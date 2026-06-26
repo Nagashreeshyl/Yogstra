@@ -1,0 +1,48 @@
+import { useState } from 'react'
+import { Search, SlidersHorizontal } from 'lucide-react'
+import { useApp, defaultFilters } from '../../context/AppContext'
+import { FilterPanel } from './FilterPanel'
+
+interface SearchBarProps {
+  placeholder?: string
+}
+
+export function SearchBar({ placeholder = 'Search teachers, styles, locations...' }: SearchBarProps) {
+  const { searchQuery, setSearchQuery } = useApp()
+  const [showFilters, setShowFilters] = useState(false)
+
+  return (
+    <div className="relative">
+      <div className="flex gap-2">
+        <div className="flex-1 relative">
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-charcoal/40" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={placeholder}
+            className="w-full pl-11 pr-4 py-3 bg-cream border border-border rounded-sm text-charcoal placeholder:text-charcoal/40 focus:outline-none focus:border-teal transition-colors"
+          />
+        </div>
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="flex items-center gap-2 px-4 py-3 border border-border rounded-sm text-sm text-charcoal hover:bg-cream-dark transition-colors cursor-pointer"
+        >
+          <SlidersHorizontal size={18} />
+          Filters
+        </button>
+      </div>
+      {showFilters && (
+        <FilterPanel onClose={() => setShowFilters(false)} />
+      )}
+    </div>
+  )
+}
+
+export function useFilteredTeachers() {
+  const { searchQuery, filters, selectedCategory } = useApp()
+  // Import dynamically to avoid circular deps - we'll filter in pages
+  return { searchQuery, filters, selectedCategory }
+}
+
+export { defaultFilters }
