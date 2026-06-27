@@ -24,6 +24,25 @@ interface BuyClassModalProps {
   threadId: string
 }
 
+const DEFAULT_SESSION_TIME = '00:00'
+
+function formatSessionTimeLabel(value24: string) {
+  const [hourPart, minutePart] = value24.split(':')
+  const hour24 = Number(hourPart)
+  const minutes = minutePart ?? '00'
+  const period = hour24 >= 12 ? 'PM' : 'AM'
+  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12
+  return `${hour12}:${minutes} ${period}`
+}
+
+const SESSION_TIME_OPTIONS = Array.from({ length: 48 }, (_, index) => {
+  const totalMinutes = index * 30
+  const hour24 = Math.floor(totalMinutes / 60)
+  const minute = totalMinutes % 60
+  const value = `${String(hour24).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
+  return { value, label: formatSessionTimeLabel(value) }
+})
+
 export function BuyClassModal({
   isOpen,
   onClose,
@@ -37,7 +56,7 @@ export function BuyClassModal({
   const [classType, setClassType] = useState<ClassType>('1:1')
   const [duration, setDuration] = useState<ClassDuration>('month')
   const [startDate, setStartDate] = useState('')
-  const [time, setTime] = useState('')
+  const [time, setTime] = useState(DEFAULT_SESSION_TIME)
   const [notes, setNotes] = useState('')
   const [baseFee, setBaseFee] = useState(0)
   const [loadingFee, setLoadingFee] = useState(false)
@@ -58,6 +77,7 @@ export function BuyClassModal({
     setError(null)
     setAppliedCoupon(null)
     setCouponInput('')
+    setTime(DEFAULT_SESSION_TIME)
     setLoadingFee(true)
     void fetchTeacherFee(teacherId, classType, duration)
       .then(setBaseFee)
@@ -251,12 +271,17 @@ export function BuyClassModal({
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
-            <Input
+            <Select
               label="Preferred time"
-              type="time"
               value={time}
               onChange={(e) => setTime(e.target.value)}
-            />
+            >
+              {SESSION_TIME_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
           </div>
 
           <Textarea
