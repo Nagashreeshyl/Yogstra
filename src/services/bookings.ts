@@ -74,18 +74,6 @@ export async function fetchTeacherActiveStudentCount(teacherId: string): Promise
   return count ?? 0
 }
 
-export async function fetchTeacherPendingBookings(teacherId: string): Promise<Booking[]> {
-  const { data, error } = await supabase
-    .from('bookings')
-    .select(bookingSelect)
-    .eq('teacher_id', teacherId)
-    .eq('status', 'pending')
-    .order('created_at', { ascending: false })
-
-  if (error) throw error
-  return (data ?? []).map((row) => mapBooking(row))
-}
-
 export async function fetchTeacherMonthlyEarnings(teacherId: string): Promise<number> {
   const { data, error } = await supabase
     .from('bookings')
@@ -97,44 +85,49 @@ export async function fetchTeacherMonthlyEarnings(teacherId: string): Promise<nu
   return (data ?? []).reduce((sum, b) => sum + Number(b.monthly_fee ?? 0), 0)
 }
 
-export async function updateBookingStatus(
-  bookingId: string,
-  status: 'active' | 'cancelled' | 'pending',
-) {
-  const { error } = await supabase.from('bookings').update({ status }).eq('id', bookingId)
-  if (error) throw error
-}
-
-export async function hasExistingTeacherRequest(
+export async function ensureActiveBookingAfterPayment(
   studentId: string,
   teacherId: string,
-): Promise<boolean> {
-  const { data, error } = await supabase
+  amount: number,
+  startDate: string,
+) {
+  const { data: existing, error: fetchError } = await supabase
     .from('bookings')
-    .select('id')
+    .select('id, status')
     .eq('student_id', studentId)
     .eq('teacher_id', teacherId)
     .in('status', ['pending', 'active'])
     .limit(1)
     .maybeSingle()
 
-  if (error) throw error
-  return Boolean(data)
-}
+  if (fetchError) throw fetchError
 
-export async function createTeacherBookingRequest(
-  studentId: string,
-  teacherId: string,
-  monthlyFee: number,
-) {
+  if (existing?.status === 'active') return existing.id as string
+
+  if (existing?.status === 'pending') {
+    const { error } = await supabase
+      .from('bookings')
+      .update({
+        status: 'active',
+        payment_status: 'paid',
+        monthly_fee: amount,
+        start_date: startDate,
+      })
+      .eq('id', existing.id)
+
+    if (error) throw error
+    return existing.id as string
+  }
+
   const { data, error } = await supabase
     .from('bookings')
     .insert({
       student_id: studentId,
       teacher_id: teacherId,
-      status: 'pending',
-      monthly_fee: monthlyFee,
-      payment_status: 'pending',
+      status: 'active',
+      payment_status: 'paid',
+      monthly_fee: amount,
+      start_date: startDate,
     })
     .select('id')
     .single()

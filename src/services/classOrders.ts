@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabase'
 import { markCouponUsed } from './coupons'
 import { sendDirectMessage } from './directChat'
 import { createTeacherBookingNotification } from './teacherNotifications'
+import { ensureActiveBookingAfterPayment } from './bookings'
 import { profileLinkToken } from '../utils/messageContent'
 import { formatTime } from '../utils/format'
 
@@ -57,8 +58,30 @@ export function buildYogstraBookingMessage(input: ClassOrderInput, paymentId: st
     .join('\n')
 }
 
-export async function createClassOrder(input: ClassOrderInput) {
-  const { data, error } = await supabase
+async function notifyTeacherOfBooking(input: ClassOrderInput, paymentId: string) {
+  const content = buildYogstraBookingMessage(input, paymentId)
+  await sendDirectMessage(input.threadId, input.studentId, content)
+}
+
+export async function fulfillClassOrderAfterPayment(
+  paymentId: string,
+  input: ClassOrderInput,
+) {
+  const { data: schedule, error: scheduleError } = await supabase
+    .from('schedules')
+    .insert({
+      teacher_id: input.teacherId,
+      student_id: input.studentId,
+      class_type: input.classType,
+      scheduled_at: input.scheduledAt,
+      duration_minutes: 60,
+    })
+    .select('id')
+    .single()
+
+  if (scheduleError) throw scheduleError
+
+  const { data: order, error: orderError } = await supabase
     .from('class_orders')
     .insert({
       student_id: input.studentId,
@@ -71,75 +94,37 @@ export async function createClassOrder(input: ClassOrderInput) {
       amount: input.amount,
       coupon_id: input.couponId ?? null,
       discount_percent: input.discountPercent ?? null,
-      payment_status: 'pending',
+      payment_status: 'paid',
+      razorpay_payment_id: paymentId,
+      schedule_id: schedule.id,
     })
     .select('id')
     .single()
 
-  if (error) {
-    if (error.code === 'PGRST205' || error.code === '42P01') {
+  if (orderError) {
+    if (orderError.code === 'PGRST205' || orderError.code === '42P01') {
       throw new Error('Class booking is not set up. Run supabase/chat-enhancements.sql.')
     }
-    throw error
+    throw orderError
   }
 
-  return data.id as string
-}
+  const orderId = order.id as string
 
-export async function notifyTeacherOfBooking(input: ClassOrderInput, paymentId: string) {
-  const content = buildYogstraBookingMessage(input, paymentId)
-  await sendDirectMessage(input.threadId, input.studentId, content)
-}
-
-/** After Razorpay success: mark paid, notify teacher in chat + notifications. */
-export async function completeClassOrderAfterPayment(
-  orderId: string,
-  paymentId: string,
-  input: ClassOrderInput,
-) {
-  await markClassOrderPaid(orderId, paymentId)
   if (input.couponDeliveryId) {
     await markCouponUsed(input.couponDeliveryId, orderId)
   }
+
+  await ensureActiveBookingAfterPayment(
+    input.studentId,
+    input.teacherId,
+    input.amount,
+    input.startDate,
+  )
+
   await notifyTeacherOfBooking(input, paymentId)
   await createTeacherBookingNotification(orderId, input, paymentId)
-}
 
-export async function markClassOrderPaid(orderId: string, razorpayPaymentId: string) {
-  const { data: order, error: fetchError } = await supabase
-    .from('class_orders')
-    .select('*')
-    .eq('id', orderId)
-    .single()
-
-  if (fetchError) throw fetchError
-
-  const { data: schedule, error: scheduleError } = await supabase
-    .from('schedules')
-    .insert({
-      teacher_id: order.teacher_id,
-      student_id: order.student_id,
-      class_type: order.class_type,
-      scheduled_at: order.scheduled_at,
-      duration_minutes: 60,
-    })
-    .select('id')
-    .single()
-
-  if (scheduleError) throw scheduleError
-
-  const { error: updateError } = await supabase
-    .from('class_orders')
-    .update({
-      payment_status: 'paid',
-      razorpay_payment_id: razorpayPaymentId,
-      schedule_id: schedule.id,
-    })
-    .eq('id', orderId)
-
-  if (updateError) throw updateError
-
-  return schedule.id as string
+  return orderId
 }
 
 export async function fetchTeacherFee(

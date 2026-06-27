@@ -7,8 +7,7 @@ import { Select } from '../ui/Select'
 import { useApp } from '../../context/AppContext'
 import type { ClassDuration, ClassType } from '../../services/classOrders'
 import {
-  completeClassOrderAfterPayment,
-  createClassOrder,
+  fulfillClassOrderAfterPayment,
   fetchTeacherFee,
   type ClassOrderInput,
 } from '../../services/classOrders'
@@ -179,7 +178,7 @@ export function BuyClassModal({
     }
 
     try {
-      const orderId = await createClassOrder(orderInput)
+      const receiptId = crypto.randomUUID()
 
       await openRazorpayCheckout({
         amountInr: payableAmount,
@@ -187,10 +186,10 @@ export function BuyClassModal({
         studentEmail: user?.email,
         teacherName,
         classType: classType === '1:1' ? '1-on-1' : 'Group',
-        receipt: orderId,
+        receipt: receiptId,
         onSuccess: async (paymentId) => {
           try {
-            await completeClassOrderAfterPayment(orderId, paymentId, orderInput)
+            await fulfillClassOrderAfterPayment(paymentId, orderInput)
             onClose()
           } catch (err) {
             throw err instanceof Error

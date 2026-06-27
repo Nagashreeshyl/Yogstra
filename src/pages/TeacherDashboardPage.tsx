@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Users, Calendar, IndianRupee, Star, MessageCircle } from 'lucide-react'
+import { Users, Calendar, IndianRupee, Star, MessageCircle, Bell } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { fetchPosts } from '../services/posts'
@@ -7,8 +7,6 @@ import { fetchTodaySchedules } from '../services/schedules'
 import {
   fetchTeacherActiveStudentCount,
   fetchTeacherMonthlyEarnings,
-  fetchTeacherPendingBookings,
-  updateBookingStatus,
 } from '../services/bookings'
 import { fetchTeacherById } from '../services/teachers'
 import { Avatar } from '../components/ui/Avatar'
@@ -21,7 +19,7 @@ export function TeacherDashboardPage() {
   const { user } = useApp()
   const teacherId = user?.id ?? ''
 
-  const { data: studentCount, loading: studentsLoading, refetch: refetchStudents } = useAsyncData(
+  const { data: studentCount, loading: studentsLoading } = useAsyncData(
     () => (teacherId ? fetchTeacherActiveStudentCount(teacherId) : Promise.resolve(0)),
     [teacherId],
   )
@@ -37,17 +35,7 @@ export function TeacherDashboardPage() {
     () => (teacherId ? fetchTeacherById(teacherId) : Promise.resolve(null)),
     [teacherId],
   )
-  const { data: pendingBookings, refetch: refetchPending } = useAsyncData(
-    () => (teacherId ? fetchTeacherPendingBookings(teacherId) : Promise.resolve([])),
-    [teacherId],
-  )
   const { data: posts } = useAsyncData(() => fetchPosts(5))
-
-  const handleBookingAction = async (bookingId: string, status: 'active' | 'cancelled') => {
-    await updateBookingStatus(bookingId, status)
-    await refetchPending()
-    await refetchStudents()
-  }
 
   const stats = [
     { label: 'Total Students', value: String(studentCount ?? 0), icon: Users },
@@ -108,35 +96,20 @@ export function TeacherDashboardPage() {
         </div>
 
         <div>
-          <h2 className="font-heading text-lg font-medium mb-4">Pending Requests</h2>
-          <div className="space-y-3 mb-8">
-            {(pendingBookings ?? []).length === 0 ? (
-              <p className="text-sm text-charcoal/50">No pending booking requests.</p>
-            ) : (
-              pendingBookings!.map((req) => (
-                <Card key={req.id} className="p-4 flex items-center justify-between gap-4">
-                  <div>
-                    <p className="font-medium text-sm">{req.studentName}</p>
-                    <p className="text-xs text-charcoal/50">
-                      ₹{req.monthlyFee.toLocaleString('en-IN')} / month · {req.startDate}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={() => handleBookingAction(req.id, 'active')}>
-                      Accept
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => handleBookingAction(req.id, 'cancelled')}
-                    >
-                      Decline
-                    </Button>
-                  </div>
-                </Card>
-              ))
-            )}
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <h2 className="font-heading text-lg font-medium">Class bookings</h2>
+            <Link
+              to="/dashboard/teacher/notifications"
+              className="inline-flex items-center gap-1.5 text-xs text-teal font-medium hover:underline"
+            >
+              <Bell size={14} />
+              View notifications
+            </Link>
           </div>
+          <p className="text-sm text-charcoal/50 mb-8">
+            New bookings appear in Notifications after a student completes payment. No action needed
+            on your side — you&apos;ll see class details and the student profile there.
+          </p>
 
           <h2 className="font-heading text-lg font-medium mb-4">Recent Community Posts</h2>
           <div className="space-y-3">

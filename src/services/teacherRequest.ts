@@ -1,12 +1,13 @@
 import type { Teacher } from '../types'
 import { buildTeacherRequestMessage } from '../utils/teacherIntroMessage'
-import { createTeacherBookingRequest, hasExistingTeacherRequest } from './bookings'
-import { fetchHiddenThreadIds } from './chatSettings'
+import { upsertThreadSettings, fetchHiddenThreadIds } from './chatSettings'
 import {
   ensureDirectChat,
+  formatChatError,
   hideLatestMessageForUser,
   sendDirectMessage,
 } from './directChat'
+import { supabase } from '../lib/supabase'
 
 export async function requestTeacherWithIntro(params: {
   studentId: string
@@ -15,19 +16,35 @@ export async function requestTeacherWithIntro(params: {
 }): Promise<{ threadId: string; isNewRequest: boolean }> {
   const { studentId, studentName, teacher } = params
 
-  const alreadyRequested = await hasExistingTeacherRequest(studentId, teacher.id)
-
-  if (!alreadyRequested) {
-    await createTeacherBookingRequest(studentId, teacher.id, teacher.monthlyFee)
+  let threadId: string
+  try {
+    ;({ threadId } = await ensureDirectChat(studentId, teacher.id))
+  } catch (err) {
+    throw new Error(formatChatError(err))
   }
 
-  const { threadId } = await ensureDirectChat(studentId, teacher.id)
+  const { data: existingMessage } = await supabase
+    .from('direct_messages')
+    .select('id')
+    .eq('thread_id', threadId)
+    .eq('sender_id', studentId)
+    .limit(1)
+    .maybeSingle()
+
+  const alreadyRequested = Boolean(existingMessage)
+
+  await upsertThreadSettings(threadId, studentId, { hidden: false }).catch(() => {})
+
   const hiddenThreadIds = await fetchHiddenThreadIds(studentId).catch(() => new Set<string>())
   const chatHiddenForStudent = hiddenThreadIds.has(threadId)
 
   if (!alreadyRequested) {
     const message = buildTeacherRequestMessage(studentName, teacher.gender)
-    await sendDirectMessage(threadId, studentId, message)
+    try {
+      await sendDirectMessage(threadId, studentId, message)
+    } catch (err) {
+      throw new Error(formatChatError(err))
+    }
     if (chatHiddenForStudent) {
       await hideLatestMessageForUser(threadId, studentId)
     }
