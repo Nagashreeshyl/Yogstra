@@ -46,6 +46,10 @@ function normalizeInrAmount(amountInr: number) {
   return { inr: rounded, paise }
 }
 
+function trimEnv(value: string | undefined) {
+  return value?.trim() ?? ''
+}
+
 async function createRazorpayOrder(amountInr: number, receipt?: string) {
   const response = await fetch('/api/razorpay-order', {
     method: 'POST',
@@ -73,7 +77,7 @@ async function createRazorpayOrder(amountInr: number, receipt?: string) {
 
   return {
     orderId: body.orderId,
-    keyId: body.keyId,
+    keyId: body.keyId ? trimEnv(body.keyId) : undefined,
   }
 }
 
@@ -87,7 +91,7 @@ export async function openRazorpayCheckout(params: {
   onSuccess: (paymentId: string) => void | Promise<void>
   onDismiss?: () => void
 }) {
-  const key = import.meta.env.VITE_RAZORPAY_KEY_ID as string | undefined
+  const key = trimEnv(import.meta.env.VITE_RAZORPAY_KEY_ID as string | undefined)
   if (!key) {
     throw new Error(
       'Payment gateway is not configured. Add VITE_RAZORPAY_KEY_ID to your .env file.',

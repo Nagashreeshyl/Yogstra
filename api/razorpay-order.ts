@@ -13,13 +13,17 @@ type VercelResponse = {
   json: (body: unknown) => void
 }
 
+function trimEnv(value: string | undefined) {
+  return value?.trim() ?? ''
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const keyId = process.env.RAZORPAY_KEY_ID ?? process.env.VITE_RAZORPAY_KEY_ID
-  const keySecret = process.env.RAZORPAY_KEY_SECRET
+  const keyId = trimEnv(process.env.RAZORPAY_KEY_ID ?? process.env.VITE_RAZORPAY_KEY_ID)
+  const keySecret = trimEnv(process.env.RAZORPAY_KEY_SECRET)
 
   if (!keyId || !keySecret) {
     return res.status(500).json({
