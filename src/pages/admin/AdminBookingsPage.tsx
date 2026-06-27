@@ -4,6 +4,7 @@ import { fetchBookings } from '../../services/bookings'
 import { AdminTable, AdminPagination } from '../../components/admin/AdminTable'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
+import { TeacherTableSkeleton } from '../../components/ui/Skeleton'
 
 const PAGE_SIZE = 5
 
@@ -28,7 +29,7 @@ export function AdminBookingsPage() {
       <h1 className="font-heading text-3xl font-medium mb-8">Bookings</h1>
 
       {loading ? (
-        <p className="text-charcoal/50">Loading bookings...</p>
+        <TeacherTableSkeleton rows={5} />
       ) : (
         <>
           <AdminTable

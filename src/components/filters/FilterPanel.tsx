@@ -41,7 +41,7 @@ export function FilterPanel({ onClose }: FilterPanelProps) {
   }
 
   return (
-    <div className="absolute top-full left-0 right-0 mt-2 z-40 bg-cream border border-border rounded-sm p-6" style={{ boxShadow: '0 4px 24px rgba(28, 28, 28, 0.06)' }}>
+    <div className="absolute top-full left-0 right-0 mt-2 z-40 bg-surface-elevated border border-surface-inset rounded-sm p-6 shadow-lg">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div>
           <p className="text-sm font-medium mb-3">Category</p>
@@ -53,7 +53,7 @@ export function FilterPanel({ onClose }: FilterPanelProps) {
                 className={`px-3 py-1.5 text-xs border rounded-sm transition-colors cursor-pointer ${
                   local.categories.includes(cat.name)
                     ? 'bg-teal-soft border-teal text-charcoal'
-                    : 'border-border text-charcoal/70 hover:border-teal/50'
+                    : 'border-surface-inset bg-surface-muted text-charcoal/70 hover:border-teal/50'
                 }`}
               >
                 {cat.name}
@@ -72,7 +72,7 @@ export function FilterPanel({ onClose }: FilterPanelProps) {
                 className={`px-3 py-1.5 text-xs border rounded-sm transition-colors cursor-pointer ${
                   local.teachingMode === mode
                     ? 'bg-teal-soft border-teal text-charcoal'
-                    : 'border-border text-charcoal/70 hover:border-teal/50'
+                    : 'border-surface-inset bg-surface-muted text-charcoal/70 hover:border-teal/50'
                 }`}
               >
                 {mode}

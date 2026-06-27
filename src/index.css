@@ -8,6 +8,11 @@
   --color-border: #e8dcc8;
   --color-cream-dark: #ebe0c8;
   --color-teal-soft: #d4eef2;
+  /* Warm surfaces — breaks up flat cream on main content */
+  --color-surface: #ebe3d0;
+  --color-surface-elevated: #e2dac7;
+  --color-surface-inset: #d9cfba;
+  --color-surface-muted: #f0e9d8;
   --font-heading: "Playfair Display", serif;
   --font-body: "Inter", sans-serif;
 }

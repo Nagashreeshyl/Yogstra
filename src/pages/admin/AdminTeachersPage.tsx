@@ -6,6 +6,7 @@ import { AdminTable, AdminPagination } from '../../components/admin/AdminTable'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Modal } from '../../components/ui/Modal'
+import { TeacherTableSkeleton } from '../../components/ui/Skeleton'
 
 const PAGE_SIZE = 5
 
@@ -57,7 +58,7 @@ export function AdminTeachersPage() {
       <h1 className="font-heading text-3xl font-medium mb-8">Teachers</h1>
 
       {loading ? (
-        <p className="text-charcoal/50">Loading teachers...</p>
+        <TeacherTableSkeleton rows={5} />
       ) : (
         <>
           <AdminTable

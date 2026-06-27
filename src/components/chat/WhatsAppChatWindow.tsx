@@ -1,134 +1,452 @@
-import { BadgeCheck, Send } from 'lucide-react'
-import { useEffect, useState, type FormEvent } from 'react'
+import { BadgeCheck, CornerUpLeft, Search, Send, ShoppingBag, X } from 'lucide-react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Avatar } from '../ui/Avatar'
 import { Badge } from '../ui/Badge'
+import { Button } from '../ui/Button'
+import { ChatWindowSkeleton } from '../ui/Skeleton'
 import { useDirectChatMessages } from '../../hooks/useDirectChatMessages'
-import { markThreadAsRead } from '../../services/directChat'
+import {
+  deleteDirectMessageForBoth,
+  deleteDirectMessageForMe,
+  formatMessageDisplay,
+  hideChatFromInbox,
+  markThreadAsRead,
+} from '../../services/directChat'
+import { fetchThreadSettings, upsertThreadSettings, type ThreadSetting } from '../../services/chatSettings'
+import { submitChatReport } from '../../services/reports'
 import { formatTime } from '../../utils/format'
+import { stripProfileTokens } from '../../utils/messageContent'
+import { getChatParticipantProfilePath } from '../../utils/chatRoutes'
+import { ChatActionModal } from './ChatActionModal'
+import { ChatMessageContent } from './ChatMessageContent'
+import { BuyClassModal } from './BuyClassModal'
+import { ChatEphemeralToast } from './ChatEphemeralToast'
+import { ChatMessageMenu } from './ChatMessageMenu'
+import { ChatHeaderMenu, ReportChatModal } from './ReportChatModal'
 
 interface WhatsAppChatWindowProps {
   threadId: string
   currentUserId: string
+  participantId: string
+  currentUserName: string
   participantName: string
   participantAvatar?: string
   participantVerified?: boolean
+  participantRole?: 'student' | 'teacher'
+  currentUserRole?: 'student' | 'teacher'
   onRead?: (threadId: string) => void
+  onThreadHidden?: () => void
 }
 
 export function WhatsAppChatWindow({
   threadId,
   currentUserId,
+  currentUserName,
+  participantId,
   participantName,
   participantAvatar,
   participantVerified,
+  participantRole = 'student',
+  currentUserRole = 'student',
   onRead,
+  onThreadHidden,
 }: WhatsAppChatWindowProps) {
-  const { messages, loading, sending, error, bottomRef, send } = useDirectChatMessages(
+  const navigate = useNavigate()
+  const { messages, loading, sending, error, bottomRef, send, reload } = useDirectChatMessages(
     threadId,
     currentUserId,
   )
   const [draft, setDraft] = useState('')
+  const [showReportModal, setShowReportModal] = useState(false)
+  const [showBuyModal, setShowBuyModal] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [ephemeralNotice, setEphemeralNotice] = useState<string | null>(null)
+  const [showDeleteChatConfirm, setShowDeleteChatConfirm] = useState(false)
+  const [threadSettings, setThreadSettings] = useState<ThreadSetting>({
+    muted: false,
+    blocked: false,
+    hidden: false,
+  })
+  const [replyTo, setReplyTo] = useState<{ id: string; content: string } | null>(null)
+
+  const showBuyButton = currentUserRole === 'student' && participantRole === 'teacher'
+  const isBlocked = threadSettings.blocked
 
   const lastReadAt = messages.at(-1)?.createdAt
 
   useEffect(() => {
     if (loading || !threadId) return
-
     void markThreadAsRead(threadId, currentUserId, lastReadAt)
       .then(() => onRead?.(threadId))
       .catch(() => undefined)
   }, [threadId, currentUserId, loading, lastReadAt, onRead])
 
+  useEffect(() => {
+    setEphemeralNotice(null)
+    setShowSearch(false)
+    setSearchQuery('')
+    setReplyTo(null)
+    setShowDeleteChatConfirm(false)
+    void fetchThreadSettings(threadId, currentUserId)
+      .then(setThreadSettings)
+      .catch(() => undefined)
+  }, [threadId, currentUserId])
+
+  const flashNotice = (notice: string) => setEphemeralNotice(notice)
+
+  const filteredMessages = useMemo(() => {
+    if (!searchQuery.trim()) return messages
+    const q = searchQuery.toLowerCase()
+    return messages.filter((m) => m.content.toLowerCase().includes(q))
+  }, [messages, searchQuery])
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!draft.trim() || sending) return
-    const text = draft
+    if (!draft.trim() || sending || isBlocked) return
+    let text = draft.trim()
+    if (replyTo) {
+      const preview = replyTo.content.slice(0, 120).replace(/\n/g, ' ')
+      text = `↩ ${preview}${replyTo.content.length > 120 ? '…' : ''}\n${text}`
+    }
     setDraft('')
+    setReplyTo(null)
     await send(text)
   }
 
-  return (
-    <div className="flex flex-col h-full min-h-0 bg-cream-dark border border-border rounded-sm overflow-hidden">
-      <div className="px-4 py-3 border-b border-cream/10 bg-charcoal shrink-0 flex items-center gap-3">
-        <Avatar src={participantAvatar} name={participantName} size={40} />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h2 className="text-sm font-semibold truncate text-cream">{participantName}</h2>
-            {participantVerified && (
-              <Badge variant="verified" className="flex items-center gap-1 shrink-0">
-                <BadgeCheck size={10} />
-                Verified
-              </Badge>
-            )}
-          </div>
-          <p className="text-xs text-cream/45">Tap to view profile</p>
-        </div>
-      </div>
+  const handleReport = async (reason: string) => {
+    await submitChatReport({
+      threadId,
+      reporterId: currentUserId,
+      reportedUserId: participantId,
+      reason,
+    })
+    flashNotice('Report submitted. An admin will review this conversation.')
+  }
 
-      <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-3 space-y-1.5 min-h-0 bg-cream-dark">
-        {loading ? (
-          <p className="text-sm text-charcoal/50 text-center py-8">Loading messages...</p>
-        ) : messages.length === 0 ? (
-          <p className="text-sm text-charcoal/50 text-center py-8">No messages yet. Say hello!</p>
-        ) : (
-          messages.map((msg) => {
-            const isSent = msg.senderId === currentUserId
-            return (
-              <div
-                key={msg.id}
-                className={`flex ${isSent ? 'justify-end' : 'justify-start'}`}
+  const patchSettings = async (patch: Partial<ThreadSetting>, notice: string) => {
+    await upsertThreadSettings(threadId, currentUserId, patch)
+    setThreadSettings((prev) => ({ ...prev, ...patch }))
+    flashNotice(notice)
+  }
+
+  const handleToggleMute = async () => {
+    const next = !threadSettings.muted
+    await patchSettings({ muted: next }, next ? 'Conversation muted.' : 'Conversation unmuted.')
+  }
+
+  const handleToggleBlock = async () => {
+    const next = !threadSettings.blocked
+    await patchSettings(
+      { blocked: next },
+      next ? 'User blocked. Unblock from the menu to message again.' : 'User unblocked.',
+    )
+  }
+
+  const confirmDeleteChat = async () => {
+    setShowDeleteChatConfirm(false)
+    try {
+      await hideChatFromInbox(threadId, currentUserId)
+      flashNotice('Chat deleted from your inbox.')
+      onThreadHidden?.()
+    } catch {
+      flashNotice('Could not delete chat. Run supabase/chat-enhancements.sql in Supabase.')
+    }
+  }
+
+  const profilePath = getChatParticipantProfilePath(
+    participantId,
+    participantRole,
+    currentUserRole,
+  )
+
+  const handleCopy = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(stripProfileTokens(text))
+      flashNotice('Message copied.')
+    } catch {
+      flashNotice('Could not copy message.')
+    }
+  }
+
+  if (loading && messages.length === 0) {
+    return <ChatWindowSkeleton />
+  }
+
+  return (
+    <>
+      <div className="flex flex-col h-full min-h-0 bg-cream-dark border border-border rounded-sm overflow-hidden">
+        <div className="px-4 py-3 border-b border-cream/10 bg-charcoal shrink-0 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => navigate(profilePath)}
+            className="flex items-center gap-3 min-w-0 flex-1 text-left cursor-pointer rounded-sm hover:bg-cream/5 transition-colors -m-1 p-1"
+          >
+            <Avatar src={participantAvatar} name={participantName} size={40} />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-semibold truncate text-cream">{participantName}</h2>
+                {participantVerified && (
+                  <Badge variant="verified" className="flex items-center gap-1 shrink-0">
+                    <BadgeCheck size={10} />
+                    Verified
+                  </Badge>
+                )}
+                {threadSettings.muted && (
+                  <span className="text-[10px] text-cream/40 uppercase tracking-wide">Muted</span>
+                )}
+              </div>
+              <p className="text-xs text-cream/45">Tap to view profile</p>
+            </div>
+          </button>
+          {showBuyButton && (
+            <Button
+              size="sm"
+              className="shrink-0 gap-1.5 h-8 px-3 text-xs"
+              onClick={() => setShowBuyModal(true)}
+            >
+              <ShoppingBag size={14} />
+              Buy
+            </Button>
+          )}
+          <ChatHeaderMenu
+            muted={threadSettings.muted}
+            blocked={threadSettings.blocked}
+            onReport={() => setShowReportModal(true)}
+            onSearch={() => setShowSearch((v) => !v)}
+            onToggleMute={() => void handleToggleMute()}
+            onToggleBlock={() => void handleToggleBlock()}
+            onDeleteChat={() => setShowDeleteChatConfirm(true)}
+          />
+        </div>
+
+        {showSearch && (
+          <div className="px-4 py-3 shrink-0 bg-cream-dark">
+            <div
+              className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl shadow-sm"
+              style={{ backgroundColor: '#2A3942' }}
+            >
+              <Search size={16} className="text-cream/45 shrink-0" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search in chat..."
+                className="flex-1 text-sm bg-transparent outline-none text-cream placeholder:text-cream/40"
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSearch(false)
+                  setSearchQuery('')
+                }}
+                className="text-cream/45 hover:text-cream cursor-pointer"
               >
+                <X size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {isBlocked && (
+          <p className="px-4 py-2 text-xs text-red-800 bg-red-50 border-b border-red-200 shrink-0">
+            You blocked this user. Unblock from the menu to send messages.
+          </p>
+        )}
+
+        <div className="relative flex-1 overflow-y-auto px-4 sm:px-5 py-4 space-y-4 min-h-0 bg-cream-dark">
+          <ChatEphemeralToast
+            message={ephemeralNotice}
+            onDismiss={() => setEphemeralNotice(null)}
+          />
+          {filteredMessages.length === 0 ? (
+            searchQuery ? (
+              <p className="text-sm text-charcoal/50 text-center py-8">
+                No messages match your search.
+              </p>
+            ) : null
+          ) : (
+            filteredMessages.map((msg) => {
+              const isSent = msg.senderId === currentUserId
+              const display = formatMessageDisplay(
+                msg,
+                currentUserId,
+                isSent ? currentUserName : participantName,
+              )
+
+              if (!display.text && !display.meta) return null
+
+              return (
                 <div
-                  className={`relative max-w-[78%] px-3 py-2 ${
-                    isSent
-                      ? 'bg-teal text-cream rounded-2xl rounded-tr-sm'
-                      : 'bg-cream border border-border text-charcoal rounded-2xl rounded-tl-sm'
+                  key={msg.id}
+                  className={`flex items-end gap-1 py-0.5 group ${
+                    isSent ? 'justify-end' : 'justify-start'
                   }`}
                 >
-                  <p className="text-[14.5px] leading-snug whitespace-pre-wrap break-words pr-12">
-                    {msg.content}
-                  </p>
-                  <span
-                    className={`absolute bottom-1.5 right-2.5 text-[10px] ${
-                      isSent ? 'text-cream/70' : 'text-charcoal/40'
+                  {isSent && !msg.deletedAt && (
+                    <ChatMessageMenu
+                      isSent
+                      canModify
+                      onReply={() =>
+                        setReplyTo({ id: msg.id, content: display.text || msg.content })
+                      }
+                      onCopy={() => void handleCopy(display.text || msg.content)}
+                      onDeleteForMe={() =>
+                        void deleteDirectMessageForMe(msg.id, currentUserId).then(reload)
+                      }
+                      onDeleteForEveryone={() =>
+                        void deleteDirectMessageForBoth(msg.id, currentUserId).then(reload)
+                      }
+                    />
+                  )}
+
+                  <div
+                    className={`relative min-w-[80px] max-w-[85%] rounded-xl ${
+                      msg.deleteScope === 'both'
+                        ? 'bg-charcoal/5 border border-dashed border-charcoal/20 text-charcoal/50 italic'
+                        : isSent
+                          ? 'bg-teal text-cream'
+                          : 'bg-cream border border-border text-charcoal shadow-sm'
                     }`}
                   >
-                    {formatTime(msg.createdAt)}
-                  </span>
+                    <div className="px-5 py-3.5">
+                      <p className="text-[15px] leading-[1.5] whitespace-pre-wrap break-words">
+                        <ChatMessageContent
+                          text={display.text}
+                          isSent={isSent}
+                          viewerRole={currentUserRole}
+                        />
+                      </p>
+                      <div className="flex justify-end items-center gap-1.5 mt-1.5 -mb-0.5">
+                        {display.meta && (
+                          <span
+                            className={`text-[10px] ${
+                              isSent && msg.deleteScope !== 'both'
+                                ? 'text-cream/55'
+                                : 'text-charcoal/35'
+                            }`}
+                          >
+                            {display.meta}
+                          </span>
+                        )}
+                        <span
+                          className={`text-[11px] shrink-0 ${
+                            isSent && msg.deleteScope !== 'both'
+                              ? 'text-cream/65'
+                              : 'text-charcoal/40'
+                          }`}
+                        >
+                          {formatTime(msg.createdAt)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {!isSent && !msg.deletedAt && (
+                    <ChatMessageMenu
+                      isSent={false}
+                      canModify={false}
+                      onReply={() =>
+                        setReplyTo({ id: msg.id, content: display.text || msg.content })
+                      }
+                      onCopy={() => void handleCopy(display.text || msg.content)}
+                      onDeleteForMe={() =>
+                        void deleteDirectMessageForMe(msg.id, currentUserId).then(reload)
+                      }
+                      onDeleteForEveryone={() =>
+                        void deleteDirectMessageForBoth(msg.id, currentUserId).then(reload)
+                      }
+                    />
+                  )}
                 </div>
-              </div>
-            )
-          })
+              )
+            })
+          )}
+          <div ref={bottomRef} />
+        </div>
+
+        {error && (
+          <p className="px-4 py-2 text-xs text-red-600 border-t border-border bg-cream shrink-0">
+            {error}
+          </p>
         )}
-        <div ref={bottomRef} />
+
+        {replyTo && (
+          <div className="px-3 py-2 border-t border-border bg-cream flex items-center gap-2 shrink-0">
+            <CornerUpLeft size={16} className="text-teal shrink-0" />
+            <p className="flex-1 text-xs text-charcoal/70 truncate border-l-2 border-teal pl-2">
+              {replyTo.content}
+            </p>
+            <button
+              type="button"
+              onClick={() => setReplyTo(null)}
+              className="text-charcoal/40 hover:text-charcoal cursor-pointer"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
+        <form
+          onSubmit={handleSubmit}
+          className="px-3 py-2.5 border-t border-border bg-cream-dark shrink-0 flex items-center gap-2"
+        >
+          <input
+            type="text"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder={isBlocked ? 'Unblock to message' : 'Type a message'}
+            disabled={isBlocked}
+            className="flex-1 min-w-0 px-4 py-2.5 bg-charcoal border border-cream/10 rounded-full text-cream placeholder:text-cream/40 focus:outline-none focus:border-teal transition-colors text-sm disabled:opacity-50"
+          />
+          <button
+            type="submit"
+            disabled={!draft.trim() || sending || isBlocked}
+            className="shrink-0 w-10 h-10 inline-flex items-center justify-center bg-teal text-cream rounded-full hover:bg-teal-dark disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
+            aria-label="Send message"
+          >
+            <Send size={18} />
+          </button>
+        </form>
       </div>
 
-      {error && (
-        <p className="px-4 py-2 text-xs text-red-600 border-t border-border bg-cream">
-          {error}
-        </p>
-      )}
+      <ChatActionModal
+        isOpen={showDeleteChatConfirm}
+        title="Delete chat?"
+        onClose={() => setShowDeleteChatConfirm(false)}
+        actions={[
+          {
+            label: 'Delete chat',
+            danger: true,
+            onClick: () => void confirmDeleteChat(),
+          },
+          {
+            label: 'Cancel',
+            onClick: () => setShowDeleteChatConfirm(false),
+          },
+        ]}
+      />
 
-      <form
-        onSubmit={handleSubmit}
-        className="px-3 py-2.5 border-t border-border bg-cream-dark shrink-0 flex items-center gap-2"
-      >
-        <input
-          type="text"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder="Type a message"
-          className="flex-1 min-w-0 px-4 py-2.5 bg-charcoal border border-cream/10 rounded-full text-cream placeholder:text-cream/40 focus:outline-none focus:border-teal transition-colors text-sm"
+      <ReportChatModal
+        isOpen={showReportModal}
+        participantName={participantName}
+        onClose={() => setShowReportModal(false)}
+        onSubmit={handleReport}
+      />
+
+      {showBuyButton && (
+        <BuyClassModal
+          isOpen={showBuyModal}
+          onClose={() => setShowBuyModal(false)}
+          studentId={currentUserId}
+          studentName={currentUserName}
+          teacherId={participantId}
+          teacherName={participantName}
+          threadId={threadId}
         />
-        <button
-          type="submit"
-          disabled={!draft.trim() || sending}
-          className="shrink-0 w-10 h-10 inline-flex items-center justify-center bg-teal text-cream rounded-full hover:bg-teal-dark disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
-          aria-label="Send message"
-        >
-          <Send size={18} />
-        </button>
-      </form>
-    </div>
+      )}
+    </>
   )
 }

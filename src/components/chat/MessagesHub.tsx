@@ -1,18 +1,33 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import {
   fetchMessagingUsers,
+  formatChatError,
+  invalidateMessagingCache,
   requiresChatRequest,
   subscribeToIncomingMessages,
   subscribeToReadUpdates,
   subscribeToUnreadRefresh,
 } from '../../services/directChat'
+import type { ChatNavigationState } from '../../utils/chatNavigation'
 import type { MessagingUser } from '../../types'
 import { UserDirectory } from './UserDirectory'
 import { DirectChatPanel } from './DirectChatPanel'
+import { ChatWindowSkeleton } from '../ui/Skeleton'
 
 type Tab = 'students' | 'teachers'
+
+type MessagesLocationState = Partial<ChatNavigationState>
+
+async function loadMessagingUsers(currentUserId: string, role: 'student' | 'teacher') {
+  try {
+    return await fetchMessagingUsers(currentUserId, role)
+  } catch (err) {
+    throw new Error(formatChatError(err))
+  }
+}
 
 function countStudentChatRequests(
   users: { id: string; role: 'student' | 'teacher'; threadStatus?: string; requestedBy?: string }[],
@@ -31,32 +46,75 @@ function countStudentChatRequests(
 
 export function MessagesHub() {
   const { user } = useApp()
-  const [tab, setTab] = useState<Tab>(user?.role === 'teacher' ? 'students' : 'teachers')
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
+  const location = useLocation()
+  const navState = (location.state as MessagesLocationState | null) ?? {}
+  const defaultTab: Tab = navState.tab ?? (user?.role === 'teacher' ? 'students' : 'teachers')
+  const [tab, setTab] = useState<Tab>(defaultTab)
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(
+    navState.selectedUserId ?? null,
+  )
+  const pendingSelectRef = useRef<string | null>(navState.selectedUserId ?? null)
+  const [loadStudents, setLoadStudents] = useState(
+    defaultTab === 'students' || Boolean(navState.selectedUserId),
+  )
+  const [loadTeachers, setLoadTeachers] = useState(
+    defaultTab === 'teachers' || Boolean(navState.selectedUserId),
+  )
 
   const userId = user?.id ?? ''
   const userRole = user?.role === 'teacher' ? 'teacher' : 'student'
 
+  useEffect(() => {
+    if (tab === 'students') setLoadStudents(true)
+    else setLoadTeachers(true)
+  }, [tab])
+
+  useEffect(() => {
+    if (!userId) return
+    const timer = window.setTimeout(() => {
+      setLoadStudents(true)
+      setLoadTeachers(true)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [userId])
+
   const { data: students, loading: studentsLoading, error: studentsError, refetch: refetchStudents, setData: setStudents } =
     useAsyncData(
-      () => (userId ? fetchMessagingUsers(userId, 'student') : Promise.resolve([])),
+      () => (userId ? loadMessagingUsers(userId, 'student') : Promise.resolve([])),
       [userId],
+      { enabled: loadStudents && Boolean(userId) },
     )
 
   const { data: teachers, loading: teachersLoading, error: teachersError, refetch: refetchTeachers, setData: setTeachers } =
     useAsyncData(
-      () => (userId ? fetchMessagingUsers(userId, 'teacher') : Promise.resolve([])),
+      () => (userId ? loadMessagingUsers(userId, 'teacher') : Promise.resolve([])),
       [userId],
+      { enabled: loadTeachers && Boolean(userId) },
     )
 
   const users = tab === 'students' ? students ?? [] : teachers ?? []
   const loading = tab === 'students' ? studentsLoading : teachersLoading
   const fetchError = tab === 'students' ? studentsError : teachersError
 
-  const selectedUser = useMemo(
-    () => users.find((u) => u.id === selectedUserId) ?? null,
-    [users, selectedUserId],
-  )
+  const selectedUser = useMemo((): MessagingUser | null => {
+    if (!selectedUserId) return null
+    const fromList = users.find((u) => u.id === selectedUserId)
+    if (fromList) return fromList
+    // Wait for the directory list so threadHidden / thread metadata is known
+    if (loading) return null
+    if (navState.participant?.id === selectedUserId) {
+      return {
+        id: navState.participant.id,
+        name: navState.participant.name,
+        avatar: navState.participant.avatar,
+        role: navState.participant.role,
+        verified: navState.participant.verified,
+      }
+    }
+    return null
+  }, [users, selectedUserId, navState.participant, loading])
+
+  const awaitingNavTarget = Boolean(selectedUserId && loading && !selectedUser)
 
   const clearThreadUnread = useCallback((threadId: string) => {
     const zeroUnread = (list: MessagingUser[] | null) =>
@@ -68,13 +126,18 @@ export function MessagesHub() {
   const handleThreadRead = useCallback(
     (threadId: string) => {
       clearThreadUnread(threadId)
-      void refetchStudents(true)
-      void refetchTeachers(true)
     },
-    [clearThreadUnread, refetchStudents, refetchTeachers],
+    [clearThreadUnread],
   )
 
+  const handleThreadHidden = useCallback(() => {
+    invalidateMessagingCache()
+    void refetchStudents(true)
+    void refetchTeachers(true)
+  }, [refetchStudents, refetchTeachers])
+
   const refreshLists = useCallback(() => {
+    invalidateMessagingCache()
     void refetchStudents(true)
     void refetchTeachers(true)
   }, [refetchStudents, refetchTeachers])
@@ -82,6 +145,7 @@ export function MessagesHub() {
   useEffect(() => {
     if (!userId) return
     const refresh = () => {
+      invalidateMessagingCache()
       void refetchStudents(true)
       void refetchTeachers(true)
     }
@@ -94,14 +158,35 @@ export function MessagesHub() {
   }, [userId, refetchStudents, refetchTeachers])
 
   useEffect(() => {
-    if (users.length && !selectedUserId) {
-      setSelectedUserId(users[0].id)
+    if (navState.tab) setTab(navState.tab)
+    if (navState.selectedUserId) {
+      pendingSelectRef.current = navState.selectedUserId
+      setSelectedUserId(navState.selectedUserId)
     }
-  }, [users, selectedUserId])
+  }, [navState.selectedUserId, navState.tab])
 
   useEffect(() => {
+    const pending = pendingSelectRef.current
+    if (pending) {
+      if (users.some((u) => u.id === pending) || navState.participant?.id === pending) {
+        setSelectedUserId(pending)
+        pendingSelectRef.current = null
+        return
+      }
+      if (loading) return
+    }
+    if (selectedUserId && users.some((u) => u.id === selectedUserId)) return
+    if (users.length && !selectedUserId && !pending) {
+      setSelectedUserId(users[0].id)
+    }
+  }, [users, selectedUserId, loading, navState.participant?.id])
+
+  const handleTabChange = (next: Tab) => {
+    if (next === tab) return
+    pendingSelectRef.current = null
     setSelectedUserId(null)
-  }, [tab])
+    setTab(next)
+  }
 
   useEffect(() => {
     if (!userId) return
@@ -161,9 +246,7 @@ export function MessagesHub() {
 
       {fetchError && (
         <p className="text-sm text-red-600 mb-4 border border-red-200 bg-cream px-4 py-3 rounded-sm">
-          Could not load messages. Run{' '}
-          <code className="text-xs">supabase/chat-threads.sql</code> and{' '}
-          <code className="text-xs">supabase/chat-reads.sql</code> in Supabase, then refresh.
+          {fetchError}
         </p>
       )}
 
@@ -177,7 +260,7 @@ export function MessagesHub() {
             <button
               key={t}
               type="button"
-              onClick={() => setTab(t)}
+              onClick={() => handleTabChange(t)}
               className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold capitalize cursor-pointer border-b-2 -mb-px transition-colors ${
                 tab === t
                   ? 'border-teal text-charcoal'
@@ -210,16 +293,26 @@ export function MessagesHub() {
           onSelect={setSelectedUserId}
         />
 
-        {selectedUser && user ? (
+        {awaitingNavTarget ? (
+          <div className="flex-1 min-h-[420px] hidden md:block">
+            <ChatWindowSkeleton />
+          </div>
+        ) : selectedUser && user ? (
           <div className="flex-1 min-h-[420px] md:min-h-0">
             <DirectChatPanel
-              key={`${selectedUser.id}-${selectedUser.threadId}-${selectedUser.threadStatus}`}
+              key={`${selectedUser.id}-${selectedUser.threadId ?? 'new'}-${selectedUser.threadStatus ?? 'none'}-${selectedUser.threadHidden ?? false}`}
               user={selectedUser}
               currentUserId={user.id}
+              currentUserName={user.name}
               currentUserRole={userRole}
               onThreadChange={refreshLists}
               onRead={handleThreadRead}
+              onThreadHidden={handleThreadHidden}
             />
+          </div>
+        ) : loading && !users.length ? (
+          <div className="flex-1 min-h-[420px] hidden md:block">
+            <ChatWindowSkeleton />
           </div>
         ) : (
           !loading && (

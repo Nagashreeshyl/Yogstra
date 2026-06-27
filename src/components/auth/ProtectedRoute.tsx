@@ -3,12 +3,10 @@ import { useApp } from '../../context/AppContext'
 import type { AuthUser } from '../../services/auth'
 import { getPostLoginPath } from '../../utils/authRouting'
 
+import { AuthLoadingSkeleton } from './AuthLoadingSkeleton'
+
 function AuthLoading() {
-  return (
-    <div className="flex h-full items-center justify-center bg-cream">
-      <p className="text-sm text-charcoal/50">Loading...</p>
-    </div>
-  )
+  return <AuthLoadingSkeleton />
 }
 
 export function RequireRole({ roles }: { roles: AuthUser['role'][] }) {

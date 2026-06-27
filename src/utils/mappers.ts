@@ -64,6 +64,13 @@ export function mapTeacher(row: ProfileWithTeacher, email = ''): Teacher {
     achievements: tp?.certifications ? [tp.certifications] : [],
     certifications: tp?.certifications ?? '',
     verified: tp?.status === 'verified',
+    gender: row.gender ?? null,
+    pricing: {
+      oneOnOneWeek: Number(tp?.fee_1v1_week ?? 0),
+      oneOnOneMonth: Number(tp?.fee_1v1_month ?? tp?.monthly_fee ?? 0),
+      groupWeek: Number(tp?.fee_group_week ?? 0),
+      groupMonth: Number(tp?.fee_group_month ?? tp?.fee_group ?? tp?.monthly_fee ?? 0),
+    },
   }
 }
 

@@ -6,17 +6,26 @@ export interface PreparedCropImage {
   height: number
 }
 
-const MAX_CROP_DIMENSION = 480
+/** Instagram-style portrait posts (4:5) */
+export const POST_IMAGE_ASPECT = 4 / 5
+export const POST_IMAGE_EXPORT = { width: 1080, height: 1350 }
+
+const DEFAULT_MAX_CROP_DIMENSION = 480
+const POST_MAX_CROP_DIMENSION = 720
 
 /** Normalize EXIF rotation and resize so displayed pixels match natural pixels 1:1. */
-export async function prepareImageForCrop(file: File): Promise<PreparedCropImage> {
+export async function prepareImageForCrop(
+  file: File,
+  options?: { maxDimension?: number },
+): Promise<PreparedCropImage> {
+  const maxDimension = options?.maxDimension ?? DEFAULT_MAX_CROP_DIMENSION
   const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
 
   let width = bitmap.width
   let height = bitmap.height
 
-  if (width > MAX_CROP_DIMENSION || height > MAX_CROP_DIMENSION) {
-    const scale = MAX_CROP_DIMENSION / Math.max(width, height)
+  if (width > maxDimension || height > maxDimension) {
+    const scale = maxDimension / Math.max(width, height)
     width = Math.round(width * scale)
     height = Math.round(height * scale)
   }
@@ -87,3 +96,5 @@ export function percentToPixelCrop(
 ): PixelCrop {
   return convertToPixelCrop(crop, width, height)
 }
+
+export { POST_MAX_CROP_DIMENSION }

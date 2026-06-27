@@ -10,6 +10,7 @@ import { Avatar } from '../../components/ui/Avatar'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Toast } from '../../components/ui/Toast'
+import { SettingsFormSkeleton } from '../../components/ui/Skeleton'
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024
 
@@ -104,7 +105,7 @@ export function StudentSettingsPage() {
   }
 
   if (loading) {
-    return <div className="p-8 text-charcoal/50 text-sm">Loading profile...</div>
+    return <SettingsFormSkeleton />
   }
 
   return (

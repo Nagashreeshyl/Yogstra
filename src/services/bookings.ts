@@ -104,3 +104,41 @@ export async function updateBookingStatus(
   const { error } = await supabase.from('bookings').update({ status }).eq('id', bookingId)
   if (error) throw error
 }
+
+export async function hasExistingTeacherRequest(
+  studentId: string,
+  teacherId: string,
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('id')
+    .eq('student_id', studentId)
+    .eq('teacher_id', teacherId)
+    .in('status', ['pending', 'active'])
+    .limit(1)
+    .maybeSingle()
+
+  if (error) throw error
+  return Boolean(data)
+}
+
+export async function createTeacherBookingRequest(
+  studentId: string,
+  teacherId: string,
+  monthlyFee: number,
+) {
+  const { data, error } = await supabase
+    .from('bookings')
+    .insert({
+      student_id: studentId,
+      teacher_id: teacherId,
+      status: 'pending',
+      monthly_fee: monthlyFee,
+      payment_status: 'pending',
+    })
+    .select('id')
+    .single()
+
+  if (error) throw error
+  return data.id as string
+}

@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AppProvider } from './context/AppContext'
 import { AppLayout } from './components/layout/AppLayout'
-import { StudentPublicRedirect } from './components/auth/StudentPublicRedirect'
+import { LoggedInRedirect } from './components/auth/LoggedInRedirect'
 import { StudentDashboardLayout } from './components/layout/StudentDashboardLayout'
 import { TeacherDashboardLayout } from './components/layout/TeacherDashboardLayout'
 import { AdminLayout } from './components/admin/AdminLayout'
@@ -27,6 +27,8 @@ import { TeacherEarningsPage } from './pages/teacher/TeacherEarningsPage'
 import { TeacherSettingsPage } from './pages/teacher/TeacherSettingsPage'
 import { TeacherCommunityPage } from './pages/teacher/TeacherCommunityPage'
 import { TeacherMessagesPage } from './pages/teacher/TeacherMessagesPage'
+import { TeacherNotificationsPage } from './pages/teacher/TeacherNotificationsPage'
+import { TeacherCouponsPage } from './pages/teacher/TeacherCouponsPage'
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage'
 import { AdminTeachersPage } from './pages/admin/AdminTeachersPage'
 import { AdminStudentsPage } from './pages/admin/AdminStudentsPage'
@@ -45,9 +47,9 @@ export default function App() {
         <Routes>
           <Route
             element={
-              <StudentPublicRedirect>
+              <LoggedInRedirect>
                 <AppLayout />
-              </StudentPublicRedirect>
+              </LoggedInRedirect>
             }
           >
             <Route index element={<ExplorePage />} />
@@ -59,7 +61,14 @@ export default function App() {
             <Route path="shop" element={<ShopPage />} />
           </Route>
 
-          <Route path="auth/role" element={<RoleSelectionPage />} />
+          <Route
+            path="auth/role"
+            element={
+              <LoggedInRedirect>
+                <RoleSelectionPage />
+              </LoggedInRedirect>
+            }
+          />
 
           <Route element={<RequireGuest />}>
             <Route path="auth/student" element={<StudentAuthPage />} />
@@ -88,9 +97,12 @@ export default function App() {
             <Route path="dashboard/teacher" element={<TeacherDashboardLayout />}>
               <Route index element={<TeacherDashboardPage />} />
               <Route path="students" element={<TeacherStudentsPage />} />
+              <Route path="students/:id" element={<StudentProfilePage />} />
               <Route path="schedule" element={<TeacherSchedulePage />} />
               <Route path="community" element={<TeacherCommunityPage />} />
               <Route path="messages" element={<TeacherMessagesPage />} />
+              <Route path="notifications" element={<TeacherNotificationsPage />} />
+              <Route path="coupons" element={<TeacherCouponsPage />} />
               <Route path="earnings" element={<TeacherEarningsPage />} />
               <Route path="settings" element={<TeacherSettingsPage />} />
             </Route>

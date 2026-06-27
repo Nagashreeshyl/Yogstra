@@ -1,5 +1,5 @@
 -- Direct messaging with chat requests
--- Run in Supabase Dashboard → SQL Editor
+-- Run in Supabase Dashboard → SQL Editor (safe to re-run)
 
 create table if not exists chat_threads (
   id uuid primary key default gen_random_uuid(),
@@ -29,60 +29,86 @@ create index if not exists chat_threads_participant_b_idx on chat_threads(partic
 alter table chat_threads enable row level security;
 alter table direct_messages enable row level security;
 
-create policy "Users can view own chat threads"
-  on chat_threads for select
-  using (
-    auth.uid() = participant_a
-    or auth.uid() = participant_b
-    or is_admin()
-  );
+do $$ begin
+  create policy "Users can view own chat threads"
+    on chat_threads for select
+    using (
+      auth.uid() = participant_a
+      or auth.uid() = participant_b
+      or is_admin()
+    );
+exception when duplicate_object then null;
+end $$;
 
-create policy "Users can create chat threads"
-  on chat_threads for insert
-  with check (
-    auth.uid() = requested_by
-    and (auth.uid() = participant_a or auth.uid() = participant_b)
-  );
+do $$ begin
+  create policy "Users can create chat threads"
+    on chat_threads for insert
+    with check (
+      auth.uid() = requested_by
+      and (auth.uid() = participant_a or auth.uid() = participant_b)
+    );
+exception when duplicate_object then null;
+end $$;
 
-create policy "Participants can update chat threads"
-  on chat_threads for update
-  using (
-    auth.uid() = participant_a
-    or auth.uid() = participant_b
-    or is_admin()
-  );
+do $$ begin
+  create policy "Participants can update chat threads"
+    on chat_threads for update
+    using (
+      auth.uid() = participant_a
+      or auth.uid() = participant_b
+      or is_admin()
+    );
+exception when duplicate_object then null;
+end $$;
 
-create policy "Users can view direct messages in their threads"
-  on direct_messages for select
-  using (
-    is_admin()
-    or exists (
-      select 1 from chat_threads t
-      where t.id = thread_id
-        and (t.participant_a = auth.uid() or t.participant_b = auth.uid())
-        and t.status = 'accepted'
-    )
-    or (
+do $$ begin
+  create policy "Users can view direct messages in their threads"
+    on direct_messages for select
+    using (
+      is_admin()
+      or exists (
+        select 1 from chat_threads t
+        where t.id = thread_id
+          and (t.participant_a = auth.uid() or t.participant_b = auth.uid())
+          and t.status = 'accepted'
+      )
+      or (
+        auth.uid() = sender_id
+        and exists (
+          select 1 from chat_threads t
+          where t.id = thread_id
+            and (t.participant_a = auth.uid() or t.participant_b = auth.uid())
+        )
+      )
+    );
+exception when duplicate_object then null;
+end $$;
+
+do $$ begin
+  create policy "Users can send direct messages in accepted threads"
+    on direct_messages for insert
+    with check (
       auth.uid() = sender_id
       and exists (
         select 1 from chat_threads t
         where t.id = thread_id
+          and t.status = 'accepted'
           and (t.participant_a = auth.uid() or t.participant_b = auth.uid())
       )
-    )
-  );
+    );
+exception when duplicate_object then null;
+end $$;
 
-create policy "Users can send direct messages in accepted threads"
-  on direct_messages for insert
-  with check (
-    auth.uid() = sender_id
-    and exists (
-      select 1 from chat_threads t
-      where t.id = thread_id
-        and t.status = 'accepted'
-        and (t.participant_a = auth.uid() or t.participant_b = auth.uid())
-    )
-  );
+do $$ begin
+  alter publication supabase_realtime add table direct_messages;
+exception
+  when duplicate_object then null;
+  when undefined_object then null;
+end $$;
 
-alter publication supabase_realtime add table direct_messages;
-alter publication supabase_realtime add table chat_threads;
+do $$ begin
+  alter publication supabase_realtime add table chat_threads;
+exception
+  when duplicate_object then null;
+  when undefined_object then null;
+end $$;

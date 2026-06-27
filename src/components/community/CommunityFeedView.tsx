@@ -7,6 +7,7 @@ import { CommunityFeed } from './CommunityFeed'
 import { CommunitySidebar } from './CommunitySidebar'
 import { CreatePostModal } from './CreatePostModal'
 import { FeedPageLayout } from '../layout/FeedPageLayout'
+import { PostFeedSkeleton } from '../ui/Skeleton'
 
 export function CommunityFeedView() {
   const { user, isLoggedIn } = useApp()
@@ -45,7 +46,7 @@ export function CommunityFeedView() {
       )}
 
       {loading ? (
-        <p className="text-charcoal/45 text-center text-sm py-16">Loading posts...</p>
+        <PostFeedSkeleton count={3} />
       ) : (posts ?? []).length === 0 ? (
         <div className="border border-border/70 rounded-sm py-16 text-center">
           <p className="text-sm font-semibold text-charcoal/70">No posts yet</p>

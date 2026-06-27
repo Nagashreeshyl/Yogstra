@@ -4,6 +4,7 @@ import { fetchAllTeachersAdmin } from '../../services/teachers'
 import { fetchSchedulesByTeacher } from '../../services/schedules'
 import { Select } from '../../components/ui/Select'
 import { Badge } from '../../components/ui/Badge'
+import { ScheduleCalendarSkeleton } from '../../components/ui/Skeleton'
 
 export function AdminSchedulesPage() {
   const { data: teachers } = useAsyncData(() => fetchAllTeachersAdmin())
@@ -40,7 +41,7 @@ export function AdminSchedulesPage() {
       )}
 
       {loading ? (
-        <p className="text-charcoal/50">Loading schedule...</p>
+        <ScheduleCalendarSkeleton />
       ) : (schedules ?? []).length === 0 ? (
         <p className="text-charcoal/50">No scheduled classes for this teacher.</p>
       ) : (

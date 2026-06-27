@@ -32,6 +32,15 @@ export interface Teacher {
   achievements: string[]
   certifications: string
   verified: boolean
+  gender?: 'male' | 'female' | null
+  pricing: TeacherPricing
+}
+
+export interface TeacherPricing {
+  oneOnOneWeek: number
+  oneOnOneMonth: number
+  groupWeek: number
+  groupMonth: number
 }
 
 export interface Student {
@@ -105,7 +114,30 @@ export interface ChatConversation {
   participantOneRole: string
   participantTwoRole: string
   lastMessage: string
-  messages: { sender: string; senderRole: string; text: string; time: string }[]
+  messages: AdminChatMessage[]
+}
+
+export interface ReportedChatConversation extends ChatConversation {
+  reportId: string
+  reportReason: string
+  reportedAt: string
+  reporterName: string
+  reportCount: number
+  reportStatus: 'open' | 'reviewed' | 'dismissed'
+  reviewedAt?: string | null
+  messagesSnapshot?: AdminChatMessage[] | null
+}
+
+export interface AdminChatMessage {
+  id?: string
+  sender: string
+  senderRole: string
+  text: string
+  time: string
+  editedAt?: string | null
+  deletedAt?: string | null
+  deletedBy?: string | null
+  deleteScope?: string | null
 }
 
 export interface ChatMessage {
@@ -139,6 +171,8 @@ export interface MessagingUser {
   lastMessage?: string
   lastMessageAt?: string
   unreadCount?: number
+  /** Thread exists but user deleted/hid it from their inbox */
+  threadHidden?: boolean
 }
 
 export interface DirectChatMessage {
@@ -147,6 +181,12 @@ export interface DirectChatMessage {
   senderId: string
   content: string
   createdAt: string
+  editedAt?: string | null
+  editedBy?: string | null
+  deletedAt?: string | null
+  deletedBy?: string | null
+  deleteScope?: 'self' | 'both' | null
+  hiddenFor?: string[]
 }
 
 export interface Payout {

@@ -55,7 +55,26 @@ function clearPendingTeacher(email: string) {
   localStorage.removeItem(`${PENDING_TEACHER_KEY}:${email.toLowerCase()}`)
 }
 
-export async function fetchProfile(userId: string, emailFallback = ''): Promise<AuthUser | null> {
+const PROFILE_CACHE_TTL_MS = 30_000
+const profileCache = new Map<string, { profile: AuthUser; at: number }>()
+
+export function invalidateProfileCache(userId?: string) {
+  if (userId) profileCache.delete(userId)
+  else profileCache.clear()
+}
+
+export async function fetchProfile(
+  userId: string,
+  emailFallback = '',
+  options?: { skipCache?: boolean },
+): Promise<AuthUser | null> {
+  if (!options?.skipCache) {
+    const cached = profileCache.get(userId)
+    if (cached && Date.now() - cached.at < PROFILE_CACHE_TTL_MS) {
+      return cached.profile
+    }
+  }
+
   const { data, error } = await supabase
     .from('profiles')
     .select('*, teacher_profiles(status)')
@@ -64,19 +83,27 @@ export async function fetchProfile(userId: string, emailFallback = ''): Promise<
 
   if (error || !data) return null
 
-  const { data: { user } } = await supabase.auth.getUser()
+  let email = emailFallback
+  if (!email) {
+    const { data: { user } } = await supabase.auth.getUser()
+    email = user?.email ?? ''
+  }
+
   const tp = data.teacher_profiles
   const teacherProfile = Array.isArray(tp) ? tp[0] : tp
   const role = data.role as AuthUser['role']
 
-  return {
+  const profile: AuthUser = {
     id: data.id,
     name: data.full_name ?? '',
-    email: user?.email ?? emailFallback,
+    email,
     role,
     avatar: data.avatar_url ?? undefined,
     teacherStatus: role === 'teacher' ? (teacherProfile?.status ?? 'pending') : null,
   }
+
+  profileCache.set(userId, { profile, at: Date.now() })
+  return profile
 }
 
 async function insertTeacherProfile(userId: string, data: {
@@ -181,6 +208,7 @@ export async function signIn(email: string, password: string) {
   if (error) throw error
   if (!data.user) throw new Error('Login failed')
 
+  invalidateProfileCache(data.user.id)
   const profile = await ensureProfile(data.user)
   if (!profile) {
     throw new Error('Could not load your profile. Please try again.')
@@ -259,6 +287,7 @@ export async function signUpTeacher(form: TeacherRegistrationData): Promise<Sign
 
 export async function signOut() {
   const { error } = await supabase.auth.signOut()
+  invalidateProfileCache()
   if (error) throw error
 }
 

@@ -21,12 +21,12 @@ export function SearchBar({ placeholder = 'Search teachers, styles, locations...
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={placeholder}
-            className="w-full pl-11 pr-4 py-3 bg-cream border border-border rounded-sm text-charcoal placeholder:text-charcoal/40 focus:outline-none focus:border-teal transition-colors"
+            className="w-full pl-11 pr-4 py-3 bg-surface-elevated border border-surface-inset rounded-sm text-charcoal placeholder:text-charcoal/45 focus:outline-none focus:border-teal focus:bg-surface-muted transition-colors shadow-sm"
           />
         </div>
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="flex items-center gap-2 px-4 py-3 border border-border rounded-sm text-sm text-charcoal hover:bg-cream-dark transition-colors cursor-pointer"
+          className="flex items-center gap-2 px-4 py-3 border border-surface-inset rounded-sm text-sm text-charcoal bg-surface-elevated hover:bg-surface-muted transition-colors cursor-pointer shadow-sm"
         >
           <SlidersHorizontal size={18} />
           Filters

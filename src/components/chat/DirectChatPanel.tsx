@@ -1,31 +1,41 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Clock, MessageCircle, UserPlus } from 'lucide-react'
 import type { MessagingUser } from '../../types'
 import { Avatar } from '../ui/Avatar'
 import { Button } from '../ui/Button'
+import { ChatWindowSkeleton } from '../ui/Skeleton'
 import { WhatsAppChatWindow } from './WhatsAppChatWindow'
+import { EmptyChatPanel } from './EmptyChatPanel'
 import {
   ensureDirectChat,
+  fetchDirectChatThread,
+  formatChatError,
+  invalidateMessagingCache,
   requestChat,
   requiresChatRequest,
   respondToChatRequest,
   subscribeToThreadUpdates,
 } from '../../services/directChat'
+import { fetchHiddenThreadIds, upsertThreadSettings } from '../../services/chatSettings'
 
 interface DirectChatPanelProps {
   user: MessagingUser
   currentUserId: string
+  currentUserName: string
   currentUserRole: 'student' | 'teacher'
   onThreadChange: () => void
   onRead?: (threadId: string) => void
+  onThreadHidden?: () => void
 }
 
 export function DirectChatPanel({
   user,
   currentUserId,
+  currentUserName,
   currentUserRole,
   onThreadChange,
   onRead,
+  onThreadHidden,
 }: DirectChatPanelProps) {
   const [localUser, setLocalUser] = useState(user)
   const [requesting, setRequesting] = useState(false)
@@ -47,38 +57,49 @@ export function DirectChatPanel({
     return unsubscribe
   }, [currentUserId, onThreadChange])
 
-  useEffect(() => {
-    if (needsRequest) return
-    if (localUser.threadId && localUser.threadStatus === 'accepted') return
-
-    let cancelled = false
+  const loadThreadMetadata = useCallback(async () => {
     setOpening(true)
     setError(null)
+    try {
+      const hiddenIds = await fetchHiddenThreadIds(currentUserId).catch(() => new Set<string>())
 
-    ensureDirectChat(currentUserId, localUser.id)
-      .then((result) => {
-        if (cancelled) return
+      if (needsRequest) {
+        const existing = await fetchDirectChatThread(currentUserId, localUser.id)
+        if (!existing) return
+
         setLocalUser((prev) => ({
           ...prev,
-          threadId: result.threadId,
-          threadStatus: result.status,
+          threadId: existing.threadId,
+          threadStatus: existing.status,
+          requestedBy: existing.requestedBy,
+          threadHidden: hiddenIds.has(existing.threadId),
         }))
-        onThreadChange()
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setError('Could not open chat. Run supabase/chat-threads.sql if this is a new setup.')
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setOpening(false)
-      })
+        return
+      }
 
-    return () => {
-      cancelled = true
+      const result = await ensureDirectChat(currentUserId, localUser.id)
+      setLocalUser((prev) => ({
+        ...prev,
+        threadId: result.threadId,
+        threadStatus: result.status,
+        threadHidden: hiddenIds.has(result.threadId),
+      }))
+      onThreadChange()
+    } catch (err) {
+      setError(formatChatError(err))
+    } finally {
+      setOpening(false)
     }
-  }, [needsRequest, localUser.id, localUser.threadId, localUser.threadStatus, currentUserId, onThreadChange])
+  }, [currentUserId, localUser.id, needsRequest, onThreadChange])
 
+  useEffect(() => {
+    if (localUser.threadId && localUser.threadStatus) return
+    void loadThreadMetadata()
+  }, [localUser.id, localUser.threadId, localUser.threadStatus, loadThreadMetadata])
+
+  const isHidden = Boolean(user.threadHidden || localUser.threadHidden)
+  const isAccepted = localUser.threadStatus === 'accepted'
+  const canMessage = isAccepted && Boolean(localUser.threadId)
   const isIncoming =
     needsRequest &&
     localUser.threadStatus === 'pending' &&
@@ -87,24 +108,47 @@ export function DirectChatPanel({
     needsRequest &&
     localUser.threadStatus === 'pending' &&
     localUser.requestedBy === currentUserId
-  const isAccepted = localUser.threadStatus === 'accepted'
   const isRejected = needsRequest && localUser.threadStatus === 'rejected'
   const hasNoThread = !localUser.threadId
+
+  const handleConversationStarted = (threadId: string) => {
+    setLocalUser((prev) => ({
+      ...prev,
+      threadId,
+      threadStatus: 'accepted',
+      threadHidden: false,
+    }))
+    onThreadChange()
+  }
 
   const handleRequest = async () => {
     setRequesting(true)
     setError(null)
     try {
       const result = await requestChat(currentUserId, localUser.id)
-      setLocalUser((prev) => ({
-        ...prev,
-        threadId: result.threadId,
-        threadStatus: result.status,
-        requestedBy: currentUserId,
-      }))
+
+      if (result.status === 'accepted') {
+        await upsertThreadSettings(result.threadId, currentUserId, { hidden: false }).catch(
+          () => {},
+        )
+        setLocalUser((prev) => ({
+          ...prev,
+          threadId: result.threadId,
+          threadStatus: 'accepted',
+          threadHidden: false,
+        }))
+      } else {
+        setLocalUser((prev) => ({
+          ...prev,
+          threadId: result.threadId,
+          threadStatus: result.status,
+          requestedBy: currentUserId,
+          threadHidden: false,
+        }))
+      }
       onThreadChange()
-    } catch {
-      setError('Could not send chat request.')
+    } catch (err) {
+      setError(formatChatError(err))
     } finally {
       setRequesting(false)
     }
@@ -116,10 +160,11 @@ export function DirectChatPanel({
     setError(null)
     try {
       const status = await respondToChatRequest(localUser.threadId, currentUserId, accept)
-      setLocalUser((prev) => ({ ...prev, threadStatus: status }))
+      invalidateMessagingCache()
+      setLocalUser((prev) => ({ ...prev, threadStatus: status, threadHidden: false }))
       onThreadChange()
-    } catch {
-      setError('Could not update chat request.')
+    } catch (err) {
+      setError(formatChatError(err))
     } finally {
       setResponding(false)
     }
@@ -127,21 +172,56 @@ export function DirectChatPanel({
 
   if (!needsRequest && opening) {
     return (
-      <div className="flex flex-col h-full min-h-[420px] bg-cream border border-border rounded-sm items-center justify-center">
-        <p className="text-sm text-charcoal/50">Opening chat...</p>
+      <div className="flex flex-col h-full min-h-[420px]">
+        <ChatWindowSkeleton />
       </div>
     )
   }
 
-  if (isAccepted && localUser.threadId) {
+  if (canMessage && isHidden) {
     return (
-      <WhatsAppChatWindow
-        threadId={localUser.threadId}
+      <EmptyChatPanel
         currentUserId={currentUserId}
+        participantId={localUser.id}
         participantName={localUser.name}
         participantAvatar={localUser.avatar}
         participantVerified={localUser.verified}
+        participantRole={localUser.role}
+        currentUserRole={currentUserRole}
+        onConversationStarted={handleConversationStarted}
+      />
+    )
+  }
+
+  if (canMessage && !isHidden) {
+    return (
+      <WhatsAppChatWindow
+        threadId={localUser.threadId!}
+        currentUserId={currentUserId}
+        currentUserName={currentUserName}
+        participantId={localUser.id}
+        participantName={localUser.name}
+        participantAvatar={localUser.avatar}
+        participantVerified={localUser.verified}
+        participantRole={localUser.role}
+        currentUserRole={currentUserRole}
         onRead={onRead}
+        onThreadHidden={onThreadHidden}
+      />
+    )
+  }
+
+  if (!needsRequest && !opening && !canMessage) {
+    return (
+      <EmptyChatPanel
+        currentUserId={currentUserId}
+        participantId={localUser.id}
+        participantName={localUser.name}
+        participantAvatar={localUser.avatar}
+        participantVerified={localUser.verified}
+        participantRole={localUser.role}
+        currentUserRole={currentUserRole}
+        onConversationStarted={handleConversationStarted}
       />
     )
   }
@@ -153,10 +233,11 @@ export function DirectChatPanel({
         <h2 className="text-base font-semibold mt-4">{localUser.name}</h2>
         <p className="text-sm text-charcoal/50 capitalize mt-0.5">{localUser.role}</p>
 
-        {hasNoThread && (
+        {needsRequest && hasNoThread && (
           <>
             <p className="text-sm text-charcoal/60 mt-6 max-w-xs leading-relaxed">
-              Send a chat request. {localUser.name.split(' ')[0]} needs to accept before you can message each other.
+              Send a chat request. {localUser.name.split(' ')[0]} must accept before you can message
+              each other.
             </p>
             <Button
               onClick={() => void handleRequest()}
@@ -164,7 +245,7 @@ export function DirectChatPanel({
               className="mt-6 gap-2"
             >
               <UserPlus size={16} />
-              {requesting ? 'Sending...' : 'Request to chat'}
+              {requesting ? 'Sending...' : 'Send Chat Request'}
             </Button>
           </>
         )}
@@ -216,13 +297,15 @@ export function DirectChatPanel({
               className="mt-4 gap-2"
             >
               <UserPlus size={16} />
-              Request again
+              Send Request Again
             </Button>
           </>
         )}
 
-        {error && (
-          <p className="text-xs text-red-600 mt-4 max-w-sm">{error}</p>
+        {needsRequest && error && (
+          <p className="text-sm text-red-600 mt-4 max-w-sm leading-relaxed border border-red-200 bg-red-50 px-4 py-3 rounded-sm">
+            {error}
+          </p>
         )}
       </div>
     </div>

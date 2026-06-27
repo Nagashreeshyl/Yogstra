@@ -12,18 +12,23 @@ import { SettingsSidebar } from '../../components/profile/SettingsSidebar'
 import { Avatar } from '../../components/ui/Avatar'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
+import { Select } from '../../components/ui/Select'
 import { Textarea } from '../../components/ui/Textarea'
 import { Toast } from '../../components/ui/Toast'
+import { ProfilePageSkeleton } from '../../components/ui/Skeleton'
 import { SettingsPageLayout } from '../../components/layout/FeedPageLayout'
+import { formatIndianNumber, parseIndianNumber } from '../../utils/format'
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024
 
+type SettingsTab = 'profile' | 'pricing'
 type CropMode = 'avatar' | 'cover' | null
 
 export function TeacherSettingsPage() {
   const { user, refreshUser } = useApp()
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const coverInputRef = useRef<HTMLInputElement>(null)
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>('profile')
   const { data: teacher, loading, refetch } = useAsyncData(
     () => (user ? fetchTeacherById(user.id) : Promise.resolve(null)),
     [user?.id],
@@ -36,6 +41,11 @@ export function TeacherSettingsPage() {
   const [bio, setBio] = useState('')
   const [certifications, setCertifications] = useState('')
   const [monthlyFee, setMonthlyFee] = useState('')
+  const [fee1v1Week, setFee1v1Week] = useState('')
+  const [fee1v1Month, setFee1v1Month] = useState('')
+  const [feeGroupWeek, setFeeGroupWeek] = useState('')
+  const [feeGroupMonth, setFeeGroupMonth] = useState('')
+  const [gender, setGender] = useState<'male' | 'female' | ''>('')
   const [specializations, setSpecializations] = useState<string[]>([])
   const [specInput, setSpecInput] = useState('')
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
@@ -56,6 +66,11 @@ export function TeacherSettingsPage() {
     setBio(teacher.bio)
     setCertifications(teacher.certifications)
     setMonthlyFee(String(teacher.monthlyFee))
+    setFee1v1Week(formatIndianNumber(teacher.pricing.oneOnOneWeek || ''))
+    setFee1v1Month(formatIndianNumber(teacher.pricing.oneOnOneMonth || ''))
+    setFeeGroupWeek(formatIndianNumber(teacher.pricing.groupWeek || ''))
+    setFeeGroupMonth(formatIndianNumber(teacher.pricing.groupMonth || ''))
+    setGender(teacher.gender ?? '')
     setSpecializations(teacher.specializations)
     setAvatarPreview(teacher.photo || null)
     setCoverPreview(teacher.coverPhoto || null)
@@ -151,6 +166,36 @@ export function TeacherSettingsPage() {
     setSpecializations(specializations.filter((s) => s !== spec))
   }
 
+  const handleSavePricing = async () => {
+    if (!user) return
+    setSaving(true)
+    try {
+      await updateTeacherSettings(user.id, {
+        fullName: teacher?.name ?? user.name,
+        phone: teacher?.phone ?? '',
+        city: teacher?.city ?? '',
+        state: teacher?.state ?? '',
+        bio: teacher?.bio ?? '',
+        certifications: teacher?.certifications ?? '',
+        monthlyFee: teacher?.monthlyFee ?? 0,
+        specializations: teacher?.specializations ?? [],
+        gender: teacher?.gender ?? null,
+        pricing: {
+          oneOnOneWeek: parseIndianNumber(fee1v1Week),
+          oneOnOneMonth: parseIndianNumber(fee1v1Month),
+          groupWeek: parseIndianNumber(feeGroupWeek),
+          groupMonth: parseIndianNumber(feeGroupMonth),
+        },
+      })
+      await refetch()
+      setToast({ message: 'Pricing saved', type: 'success' })
+    } catch {
+      setToast({ message: 'Failed to save pricing. Please try again.', type: 'error' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const handleSave = async () => {
     if (!user) return
     setSaving(true)
@@ -164,6 +209,7 @@ export function TeacherSettingsPage() {
         certifications,
         monthlyFee: Number(monthlyFee) || 0,
         specializations,
+        gender: gender || null,
       })
       await refetch()
       await refreshUser()
@@ -176,7 +222,7 @@ export function TeacherSettingsPage() {
   }
 
   if (loading) {
-    return <div className="p-8 text-charcoal/50 text-sm">Loading settings...</div>
+    return <ProfilePageSkeleton />
   }
 
   return (
@@ -195,6 +241,25 @@ export function TeacherSettingsPage() {
           />
         }
       >
+        <div className="flex gap-1 border-b border-border mb-6">
+          {(['profile', 'pricing'] as const).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setSettingsTab(tab)}
+              className={`px-4 py-2.5 text-sm capitalize cursor-pointer border-b-2 -mb-px transition-colors ${
+                settingsTab === tab
+                  ? 'border-teal text-charcoal font-medium'
+                  : 'border-transparent text-charcoal/50 hover:text-charcoal'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {settingsTab === 'profile' && (
+          <>
         <h1 className="text-xl font-semibold mb-6">Edit profile</h1>
 
         {/* Profile photo row — Instagram-style */}
@@ -307,6 +372,15 @@ export function TeacherSettingsPage() {
             <Input label="City" value={city} onChange={(e) => setCity(e.target.value)} />
             <Input label="State" value={state} onChange={(e) => setState(e.target.value)} />
           </div>
+          <Select
+            label="Title for student messages"
+            value={gender}
+            onChange={(e) => setGender(e.target.value as 'male' | 'female' | '')}
+          >
+            <option value="">Sir/Ma&apos;am (default)</option>
+            <option value="male">Sir</option>
+            <option value="female">Ma&apos;am</option>
+          </Select>
           <Textarea label="Bio" value={bio} onChange={(e) => setBio(e.target.value)} rows={4} />
           <Textarea
             label="Certifications"
@@ -359,6 +433,70 @@ export function TeacherSettingsPage() {
             {saving ? 'Saving...' : 'Save changes'}
           </Button>
         </form>
+          </>
+        )}
+
+        {settingsTab === 'pricing' && (
+          <>
+            <h1 className="text-xl font-semibold mb-2">Class pricing</h1>
+            <p className="text-sm text-charcoal/55 mb-6">
+              Set fees for online classes. Students see these when booking from chat.
+            </p>
+            <form
+              className="space-y-6 max-w-lg"
+              onSubmit={(e) => {
+                e.preventDefault()
+                void handleSavePricing()
+              }}
+            >
+              <div>
+                <h2 className="text-sm font-semibold mb-3">1-on-1 classes</h2>
+                <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    label="1 week (₹)"
+                    type="text"
+                    inputMode="numeric"
+                    value={fee1v1Week}
+                    onChange={(e) => setFee1v1Week(formatIndianNumber(e.target.value))}
+                    placeholder="5,000"
+                  />
+                  <Input
+                    label="1 month (₹)"
+                    type="text"
+                    inputMode="numeric"
+                    value={fee1v1Month}
+                    onChange={(e) => setFee1v1Month(formatIndianNumber(e.target.value))}
+                    placeholder="15,000"
+                  />
+                </div>
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold mb-3">Group classes (1-to-many)</h2>
+                <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    label="1 week (₹)"
+                    type="text"
+                    inputMode="numeric"
+                    value={feeGroupWeek}
+                    onChange={(e) => setFeeGroupWeek(formatIndianNumber(e.target.value))}
+                    placeholder="2,000"
+                  />
+                  <Input
+                    label="1 month (₹)"
+                    type="text"
+                    inputMode="numeric"
+                    value={feeGroupMonth}
+                    onChange={(e) => setFeeGroupMonth(formatIndianNumber(e.target.value))}
+                    placeholder="10,000"
+                  />
+                </div>
+              </div>
+              <Button type="submit" disabled={saving} className="w-full sm:w-auto">
+                {saving ? 'Saving...' : 'Save pricing'}
+              </Button>
+            </form>
+          </>
+        )}
       </SettingsPageLayout>
 
       {cropImageSrc && cropMode === 'avatar' && (

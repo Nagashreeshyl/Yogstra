@@ -28,8 +28,8 @@ export function CategoryFlashCards({ onSelect }: CategoryFlashCardsProps) {
   }
 
   return (
-    <div>
-      <h2 className="font-heading text-lg font-medium mb-4">Browse by Style</h2>
+    <div className="rounded-sm border border-surface-inset bg-surface-elevated/80 p-4 shadow-sm">
+      <h2 className="font-heading text-lg font-medium mb-4 text-charcoal">Browse by Style</h2>
       <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
         {categories.map((cat) => {
           const Icon = iconMap[cat.icon] || Flower2
@@ -40,8 +40,8 @@ export function CategoryFlashCards({ onSelect }: CategoryFlashCardsProps) {
               onClick={() => handleClick(cat.name)}
               className={`shrink-0 w-28 flex flex-col items-center gap-3 p-4 border rounded-sm transition-colors cursor-pointer ${
                 isActive
-                  ? 'border-teal bg-teal-soft'
-                  : 'border-border bg-cream hover:border-teal/50'
+                  ? 'border-teal bg-teal-soft shadow-sm'
+                  : 'border-surface-inset bg-surface-muted hover:border-teal/50 hover:bg-surface-elevated'
               }`}
             >
               <div className="w-12 h-12 flex items-center justify-center">

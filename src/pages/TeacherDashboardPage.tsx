@@ -15,12 +15,13 @@ import { Avatar } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
+import { TeacherDashboardSkeleton } from '../components/ui/Skeleton'
 
 export function TeacherDashboardPage() {
   const { user } = useApp()
   const teacherId = user?.id ?? ''
 
-  const { data: studentCount, refetch: refetchStudents } = useAsyncData(
+  const { data: studentCount, loading: studentsLoading, refetch: refetchStudents } = useAsyncData(
     () => (teacherId ? fetchTeacherActiveStudentCount(teacherId) : Promise.resolve(0)),
     [teacherId],
   )
@@ -32,7 +33,7 @@ export function TeacherDashboardPage() {
     () => (teacherId ? fetchTeacherMonthlyEarnings(teacherId) : Promise.resolve(0)),
     [teacherId],
   )
-  const { data: teacherProfile } = useAsyncData(
+  const { data: teacherProfile, loading: profileLoading } = useAsyncData(
     () => (teacherId ? fetchTeacherById(teacherId) : Promise.resolve(null)),
     [teacherId],
   )
@@ -62,6 +63,10 @@ export function TeacherDashboardPage() {
       icon: Star,
     },
   ]
+
+  if (studentsLoading && profileLoading) {
+    return <TeacherDashboardSkeleton />
+  }
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">

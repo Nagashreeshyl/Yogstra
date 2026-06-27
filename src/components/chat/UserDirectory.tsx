@@ -3,6 +3,7 @@ import type { MessagingUser } from '../../types'
 import { requiresChatRequest } from '../../services/directChat'
 import { Avatar } from '../ui/Avatar'
 import { formatRelativeDate } from '../../utils/format'
+import { UserDirectorySkeleton } from '../ui/Skeleton'
 
 type Tab = 'students' | 'teachers'
 
@@ -26,11 +27,7 @@ export function UserDirectory({
   onSelect,
 }: UserDirectoryProps) {
   if (loading) {
-    return (
-      <div className="border border-border rounded-sm p-6 text-sm text-charcoal/50 bg-cream h-full">
-        Loading {tab}...
-      </div>
-    )
+    return <UserDirectorySkeleton />
   }
 
   if (users.length === 0) {

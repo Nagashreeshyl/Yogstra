@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase'
-import type { Teacher } from '../types'
+import { invalidateProfileCache } from './auth'
+import type { Teacher, TeacherPricing } from '../types'
 import { mapTeacher } from '../utils/mappers'
 
 const teacherSelect = `
@@ -107,6 +108,8 @@ export interface TeacherSettingsData {
   monthlyFee: number
   specializations: string[]
   avatarUrl?: string | null
+  gender?: 'male' | 'female' | null
+  pricing?: TeacherPricing
 }
 
 export async function updateTeacherSettings(teacherId: string, data: TeacherSettingsData) {
@@ -119,6 +122,9 @@ export async function updateTeacherSettings(teacherId: string, data: TeacherSett
   if (data.avatarUrl !== undefined) {
     profileUpdate.avatar_url = data.avatarUrl
   }
+  if (data.gender !== undefined) {
+    profileUpdate.gender = data.gender
+  }
 
   const { error: profileError } = await supabase
     .from('profiles')
@@ -127,15 +133,25 @@ export async function updateTeacherSettings(teacherId: string, data: TeacherSett
 
   if (profileError) throw profileError
 
+  const teacherUpdate: Record<string, unknown> = {
+    bio: data.bio,
+    certifications: data.certifications,
+    monthly_fee: data.monthlyFee,
+    specializations: data.specializations,
+  }
+  if (data.pricing) {
+    teacherUpdate.fee_1v1_week = data.pricing.oneOnOneWeek
+    teacherUpdate.fee_1v1_month = data.pricing.oneOnOneMonth
+    teacherUpdate.fee_group_week = data.pricing.groupWeek
+    teacherUpdate.fee_group_month = data.pricing.groupMonth
+  }
+
   const { error: teacherError } = await supabase
     .from('teacher_profiles')
-    .update({
-      bio: data.bio,
-      certifications: data.certifications,
-      monthly_fee: data.monthlyFee,
-      specializations: data.specializations,
-    })
+    .update(teacherUpdate)
     .eq('id', teacherId)
 
   if (teacherError) throw teacherError
+
+  invalidateProfileCache(teacherId)
 }

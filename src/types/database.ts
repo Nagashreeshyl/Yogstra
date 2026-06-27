@@ -6,6 +6,7 @@ export interface DbProfile {
   city: string | null
   state: string | null
   avatar_url: string | null
+  gender?: 'male' | 'female' | null
   created_at: string
 }
 
@@ -14,6 +15,11 @@ export interface DbTeacherProfile {
   bio: string | null
   experience_years: string | null
   monthly_fee: number | null
+  fee_group?: number | null
+  fee_1v1_week?: number | null
+  fee_1v1_month?: number | null
+  fee_group_week?: number | null
+  fee_group_month?: number | null
   certifications: string | null
   rating: number | null
   total_students: number | null

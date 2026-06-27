@@ -1,28 +1,34 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { MapPin, BadgeCheck, Users } from 'lucide-react'
+import { MapPin, BadgeCheck, Users, MessageCircle } from 'lucide-react'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { fetchTeacherById } from '../services/teachers'
+import { requestTeacherWithIntro } from '../services/teacherRequest'
 import { useApp } from '../context/AppContext'
 import { Avatar } from '../components/ui/Avatar'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { StarRating } from '../components/ui/StarRating'
+import { ProfilePageSkeleton } from '../components/ui/Skeleton'
+import { buildChatNavigationState, messagesPathForRole } from '../utils/chatNavigation'
 
-const tabs = ['About', 'Teaching Style', 'Achievements', 'Reviews'] as const
+const tabs = ['About', 'Teaching Style', 'Achievements', 'Pricing', 'Reviews'] as const
 
 export function TeacherProfilePage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { requireAuth } = useApp()
+  const { requireAuth, user } = useApp()
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>('About')
+  const [requesting, setRequesting] = useState(false)
+  const [requestError, setRequestError] = useState<string | null>(null)
+  const [requestNotice, setRequestNotice] = useState<string | null>(null)
   const { data: teacher, loading } = useAsyncData(
     () => fetchTeacherById(id!),
     [id],
   )
 
   if (loading) {
-    return <div className="p-8 text-charcoal/50">Loading profile...</div>
+    return <ProfilePageSkeleton />
   }
 
   if (!teacher) {
@@ -34,8 +40,53 @@ export function TeacherProfilePage() {
     )
   }
 
-  const handleRequest = () => {
+  const handleRequest = async () => {
     if (!requireAuth()) return
+    if (!user) return
+    if (user.role !== 'student') {
+      setRequestError('Only students can request a teacher.')
+      return
+    }
+
+    setRequesting(true)
+    setRequestError(null)
+    setRequestNotice(null)
+
+    try {
+      const { isNewRequest } = await requestTeacherWithIntro({
+        studentId: user.id,
+        studentName: user.name,
+        teacher,
+      })
+
+      setRequestNotice(
+        isNewRequest
+          ? 'Request sent! An intro message was delivered — opening your chat.'
+          : 'You already have a request with this teacher. Opening your chat.',
+      )
+
+      navigate(messagesPathForRole('student'), {
+        state: buildChatNavigationState(
+          { id: teacher.id, name: teacher.name, photo: teacher.photo, verified: teacher.verified },
+          'teacher',
+        ),
+      })
+    } catch (err) {
+      setRequestError(err instanceof Error ? err.message : 'Could not send your request.')
+    } finally {
+      setRequesting(false)
+    }
+  }
+
+  const handleMessage = () => {
+    if (!requireAuth()) return
+    if (!user || user.role !== 'student') return
+    navigate(messagesPathForRole('student'), {
+      state: buildChatNavigationState(
+        { id: teacher.id, name: teacher.name, photo: teacher.photo, verified: teacher.verified },
+        'teacher',
+      ),
+    })
   }
 
   return (
@@ -79,9 +130,27 @@ export function TeacherProfilePage() {
               </p>
             </div>
           </div>
-          <Button className="mt-6" onClick={handleRequest}>
-            Request Teacher
-          </Button>
+          <div className="flex flex-wrap gap-3 mt-6">
+            <Button onClick={() => void handleRequest()} disabled={requesting}>
+              {requesting ? 'Sending request...' : 'Request Teacher'}
+            </Button>
+            {user?.role === 'student' && (
+              <Button variant="secondary" onClick={handleMessage} className="gap-1.5">
+                <MessageCircle size={16} />
+                Message
+              </Button>
+            )}
+          </div>
+          {requestError && (
+            <p className="text-sm text-red-600 mt-3 border border-red-200 bg-red-50 px-3 py-2 rounded-sm max-w-md">
+              {requestError}
+            </p>
+          )}
+          {requestNotice && (
+            <p className="text-sm text-teal mt-3 border border-teal/30 bg-teal-soft px-3 py-2 rounded-sm max-w-md">
+              {requestNotice}
+            </p>
+          )}
         </div>
       </div>
 
@@ -117,6 +186,52 @@ export function TeacherProfilePage() {
               </li>
             ))}
           </ul>
+        )}
+        {activeTab === 'Pricing' && (
+          <div className="grid sm:grid-cols-2 gap-6 max-w-xl">
+            <div className="border border-border rounded-sm p-4 bg-cream">
+              <h3 className="font-medium mb-3">1-on-1 classes</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-charcoal/60">1 week</span>
+                  <span className="font-medium">
+                    {teacher.pricing.oneOnOneWeek > 0
+                      ? `₹${teacher.pricing.oneOnOneWeek.toLocaleString('en-IN')}`
+                      : 'Not set'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-charcoal/60">1 month</span>
+                  <span className="font-medium">
+                    {teacher.pricing.oneOnOneMonth > 0
+                      ? `₹${teacher.pricing.oneOnOneMonth.toLocaleString('en-IN')}`
+                      : 'Not set'}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="border border-border rounded-sm p-4 bg-cream">
+              <h3 className="font-medium mb-3">Group classes</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-charcoal/60">1 week</span>
+                  <span className="font-medium">
+                    {teacher.pricing.groupWeek > 0
+                      ? `₹${teacher.pricing.groupWeek.toLocaleString('en-IN')}`
+                      : 'Not set'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-charcoal/60">1 month</span>
+                  <span className="font-medium">
+                    {teacher.pricing.groupMonth > 0
+                      ? `₹${teacher.pricing.groupMonth.toLocaleString('en-IN')}`
+                      : 'Not set'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
         {activeTab === 'Reviews' && (
           <p className="text-charcoal/50 text-sm">Reviews will appear here once students leave feedback.</p>

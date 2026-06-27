@@ -3,6 +3,7 @@ import { fetchPayouts, markPayoutPaid } from '../../services/admin'
 import { AdminTable } from '../../components/admin/AdminTable'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
+import { TeacherTableSkeleton } from '../../components/ui/Skeleton'
 
 export function AdminPayoutsPage() {
   const { data: payouts, loading, refetch } = useAsyncData(() => fetchPayouts())
@@ -17,7 +18,7 @@ export function AdminPayoutsPage() {
       <h1 className="font-heading text-3xl font-medium mb-8">Payouts</h1>
 
       {loading ? (
-        <p className="text-charcoal/50">Loading payouts...</p>
+        <TeacherTableSkeleton rows={4} />
       ) : (
         <AdminTable headers={['Teacher', 'Amount Due', 'Period', 'Status', 'Actions']}>
           {(payouts ?? []).length === 0 ? (

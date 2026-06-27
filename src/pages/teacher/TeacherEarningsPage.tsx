@@ -4,6 +4,7 @@ import { useAsyncData } from '../../hooks/useAsyncData'
 import { fetchTeacherPayouts } from '../../services/admin'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
+import { TeacherEarningsSkeleton, TeacherTableSkeleton } from '../../components/ui/Skeleton'
 
 export function TeacherEarningsPage() {
   const { user } = useApp()
@@ -14,6 +15,10 @@ export function TeacherEarningsPage() {
 
   const history = payouts ?? []
   const thisMonth = history[0]
+
+  if (loading && history.length === 0) {
+    return <TeacherEarningsSkeleton />
+  }
 
   return (
     <div className="p-8">
@@ -47,7 +52,7 @@ export function TeacherEarningsPage() {
 
       <h2 className="font-heading text-lg font-medium mb-4">Payment History</h2>
       {loading ? (
-        <p className="text-charcoal/50">Loading...</p>
+        <TeacherTableSkeleton rows={4} />
       ) : history.length === 0 ? (
         <p className="text-charcoal/50">No payout records yet.</p>
       ) : (

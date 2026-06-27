@@ -7,6 +7,7 @@ import { SearchBar } from '../components/filters/SearchBar'
 import { CategoryFlashCards } from '../components/categories/CategoryFlashCards'
 import { TeacherCard } from '../components/teachers/TeacherCard'
 import { Button } from '../components/ui/Button'
+import { TeacherGridSkeleton } from '../components/ui/Skeleton'
 
 const PAGE_SIZE = 6
 
@@ -28,7 +29,7 @@ export function FindTeachersPage() {
         <CategoryFlashCards onSelect={() => setPage(1)} />
 
         {loading ? (
-          <p className="text-charcoal/50 text-center py-12">Loading teachers...</p>
+          <TeacherGridSkeleton count={PAGE_SIZE} />
         ) : filtered.length === 0 ? (
           <p className="text-charcoal/50 text-center py-12">No teachers match your filters.</p>
         ) : (
@@ -55,7 +56,7 @@ export function FindTeachersPage() {
                 type="button"
                 onClick={() => setPage(p)}
                 className={`w-8 h-8 text-sm rounded-sm cursor-pointer ${
-                  p === page ? 'bg-teal text-charcoal font-medium' : 'text-charcoal/50 hover:bg-cream-dark'
+                  p === page ? 'bg-teal text-charcoal font-medium' : 'text-charcoal/50 hover:bg-surface-elevated'
                 }`}
               >
                 {p}

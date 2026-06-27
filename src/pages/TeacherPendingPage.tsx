@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext'
 import { getPostLoginPath } from '../utils/authRouting'
 import { reapplyAsTeacher } from '../services/teachers'
 import { Button } from '../components/ui/Button'
+import { SimplePageSkeleton } from '../components/ui/Skeleton'
 
 export function TeacherPendingPage() {
   const { user, authLoading, logout, refreshUser } = useApp()
@@ -23,7 +24,7 @@ export function TeacherPendingPage() {
   if (authLoading) {
     return (
       <div className="min-h-full flex items-center justify-center bg-cream">
-        <p className="text-sm text-charcoal/50">Loading...</p>
+        <SimplePageSkeleton />
       </div>
     )
   }

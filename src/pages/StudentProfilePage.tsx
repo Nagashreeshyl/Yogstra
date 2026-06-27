@@ -7,7 +7,9 @@ import { fetchPosts } from '../services/posts'
 import { Avatar } from '../components/ui/Avatar'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
+import { ProfilePageSkeleton } from '../components/ui/Skeleton'
 import { Card } from '../components/ui/Card'
+import { buildChatNavigationState, messagesPathForRole } from '../utils/chatNavigation'
 
 function formatJoinedDate(isoDate: string) {
   const date = new Date(isoDate)
@@ -33,8 +35,18 @@ export function StudentProfilePage() {
 
   const isTeacher = user?.role === 'teacher'
 
+  const handleMessage = () => {
+    if (!user || user.role !== 'teacher' || !student) return
+    navigate(messagesPathForRole('teacher'), {
+      state: buildChatNavigationState(
+        { id: student.id, name: student.name, avatar: student.avatar },
+        'student',
+      ),
+    })
+  }
+
   if (loading) {
-    return <div className="p-8 text-charcoal/50 text-sm">Loading profile...</div>
+    return <ProfilePageSkeleton />
   }
 
   if (!student) {
@@ -71,13 +83,14 @@ export function StudentProfilePage() {
           </div>
 
           {isTeacher && (
-            <Link
-              to="/dashboard/teacher/messages"
-              className="inline-flex items-center gap-1.5 mt-4 text-sm font-semibold text-teal hover:text-teal-dark"
+            <button
+              type="button"
+              onClick={handleMessage}
+              className="inline-flex items-center gap-1.5 mt-4 text-sm font-semibold text-teal hover:text-teal-dark cursor-pointer"
             >
               <MessageCircle size={16} />
               Message
-            </Link>
+            </button>
           )}
         </div>
       </div>

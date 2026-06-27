@@ -8,6 +8,7 @@ import { CategoryFlashCards } from '../components/categories/CategoryFlashCards'
 import { CommunityFeed } from '../components/community/CommunityFeed'
 import { FeaturedTeachers } from '../components/teachers/TeacherCard'
 import { CompetitionsTeaser } from '../components/competitions/CompetitionsTeaser'
+import { PostFeedSkeleton, TeacherGridSkeleton } from '../components/ui/Skeleton'
 import { competitions } from '../lib/constants'
 
 export function ExplorePage() {
@@ -28,7 +29,7 @@ export function ExplorePage() {
 
           <section>
             {postsLoading ? (
-              <p className="text-charcoal/50 text-sm">Loading feed...</p>
+              <PostFeedSkeleton count={2} />
             ) : postsError ? (
               <p className="text-sm text-red-600 border border-red-200 bg-red-50 px-4 py-3 rounded-sm">
                 Could not load posts: {postsError}
@@ -48,7 +49,10 @@ export function ExplorePage() {
 
         <aside className="w-full lg:w-[280px] shrink-0 space-y-8">
           {teachersLoading ? (
-            <p className="text-charcoal/50 text-sm">Loading teachers...</p>
+            <div className="space-y-4">
+              <div className="h-4 w-32 animate-pulse rounded-sm bg-surface-inset/80" />
+              <TeacherGridSkeleton count={3} />
+            </div>
           ) : teachersError ? (
             <p className="text-sm text-red-600">Could not load teachers: {teachersError}</p>
           ) : (featured.length > 0 ? featured : fallbackFeatured).length === 0 ? (

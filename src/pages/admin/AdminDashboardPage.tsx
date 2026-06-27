@@ -13,11 +13,12 @@ import { fetchRecentActivity, subscribeToAdminDashboard } from '../../services/a
 import { AdminTable, StatCard } from '../../components/admin/AdminTable'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
+import { AdminDashboardSkeleton } from '../../components/ui/Skeleton'
 import { updateTeacherStatus } from '../../services/teachers'
 
 export function AdminDashboardPage() {
-  const { data: teacherCount, refetch: refetchTeachers } = useAsyncData(() => fetchTeacherCount())
-  const { data: studentCount, refetch: refetchStudents } = useAsyncData(() => fetchStudentCount())
+  const { data: teacherCount, loading: teachersLoading, refetch: refetchTeachers } = useAsyncData(() => fetchTeacherCount())
+  const { data: studentCount, loading: studentsLoading, refetch: refetchStudents } = useAsyncData(() => fetchStudentCount())
   const { data: activeBookings, refetch: refetchBookings } = useAsyncData(() =>
     fetchActiveBookingCount(),
   )
@@ -46,6 +47,10 @@ export function AdminDashboardPage() {
   const handleReject = async (id: string) => {
     await updateTeacherStatus(id, 'rejected')
     await refetchPending(true)
+  }
+
+  if (teachersLoading && studentsLoading) {
+    return <AdminDashboardSkeleton />
   }
 
   return (

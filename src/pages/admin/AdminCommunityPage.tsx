@@ -3,6 +3,7 @@ import { fetchPosts, deletePost } from '../../services/posts'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
 import { Avatar } from '../../components/ui/Avatar'
+import { PostFeedSkeleton } from '../../components/ui/Skeleton'
 import { useState } from 'react'
 
 export function AdminCommunityPage() {
@@ -22,7 +23,7 @@ export function AdminCommunityPage() {
       <h1 className="font-heading text-3xl font-medium mb-8">Community Posts</h1>
 
       {loading ? (
-        <p className="text-charcoal/50">Loading posts...</p>
+        <PostFeedSkeleton count={4} />
       ) : (posts ?? []).length === 0 ? (
         <p className="text-charcoal/50">No community posts yet.</p>
       ) : (

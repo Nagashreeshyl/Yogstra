@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { fetchTeacherStudents } from '../../services/students'
@@ -6,9 +6,13 @@ import { Avatar } from '../../components/ui/Avatar'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
+import { TeacherTableSkeleton } from '../../components/ui/Skeleton'
+import { buildChatNavigationState, messagesPathForRole } from '../../utils/chatNavigation'
+import { studentProfilePath } from '../../utils/chatRoutes'
 
 export function TeacherStudentsPage() {
   const { user } = useApp()
+  const navigate = useNavigate()
   const { data: students, loading } = useAsyncData(
     () => (user ? fetchTeacherStudents(user.id) : Promise.resolve([])),
     [user?.id],
@@ -19,14 +23,14 @@ export function TeacherStudentsPage() {
       <h1 className="text-xl font-semibold mb-6">My Students</h1>
 
       {loading ? (
-        <p className="text-charcoal/50 text-sm">Loading students...</p>
+        <TeacherTableSkeleton rows={4} />
       ) : (students ?? []).length === 0 ? (
         <p className="text-charcoal/50 text-sm">No active students yet.</p>
       ) : (
         <div className="space-y-3">
           {students!.map((s) => (
             <Card key={s.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <Link to={`/students/${s.id}`} className="flex items-center gap-4 min-w-0 group">
+              <Link to={studentProfilePath(s.id, 'teacher')} className="flex items-center gap-4 min-w-0 group">
                 <Avatar src={s.avatar} name={s.name} size={48} />
                 <div className="min-w-0">
                   <p className="font-semibold truncate group-hover:text-teal transition-colors">
@@ -36,10 +40,21 @@ export function TeacherStudentsPage() {
                 </div>
               </Link>
               <div className="flex gap-2 shrink-0">
-                <Link to="/dashboard/teacher/messages">
-                  <Button variant="secondary" size="sm">Message</Button>
-                </Link>
-                <Link to={`/students/${s.id}`}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() =>
+                    navigate(messagesPathForRole('teacher'), {
+                      state: buildChatNavigationState(
+                        { id: s.id, name: s.name, avatar: s.avatar },
+                        'student',
+                      ),
+                    })
+                  }
+                >
+                  Message
+                </Button>
+                <Link to={studentProfilePath(s.id, 'teacher')}>
                   <Button size="sm">View profile</Button>
                 </Link>
               </div>

@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { useMessageNotifications } from '../../hooks/useMessageNotifications'
+import { useTeacherNotificationCount } from '../../hooks/useTeacherNotificationCount'
 import { Avatar } from '../ui/Avatar'
 
 const teacherNav = [
@@ -9,7 +10,9 @@ const teacherNav = [
   { to: '/dashboard/teacher/students', label: 'My Students' },
   { to: '/dashboard/teacher/schedule', label: 'Schedule' },
   { to: '/dashboard/teacher/community', label: 'Community' },
-  { to: '/dashboard/teacher/messages', label: 'Messages', notify: true },
+  { to: '/dashboard/teacher/messages', label: 'Messages', notify: 'messages' as const },
+  { to: '/dashboard/teacher/notifications', label: 'Notifications', notify: 'notifications' as const },
+  { to: '/dashboard/teacher/coupons', label: 'Coupons' },
   { to: '/dashboard/teacher/earnings', label: 'Earnings' },
   { to: '/dashboard/teacher/settings', label: 'Profile Settings' },
 ]
@@ -17,6 +20,7 @@ const teacherNav = [
 export function TeacherSidebar() {
   const { user, logout } = useApp()
   const { unreadTotal, incomingRequests } = useMessageNotifications(user?.id, 'teacher')
+  const { count: notificationCount } = useTeacherNotificationCount(user?.id)
 
   const messageBadge = unreadTotal > 0 ? unreadTotal : incomingRequests
 
@@ -28,7 +32,15 @@ export function TeacherSidebar() {
         </NavLink>
       </div>
       <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto">
-        {teacherNav.map(({ to, label, end, notify }) => (
+        {teacherNav.map(({ to, label, end, notify }) => {
+          const badge =
+            notify === 'messages'
+              ? messageBadge
+              : notify === 'notifications'
+                ? notificationCount
+                : 0
+
+          return (
           <NavLink
             key={to}
             to={to}
@@ -42,13 +54,14 @@ export function TeacherSidebar() {
             }
           >
             <span>{label}</span>
-            {notify && messageBadge > 0 && (
+            {badge > 0 && (
               <span className="min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center rounded-full bg-teal text-cream text-[10px] font-bold">
-                {messageBadge > 99 ? '99+' : messageBadge}
+                {badge > 99 ? '99+' : badge}
               </span>
             )}
           </NavLink>
-        ))}
+          )
+        })}
       </nav>
       <div className="p-4 border-t border-charcoal/20 space-y-3">
         {user && (
