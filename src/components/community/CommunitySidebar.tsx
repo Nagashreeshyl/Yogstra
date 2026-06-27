@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useLiveSync } from '../../hooks/useLiveSync'
 import { fetchStudentList } from '../../services/students'
 import { fetchTeachers } from '../../services/teachers'
 import { Avatar } from '../ui/Avatar'
@@ -9,15 +10,18 @@ export function CommunitySidebar() {
   const { user, isLoggedIn } = useApp()
   const isTeacher = isLoggedIn && user?.role === 'teacher'
 
-  const { data: students, loading: studentsLoading } = useAsyncData(
+  const { data: students, loading: studentsLoading, refetch: refetchStudents } = useAsyncData(
     () => (isTeacher ? fetchStudentList() : Promise.resolve([])),
     [isTeacher],
   )
 
-  const { data: teachers } = useAsyncData(
+  const { data: teachers, refetch: refetchTeachers } = useAsyncData(
     () => (!isTeacher ? fetchTeachers(true) : Promise.resolve([])),
     [isTeacher],
   )
+
+  useLiveSync(refetchStudents, ['bookings'], isTeacher)
+  useLiveSync(refetchTeachers, ['teachers'], !isTeacher)
 
   const suggested = (teachers ?? [])
     .filter((t) => t.id !== user?.id)

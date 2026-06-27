@@ -1,5 +1,6 @@
 import { useApp } from '../context/AppContext'
 import { useAsyncData } from '../hooks/useAsyncData'
+import { useLiveSync } from '../hooks/useLiveSync'
 import { fetchPosts } from '../services/posts'
 import { fetchTeachers } from '../services/teachers'
 import { filterTeachers } from '../utils/filterTeachers'
@@ -13,8 +14,11 @@ import { competitions } from '../lib/constants'
 
 export function ExplorePage() {
   const { searchQuery, filters, selectedCategory } = useApp()
-  const { data: teachers, loading: teachersLoading, error: teachersError } = useAsyncData(() => fetchTeachers(true))
-  const { data: posts, loading: postsLoading, error: postsError } = useAsyncData(() => fetchPosts())
+  const { data: teachers, loading: teachersLoading, error: teachersError, refetch: refetchTeachers } = useAsyncData(() => fetchTeachers(true))
+  const { data: posts, loading: postsLoading, error: postsError, refetch: refetchPosts } = useAsyncData(() => fetchPosts())
+
+  useLiveSync(refetchTeachers, ['teachers'])
+  useLiveSync(refetchPosts, ['posts'])
 
   const allTeachers = teachers ?? []
   const featured = filterTeachers(allTeachers, searchQuery, filters, selectedCategory).slice(0, 3)

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { MapPin, BadgeCheck, Users, MessageCircle, ShoppingBag } from 'lucide-react'
 import { useAsyncData } from '../hooks/useAsyncData'
+import { useLiveSync } from '../hooks/useLiveSync'
 import { fetchTeacherById } from '../services/teachers'
 import { requestTeacherWithIntro } from '../services/teacherRequest'
 import { ensureDirectChat, formatChatError } from '../services/directChat'
@@ -27,10 +28,12 @@ export function TeacherProfilePage() {
   const [buyThreadId, setBuyThreadId] = useState<string | null>(null)
   const [requestError, setRequestError] = useState<string | null>(null)
   const [requestNotice, setRequestNotice] = useState<string | null>(null)
-  const { data: teacher, loading } = useAsyncData(
+  const { data: teacher, loading, refetch } = useAsyncData(
     () => fetchTeacherById(id!),
     [id],
   )
+
+  useLiveSync(refetch, ['teachers'], Boolean(id))
 
   const isStudent = user?.role === 'student'
 

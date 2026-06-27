@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useLiveSync } from '../../hooks/useLiveSync'
 import { fetchTeacherStudents } from '../../services/students'
 import { Avatar } from '../../components/ui/Avatar'
 import { Badge } from '../../components/ui/Badge'
@@ -13,10 +14,12 @@ import { studentProfilePath } from '../../utils/chatRoutes'
 export function TeacherStudentsPage() {
   const { user } = useApp()
   const navigate = useNavigate()
-  const { data: students, loading } = useAsyncData(
+  const { data: students, loading, refetch } = useAsyncData(
     () => (user ? fetchTeacherStudents(user.id) : Promise.resolve([])),
     [user?.id],
   )
+
+  useLiveSync(refetch, ['bookings'], Boolean(user?.id))
 
   return (
     <div className="p-8 max-w-3xl">

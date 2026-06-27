@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Users, Calendar, IndianRupee, Star, MessageCircle, Bell } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { useAsyncData } from '../hooks/useAsyncData'
+import { useLiveSync } from '../hooks/useLiveSync'
 import { fetchPosts } from '../services/posts'
 import { fetchTodaySchedules } from '../services/schedules'
 import {
@@ -20,23 +21,29 @@ export function TeacherDashboardPage() {
   const { user } = useApp()
   const teacherId = user?.id ?? ''
 
-  const { data: studentCount, loading: studentsLoading } = useAsyncData(
+  const { data: studentCount, loading: studentsLoading, refetch: refetchStudents } = useAsyncData(
     () => (teacherId ? fetchTeacherActiveStudentCount(teacherId) : Promise.resolve(0)),
     [teacherId],
   )
-  const { data: todayClasses } = useAsyncData(
+  const { data: todayClasses, refetch: refetchSchedule } = useAsyncData(
     () => (teacherId ? fetchTodaySchedules(teacherId) : Promise.resolve([])),
     [teacherId],
   )
-  const { data: monthlyEarnings } = useAsyncData(
+  const { data: monthlyEarnings, refetch: refetchEarnings } = useAsyncData(
     () => (teacherId ? fetchTeacherMonthlyEarnings(teacherId) : Promise.resolve(0)),
     [teacherId],
   )
-  const { data: teacherProfile, loading: profileLoading } = useAsyncData(
+  const { data: teacherProfile, loading: profileLoading, refetch: refetchProfile } = useAsyncData(
     () => (teacherId ? fetchTeacherById(teacherId) : Promise.resolve(null)),
     [teacherId],
   )
-  const { data: posts } = useAsyncData(() => fetchPosts(5))
+  const { data: posts, refetch: refetchPosts } = useAsyncData(() => fetchPosts(5))
+
+  useLiveSync(refetchStudents, ['bookings'], Boolean(teacherId))
+  useLiveSync(refetchEarnings, ['bookings'], Boolean(teacherId))
+  useLiveSync(refetchProfile, ['teachers'], Boolean(teacherId))
+  useLiveSync(refetchSchedule, ['schedules'], Boolean(teacherId))
+  useLiveSync(refetchPosts, ['posts'])
 
   const stats = [
     { label: 'Total Students', value: String(studentCount ?? 0), icon: Users },

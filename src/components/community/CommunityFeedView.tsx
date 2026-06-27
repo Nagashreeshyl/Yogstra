@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useLiveSync } from '../../hooks/useLiveSync'
 import { fetchPosts, createPost } from '../../services/posts'
 import { CommunityFeed } from './CommunityFeed'
 import { CommunitySidebar } from './CommunitySidebar'
@@ -13,6 +14,8 @@ export function CommunityFeedView() {
   const { user, isLoggedIn } = useApp()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const { data: posts, loading, refetch } = useAsyncData(() => fetchPosts())
+
+  useLiveSync(refetch, ['posts'])
 
   const isStudent = isLoggedIn && user?.role === 'student'
 

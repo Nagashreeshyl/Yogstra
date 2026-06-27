@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useLiveSync } from '../../hooks/useLiveSync'
 import { fetchTeacherSchedulesForMonth } from '../../services/classOrders'
 import { TeacherScheduleCalendar } from '../../components/schedule/TeacherScheduleCalendar'
-import { supabase } from '../../lib/supabase'
 
 export function TeacherSchedulePage() {
   const { user } = useApp()
@@ -21,27 +21,7 @@ export function TeacherSchedulePage() {
     [user?.id, monthKey.year, monthKey.month],
   )
 
-  useEffect(() => {
-    if (!user?.id) return
-
-    const channel = supabase
-      .channel(`teacher_schedule:${user.id}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'schedules', filter: `teacher_id=eq.${user.id}` },
-        () => void refetch(true),
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'class_orders', filter: `teacher_id=eq.${user.id}` },
-        () => void refetch(true),
-      )
-      .subscribe()
-
-    return () => {
-      void supabase.removeChannel(channel)
-    }
-  }, [user?.id, refetch])
+  useLiveSync(refetch, ['schedules'], Boolean(user?.id))
 
   return (
     <div className="p-8 max-w-4xl">

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { useAsyncData } from '../hooks/useAsyncData'
+import { useLiveSync } from '../hooks/useLiveSync'
 import { fetchTeachers } from '../services/teachers'
 import { filterTeachers } from '../utils/filterTeachers'
 import { SearchBar } from '../components/filters/SearchBar'
@@ -14,7 +15,9 @@ const PAGE_SIZE = 6
 export function FindTeachersPage() {
   const { searchQuery, filters, selectedCategory } = useApp()
   const [page, setPage] = useState(1)
-  const { data: teachers, loading } = useAsyncData(() => fetchTeachers(true))
+  const { data: teachers, loading, refetch } = useAsyncData(() => fetchTeachers(true))
+
+  useLiveSync(refetch, ['teachers'])
 
   const filtered = filterTeachers(teachers ?? [], searchQuery, filters, selectedCategory)
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))

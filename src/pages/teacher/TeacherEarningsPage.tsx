@@ -1,6 +1,7 @@
 import { IndianRupee, TrendingUp, Calendar } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useLiveSync } from '../../hooks/useLiveSync'
 import { fetchTeacherPayouts } from '../../services/admin'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
@@ -8,10 +9,12 @@ import { TeacherEarningsSkeleton, TeacherTableSkeleton } from '../../components/
 
 export function TeacherEarningsPage() {
   const { user } = useApp()
-  const { data: payouts, loading } = useAsyncData(
+  const { data: payouts, loading, refetch } = useAsyncData(
     () => (user ? fetchTeacherPayouts(user.id) : Promise.resolve([])),
     [user?.id],
   )
+
+  useLiveSync(refetch, ['payouts', 'bookings'], Boolean(user?.id))
 
   const history = payouts ?? []
   const thisMonth = history[0]

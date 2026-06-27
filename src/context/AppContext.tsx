@@ -24,6 +24,7 @@ import {
   updateCategory as updateCategoryDb,
   deleteCategory as deleteCategoryDb,
 } from '../services/categories'
+import { subscribeToOwnProfile } from '../services/liveSync'
 
 interface AppContextValue {
   role: UserRole
@@ -213,6 +214,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setRole(profile.role)
     }
   }, [])
+
+  const userId = user?.id ?? null
+
+  useEffect(() => {
+    if (!userId) return
+
+    return subscribeToOwnProfile(userId, () => {
+      void refreshUser()
+    })
+  }, [userId, refreshUser])
 
   const resetFilters = useCallback(() => {
     setFilters(defaultFilters)
