@@ -18,6 +18,11 @@ import { Toast } from '../../components/ui/Toast'
 import { ProfilePageSkeleton } from '../../components/ui/Skeleton'
 import { SettingsPageLayout } from '../../components/layout/FeedPageLayout'
 import { formatIndianNumber, parseIndianNumber } from '../../utils/format'
+import {
+  getTeacherProfileCompletion,
+  missingProfileFields,
+  profileCompletionPercent,
+} from '../../utils/teacherProfileCompletion'
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024
 
@@ -40,7 +45,6 @@ export function TeacherSettingsPage() {
   const [state, setState] = useState('')
   const [bio, setBio] = useState('')
   const [certifications, setCertifications] = useState('')
-  const [monthlyFee, setMonthlyFee] = useState('')
   const [fee1v1Week, setFee1v1Week] = useState('')
   const [fee1v1Month, setFee1v1Month] = useState('')
   const [feeGroupWeek, setFeeGroupWeek] = useState('')
@@ -65,7 +69,6 @@ export function TeacherSettingsPage() {
     setState(teacher.state)
     setBio(teacher.bio)
     setCertifications(teacher.certifications)
-    setMonthlyFee(String(teacher.monthlyFee))
     setFee1v1Week(formatIndianNumber(teacher.pricing.oneOnOneWeek || ''))
     setFee1v1Month(formatIndianNumber(teacher.pricing.oneOnOneMonth || ''))
     setFeeGroupWeek(formatIndianNumber(teacher.pricing.groupWeek || ''))
@@ -77,16 +80,44 @@ export function TeacherSettingsPage() {
   }, [teacher])
 
   const completion = useMemo(
-    () => ({
-      photo: Boolean(avatarPreview),
-      cover: Boolean(coverPreview),
-      bio: bio.trim().length >= 20,
-      specializations: specializations.length > 0,
-      location: Boolean(city.trim() && state.trim()),
-      fee: Number(monthlyFee) > 0,
-    }),
-    [avatarPreview, coverPreview, bio, specializations, city, state, monthlyFee],
+    () =>
+      getTeacherProfileCompletion({
+        name: fullName,
+        phone,
+        city,
+        state,
+        bio,
+        certifications,
+        gender,
+        specializations,
+        photo: avatarPreview,
+        coverPhoto: coverPreview,
+        pricing: {
+          oneOnOneWeek: parseIndianNumber(fee1v1Week),
+          oneOnOneMonth: parseIndianNumber(fee1v1Month),
+          groupWeek: parseIndianNumber(feeGroupWeek),
+          groupMonth: parseIndianNumber(feeGroupMonth),
+        },
+      }),
+    [
+      avatarPreview,
+      coverPreview,
+      bio,
+      certifications,
+      city,
+      state,
+      fullName,
+      phone,
+      gender,
+      specializations,
+      fee1v1Week,
+      fee1v1Month,
+      feeGroupWeek,
+      feeGroupMonth,
+    ],
   )
+
+  const profilePercent = profileCompletionPercent(completion)
 
   const closeCropModal = useCallback(() => {
     setCropImageSrc(null)
@@ -166,10 +197,41 @@ export function TeacherSettingsPage() {
     setSpecializations(specializations.filter((s) => s !== spec))
   }
 
+  const validateProfileFields = () => {
+    const profileOnly = getTeacherProfileCompletion({
+      name: fullName,
+      phone,
+      city,
+      state,
+      bio,
+      certifications,
+      gender,
+      specializations,
+      photo: avatarPreview,
+      coverPhoto: coverPreview,
+      pricing: {
+        oneOnOneWeek: parseIndianNumber(fee1v1Week),
+        oneOnOneMonth: parseIndianNumber(fee1v1Month),
+        groupWeek: parseIndianNumber(feeGroupWeek),
+        groupMonth: parseIndianNumber(feeGroupMonth),
+      },
+    })
+    return missingProfileFields(profileOnly)
+  }
+
   const handleSavePricing = async () => {
     if (!user) return
+    const missing = validateProfileFields().filter((field) => field.startsWith('Class pricing'))
+    if (missing.length > 0) {
+      setToast({
+        message: `Set all four class fees: 1-on-1 week/month and group week/month.`,
+        type: 'error',
+      })
+      return
+    }
     setSaving(true)
     try {
+      const oneOnOneMonth = parseIndianNumber(fee1v1Month)
       await updateTeacherSettings(user.id, {
         fullName: teacher?.name ?? user.name,
         phone: teacher?.phone ?? '',
@@ -177,12 +239,12 @@ export function TeacherSettingsPage() {
         state: teacher?.state ?? '',
         bio: teacher?.bio ?? '',
         certifications: teacher?.certifications ?? '',
-        monthlyFee: teacher?.monthlyFee ?? 0,
+        monthlyFee: oneOnOneMonth || teacher?.monthlyFee || 0,
         specializations: teacher?.specializations ?? [],
         gender: teacher?.gender ?? null,
         pricing: {
           oneOnOneWeek: parseIndianNumber(fee1v1Week),
-          oneOnOneMonth: parseIndianNumber(fee1v1Month),
+          oneOnOneMonth,
           groupWeek: parseIndianNumber(feeGroupWeek),
           groupMonth: parseIndianNumber(feeGroupMonth),
         },
@@ -198,6 +260,16 @@ export function TeacherSettingsPage() {
 
   const handleSave = async () => {
     if (!user) return
+    const missing = validateProfileFields().filter(
+      (field) => !field.startsWith('Class pricing'),
+    )
+    if (missing.length > 0) {
+      setToast({
+        message: `Complete required fields: ${missing.slice(0, 3).join(', ')}${missing.length > 3 ? '…' : ''}`,
+        type: 'error',
+      })
+      return
+    }
     setSaving(true)
     try {
       await updateTeacherSettings(user.id, {
@@ -207,7 +279,7 @@ export function TeacherSettingsPage() {
         state,
         bio,
         certifications,
-        monthlyFee: Number(monthlyFee) || 0,
+        monthlyFee: teacher?.monthlyFee ?? parseIndianNumber(fee1v1Month) ?? 0,
         specializations,
         gender: gender || null,
       })
@@ -260,7 +332,13 @@ export function TeacherSettingsPage() {
 
         {settingsTab === 'profile' && (
           <>
-        <h1 className="text-xl font-semibold mb-6">Edit profile</h1>
+        <h1 className="text-xl font-semibold mb-2">Edit profile</h1>
+        {profilePercent < 100 && (
+          <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-sm px-3 py-2 mb-6">
+            Complete every field below and set class pricing to reach 100%. Until then, you
+            won&apos;t appear in Find Teachers.
+          </p>
+        )}
 
         {/* Profile photo row — Instagram-style */}
         <section className="flex items-center gap-6 mb-8 pb-8 border-b border-border/70">
@@ -366,37 +444,39 @@ export function TeacherSettingsPage() {
             void handleSave()
           }}
         >
-          <Input label="Name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-          <Input label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <Input label="Name *" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+          <Input label="Phone *" value={phone} onChange={(e) => setPhone(e.target.value)} required />
           <div className="grid grid-cols-2 gap-4">
-            <Input label="City" value={city} onChange={(e) => setCity(e.target.value)} />
-            <Input label="State" value={state} onChange={(e) => setState(e.target.value)} />
+            <Input label="City *" value={city} onChange={(e) => setCity(e.target.value)} required />
+            <Input label="State *" value={state} onChange={(e) => setState(e.target.value)} required />
           </div>
           <Select
-            label="Title for student messages"
+            label="Title for student messages *"
             value={gender}
             onChange={(e) => setGender(e.target.value as 'male' | 'female' | '')}
+            required
           >
-            <option value="">Sir/Ma&apos;am (default)</option>
+            <option value="">Select…</option>
             <option value="male">Sir</option>
             <option value="female">Ma&apos;am</option>
           </Select>
-          <Textarea label="Bio" value={bio} onChange={(e) => setBio(e.target.value)} rows={4} />
           <Textarea
-            label="Certifications"
+            label="Bio * (min 20 characters)"
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            rows={4}
+            required
+          />
+          <Textarea
+            label="Certifications *"
             value={certifications}
             onChange={(e) => setCertifications(e.target.value)}
             rows={2}
-          />
-          <Input
-            label="Monthly fee (₹)"
-            type="number"
-            value={monthlyFee}
-            onChange={(e) => setMonthlyFee(e.target.value)}
+            required
           />
 
           <div>
-            <label className="block text-sm font-medium mb-1.5">Specializations</label>
+            <label className="block text-sm font-medium mb-1.5">Specializations *</label>
             <div className="flex gap-2 mb-2">
               <Input
                 value={specInput}
@@ -439,9 +519,10 @@ export function TeacherSettingsPage() {
         {settingsTab === 'pricing' && (
           <>
             <h1 className="text-xl font-semibold mb-2">Class pricing</h1>
-            <p className="text-sm text-charcoal/55 mb-6">
+            <p className="text-sm text-charcoal/55 mb-2">
               Set fees for online classes. Students see these when booking from chat.
             </p>
+            <p className="text-sm text-charcoal/45 mb-6">All four fees are required for a complete profile.</p>
             <form
               className="space-y-6 max-w-lg"
               onSubmit={(e) => {
@@ -453,20 +534,22 @@ export function TeacherSettingsPage() {
                 <h2 className="text-sm font-semibold mb-3">1-on-1 classes</h2>
                 <div className="grid grid-cols-2 gap-4">
                   <Input
-                    label="1 week (₹)"
+                    label="1 week (₹) *"
                     type="text"
                     inputMode="numeric"
                     value={fee1v1Week}
                     onChange={(e) => setFee1v1Week(formatIndianNumber(e.target.value))}
                     placeholder="5,000"
+                    required
                   />
                   <Input
-                    label="1 month (₹)"
+                    label="1 month (₹) *"
                     type="text"
                     inputMode="numeric"
                     value={fee1v1Month}
                     onChange={(e) => setFee1v1Month(formatIndianNumber(e.target.value))}
                     placeholder="15,000"
+                    required
                   />
                 </div>
               </div>
@@ -474,20 +557,22 @@ export function TeacherSettingsPage() {
                 <h2 className="text-sm font-semibold mb-3">Group classes (1-to-many)</h2>
                 <div className="grid grid-cols-2 gap-4">
                   <Input
-                    label="1 week (₹)"
+                    label="1 week (₹) *"
                     type="text"
                     inputMode="numeric"
                     value={feeGroupWeek}
                     onChange={(e) => setFeeGroupWeek(formatIndianNumber(e.target.value))}
                     placeholder="2,000"
+                    required
                   />
                   <Input
-                    label="1 month (₹)"
+                    label="1 month (₹) *"
                     type="text"
                     inputMode="numeric"
                     value={feeGroupMonth}
                     onChange={(e) => setFeeGroupMonth(formatIndianNumber(e.target.value))}
                     placeholder="10,000"
+                    required
                   />
                 </div>
               </div>

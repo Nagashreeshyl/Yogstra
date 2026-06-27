@@ -9,6 +9,7 @@ import {
   fetchTeacherMonthlyEarnings,
 } from '../services/bookings'
 import { fetchTeacherById } from '../services/teachers'
+import { isTeacherProfileComplete } from '../utils/teacherProfileCompletion'
 import { Avatar } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
@@ -56,9 +57,27 @@ export function TeacherDashboardPage() {
     return <TeacherDashboardSkeleton />
   }
 
+  const profileIncomplete =
+    teacherProfile?.verified && !isTeacherProfileComplete(teacherProfile)
+
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
       <h1 className="font-heading text-3xl font-medium mb-8">Dashboard</h1>
+
+      {profileIncomplete && (
+        <div className="mb-6 rounded-sm border border-amber-200 bg-amber-50 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <p className="text-sm text-amber-900">
+            Your profile is not 100% complete, so you are hidden from Find Teachers. Finish your
+            profile and pricing in Settings.
+          </p>
+          <Link
+            to="/dashboard/teacher/settings"
+            className="text-sm font-semibold text-teal hover:underline shrink-0"
+          >
+            Complete profile →
+          </Link>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {stats.map(({ label, value, icon: Icon }) => (

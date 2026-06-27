@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabase'
 import { invalidateProfileCache } from './auth'
 import type { Teacher, TeacherPricing } from '../types'
 import { mapTeacher } from '../utils/mappers'
+import { isTeacherProfileComplete } from '../utils/teacherProfileCompletion'
 
 const teacherSelect = `
   *,
@@ -19,7 +20,7 @@ export async function fetchTeachers(verifiedOnly = false, includeRemoved = false
 
   let result = (data ?? []).map((row) => mapTeacher(row))
   if (verifiedOnly) {
-    result = result.filter((t) => t.verified)
+    result = result.filter((t) => t.verified && isTeacherProfileComplete(t))
   } else if (!includeRemoved) {
     result = result.filter((t) => t.status !== 'Removed')
   }

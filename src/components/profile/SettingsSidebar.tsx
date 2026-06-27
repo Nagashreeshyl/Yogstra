@@ -1,33 +1,19 @@
 import { Link } from 'react-router-dom'
 import { Check, Circle } from 'lucide-react'
+import { TEACHER_PROFILE_CHECKLIST, profileCompletionPercent } from '../../utils/teacherProfileCompletion'
+import type { TeacherProfileCompletion } from '../../utils/teacherProfileCompletion'
 import { TEACHER_CARD_PREVIEW } from '../../utils/panZoomCrop'
 
 interface SettingsSidebarProps {
   name: string
   avatarPreview?: string | null
   coverPreview?: string | null
-  completion: {
-    photo: boolean
-    cover: boolean
-    bio: boolean
-    specializations: boolean
-    location: boolean
-    fee: boolean
-  }
+  completion: TeacherProfileCompletion
 }
 
 export function SettingsSidebar({ name, coverPreview, completion }: SettingsSidebarProps) {
-  const items = [
-    { label: 'Profile photo', done: completion.photo },
-    { label: 'Teacher card photo', done: completion.cover },
-    { label: 'Bio', done: completion.bio },
-    { label: 'Specializations', done: completion.specializations },
-    { label: 'City & state', done: completion.location },
-    { label: 'Monthly fee', done: completion.fee },
-  ]
-
-  const doneCount = items.filter((i) => i.done).length
-  const percent = Math.round((doneCount / items.length) * 100)
+  const percent = profileCompletionPercent(completion)
+  const doneCount = TEACHER_PROFILE_CHECKLIST.filter((item) => completion[item.key]).length
 
   return (
     <div className="space-y-6">
@@ -37,7 +23,7 @@ export function SettingsSidebar({ name, coverPreview, completion }: SettingsSide
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-2xl font-semibold tabular-nums">{percent}%</span>
             <span className="text-xs text-charcoal/50">
-              {doneCount}/{items.length} complete
+              {doneCount}/{TEACHER_PROFILE_CHECKLIST.length} complete
             </span>
           </div>
           <div className="h-1.5 rounded-full bg-border overflow-hidden">
@@ -47,15 +33,20 @@ export function SettingsSidebar({ name, coverPreview, completion }: SettingsSide
             />
           </div>
         </div>
+        {percent < 100 && (
+          <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-sm px-3 py-2 mb-3">
+            Your profile must reach 100% before you appear in Find Teachers — even if verified.
+          </p>
+        )}
         <ul className="space-y-2">
-          {items.map((item) => (
-            <li key={item.label} className="flex items-center gap-2 text-sm">
-              {item.done ? (
+          {TEACHER_PROFILE_CHECKLIST.map((item) => (
+            <li key={item.key} className="flex items-center gap-2 text-sm">
+              {completion[item.key] ? (
                 <Check size={16} className="text-teal shrink-0" strokeWidth={2.5} />
               ) : (
                 <Circle size={16} className="text-charcoal/25 shrink-0" strokeWidth={1.5} />
               )}
-              <span className={item.done ? 'text-charcoal/70' : 'text-charcoal/45'}>
+              <span className={completion[item.key] ? 'text-charcoal/70' : 'text-charcoal/45'}>
                 {item.label}
               </span>
             </li>
@@ -77,11 +68,7 @@ export function SettingsSidebar({ name, coverPreview, completion }: SettingsSide
             }}
           >
             {coverPreview ? (
-              <img
-                src={coverPreview}
-                alt=""
-                className="w-full h-full object-cover"
-              />
+              <img src={coverPreview} alt="" className="w-full h-full object-cover" />
             ) : (
               <div className="flex items-center justify-center h-full text-white text-3xl font-medium">
                 {name.charAt(0).toUpperCase() || '?'}
