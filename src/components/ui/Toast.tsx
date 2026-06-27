@@ -3,7 +3,7 @@ import { X } from 'lucide-react'
 
 interface ToastProps {
   message: string
-  type?: 'success' | 'error'
+  type?: 'success' | 'error' | 'info'
   onClose: () => void
 }
 
@@ -13,13 +13,16 @@ export function Toast({ message, type = 'success', onClose }: ToastProps) {
     return () => clearTimeout(timer)
   }, [onClose])
 
+  const styles =
+    type === 'error'
+      ? 'bg-red-50 border-red-200 text-red-800'
+      : type === 'info'
+        ? 'bg-amber-50 border-amber-200 text-amber-900'
+        : 'bg-cream border-border text-charcoal'
+
   return (
     <div
-      className={`fixed top-4 right-4 z-[100] flex items-center gap-3 px-4 py-3 rounded-sm border shadow-sm max-w-sm ${
-        type === 'error'
-          ? 'bg-red-50 border-red-200 text-red-800'
-          : 'bg-cream border-border text-charcoal'
-      }`}
+      className={`fixed top-4 right-4 z-[100] flex items-center gap-3 px-4 py-3 rounded-sm border shadow-sm max-w-sm ${styles}`}
     >
       <span className="text-sm flex-1">{message}</span>
       <button

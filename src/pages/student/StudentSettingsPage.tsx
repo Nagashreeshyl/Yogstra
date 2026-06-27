@@ -2,6 +2,7 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import { Camera } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
 import { fetchStudentProfile, updateStudentSettings } from '../../services/students'
 import { uploadProfileAvatar } from '../../services/avatars'
 import { prepareImageForCrop } from '../../utils/imageCrop'
@@ -21,6 +22,10 @@ export function StudentSettingsPage() {
     () => (user ? fetchStudentProfile(user.id) : Promise.resolve(null)),
     [user?.id],
   )
+
+  useAppIntervalRefresh(() => {
+    void refetch(true)
+  }, Boolean(user?.id))
 
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
 import { fetchBookings } from '../../services/bookings'
 import { AdminTable, AdminPagination } from '../../components/admin/AdminTable'
 import { Button } from '../../components/ui/Button'
@@ -11,7 +12,11 @@ const PAGE_SIZE = 5
 export function AdminBookingsPage() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
-  const { data: bookings, loading } = useAsyncData(() => fetchBookings())
+  const { data: bookings, loading, refetch } = useAsyncData(() => fetchBookings())
+
+  useAppIntervalRefresh(() => {
+    void refetch(true)
+  })
 
   const filtered = useMemo(() => {
     if (!search) return bookings ?? []

@@ -7,6 +7,7 @@ export type TeacherNotification = {
   teacherId: string
   studentId: string | null
   orderId: string | null
+  requestId: string | null
   type: string
   title: string
   body: string
@@ -22,6 +23,7 @@ function mapRow(row: Record<string, unknown>): TeacherNotification {
     teacherId: row.teacher_id as string,
     studentId: (row.student_id as string) ?? null,
     orderId: (row.order_id as string) ?? null,
+    requestId: (row.request_id as string) ?? null,
     type: row.type as string,
     title: row.title as string,
     body: row.body as string,

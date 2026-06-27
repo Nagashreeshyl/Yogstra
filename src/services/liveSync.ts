@@ -27,7 +27,7 @@ function createLiveChannel(channelName: string, tables: TableSpec[]) {
     let entry = registry.get(channelName)
     if (!entry) {
       const listeners = new Set<Listener>()
-      const notify = debounceListeners(listeners, 350)
+      const notify = debounceListeners(listeners, 50)
       let channel = supabase.channel(channelName)
 
       for (const { table, filter } of tables) {
@@ -76,10 +76,11 @@ export const subscribeToPosts = createLiveChannel('live:posts', [
   { table: 'comments' },
 ])
 
-/** Schedules and paid class orders. */
+/** Schedules, paid class orders, and timing change requests. */
 export const subscribeToSchedules = createLiveChannel('live:schedules', [
   { table: 'schedules' },
   { table: 'class_orders' },
+  { table: 'schedule_change_requests' },
 ])
 
 /** Payout records for teacher earnings. */

@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useAsyncData } from './useAsyncData'
-import { useLiveSync } from './useLiveSync'
+import { useLiveDataRefresh } from './useLiveDataRefresh'
 import { fetchActiveClassPurchase } from '../services/classOrders'
 
 export function useActiveClassPurchase(
@@ -19,7 +19,7 @@ export function useActiveClassPurchase(
     { enabled: canCheck },
   )
 
-  useLiveSync(refetch, ['schedules'], canCheck)
+  useLiveDataRefresh(refetch, ['schedules'], canCheck)
 
   useEffect(() => {
     if (!activePurchase) return

@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import { useLiveSync } from '../../hooks/useLiveSync'
+import { useLiveDataRefresh } from '../../hooks/useLiveDataRefresh'
 import { fetchTeacherStudents } from '../../services/students'
 import { Avatar } from '../../components/ui/Avatar'
 import { Badge } from '../../components/ui/Badge'
@@ -19,7 +19,7 @@ export function TeacherStudentsPage() {
     [user?.id],
   )
 
-  useLiveSync(refetch, ['bookings'], Boolean(user?.id))
+  useLiveDataRefresh(refetch, ['bookings'], Boolean(user?.id))
 
   return (
     <div className="p-8 max-w-3xl">

@@ -1,13 +1,19 @@
-import { Bell, CheckCheck } from 'lucide-react'
+import { useState } from 'react'
+import { Bell, CheckCheck, Check, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
 import { useTeacherNotificationCount } from '../../hooks/useTeacherNotificationCount'
 import {
   fetchTeacherNotifications,
   markAllNotificationsRead,
   markNotificationRead,
 } from '../../services/teacherNotifications'
+import {
+  approveScheduleChangeRequest,
+  rejectScheduleChangeRequest,
+} from '../../services/scheduleChangeRequests'
 import { Button } from '../../components/ui/Button'
 import { NotificationBody } from '../../components/notifications/NotificationBody'
 import { NotificationsListSkeleton } from '../../components/ui/Skeleton'
@@ -18,11 +24,17 @@ export function TeacherNotificationsPage() {
   const { user } = useApp()
   const teacherId = user?.id ?? ''
   const { refresh: refreshCount } = useTeacherNotificationCount(teacherId)
+  const [resolvingId, setResolvingId] = useState<string | null>(null)
 
   const { data: notifications, loading, error, refetch } = useAsyncData(
     () => (teacherId ? fetchTeacherNotifications(teacherId) : Promise.resolve([])),
     [teacherId],
   )
+
+  useAppIntervalRefresh(() => {
+    void refetch(true)
+    refreshCount()
+  }, Boolean(teacherId))
 
   const unread = (notifications ?? []).filter((n) => !n.readAt).length
 
@@ -37,6 +49,32 @@ export function TeacherNotificationsPage() {
     await markAllNotificationsRead(teacherId)
     await refetch(true)
     refreshCount()
+  }
+
+  const handleApproveScheduleChange = async (requestId: string, notificationId: string) => {
+    if (!teacherId) return
+    setResolvingId(requestId)
+    try {
+      await approveScheduleChangeRequest(requestId, teacherId)
+      await markNotificationRead(notificationId)
+      await refetch(true)
+      refreshCount()
+    } finally {
+      setResolvingId(null)
+    }
+  }
+
+  const handleRejectScheduleChange = async (requestId: string, notificationId: string) => {
+    if (!teacherId) return
+    setResolvingId(requestId)
+    try {
+      await rejectScheduleChangeRequest(requestId, teacherId)
+      await markNotificationRead(notificationId)
+      await refetch(true)
+      refreshCount()
+    } finally {
+      setResolvingId(null)
+    }
   }
 
   if (loading && !notifications?.length) {
@@ -107,6 +145,29 @@ export function TeacherNotificationsPage() {
               <div className="text-sm text-charcoal/80 whitespace-pre-wrap font-sans leading-relaxed">
                 <NotificationBody text={n.body} />
               </div>
+              {n.type === 'schedule_change' && n.requestId && !n.readAt && (
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    size="sm"
+                    className="gap-1.5"
+                    disabled={resolvingId === n.requestId}
+                    onClick={() => void handleApproveScheduleChange(n.requestId!, n.id)}
+                  >
+                    <Check size={14} />
+                    Approve
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="gap-1.5"
+                    disabled={resolvingId === n.requestId}
+                    onClick={() => void handleRejectScheduleChange(n.requestId!, n.id)}
+                  >
+                    <X size={14} />
+                    Decline
+                  </Button>
+                </div>
+              )}
               {n.studentId && (
                 <Link
                   to={studentProfilePath(n.studentId, 'teacher')}

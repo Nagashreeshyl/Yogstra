@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
 import {
   fetchMessagingUsers,
   formatChatError,
@@ -156,6 +157,8 @@ export function MessagesHub() {
       unsubReads()
     }
   }, [userId, refetchStudents, refetchTeachers])
+
+  useAppIntervalRefresh(refreshLists, Boolean(userId))
 
   useEffect(() => {
     if (navState.tab) setTab(navState.tab)

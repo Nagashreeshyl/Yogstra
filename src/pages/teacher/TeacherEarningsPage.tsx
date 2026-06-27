@@ -1,7 +1,7 @@
 import { IndianRupee, TrendingUp, Calendar } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import { useLiveSync } from '../../hooks/useLiveSync'
+import { useLiveDataRefresh } from '../../hooks/useLiveDataRefresh'
 import { fetchTeacherPayouts } from '../../services/admin'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
@@ -14,7 +14,7 @@ export function TeacherEarningsPage() {
     [user?.id],
   )
 
-  useLiveSync(refetch, ['payouts', 'bookings'], Boolean(user?.id))
+  useLiveDataRefresh(refetch, ['payouts', 'bookings'], Boolean(user?.id))
 
   const history = payouts ?? []
   const thisMonth = history[0]

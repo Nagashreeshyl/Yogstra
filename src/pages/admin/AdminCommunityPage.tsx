@@ -1,4 +1,5 @@
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
 import { fetchPosts, deletePost } from '../../services/posts'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
@@ -8,6 +9,11 @@ import { useState } from 'react'
 
 export function AdminCommunityPage() {
   const { data: posts, loading, refetch } = useAsyncData(() => fetchPosts())
+
+  useAppIntervalRefresh(() => {
+    void refetch(true)
+  })
+
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null)
 
   const handleRemove = async () => {

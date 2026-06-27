@@ -14,11 +14,15 @@ export type ClassSession = {
   createdAt: string
   teacherName?: string
   studentName?: string
+  /** Linked schedule slot start (1-hour class window begins here) */
+  scheduledSessionAt?: string | null
 }
 
 function mapSession(row: Record<string, unknown>): ClassSession {
   const teacher = row.teacher as { full_name?: string } | null
   const student = row.student as { full_name?: string } | null
+  const schedule = row.schedule as { scheduled_at?: string } | null | Array<{ scheduled_at?: string }>
+  const scheduleRow = Array.isArray(schedule) ? schedule[0] : schedule
   return {
     id: row.id as string,
     teacherId: row.teacher_id as string,
@@ -31,13 +35,15 @@ function mapSession(row: Record<string, unknown>): ClassSession {
     createdAt: row.created_at as string,
     teacherName: teacher?.full_name,
     studentName: student?.full_name,
+    scheduledSessionAt: scheduleRow?.scheduled_at ?? null,
   }
 }
 
 const sessionSelect = `
   *,
   teacher:profiles!teacher_id(full_name),
-  student:profiles!student_id(full_name, avatar_url)
+  student:profiles!student_id(full_name, avatar_url),
+  schedule:schedules(scheduled_at)
 `
 
 export async function fetchLiveKitToken(params: {
@@ -58,7 +64,11 @@ export async function fetchLiveKitToken(params: {
   }
 
   if (!response.ok || !body.token || !body.serverUrl) {
-    throw new Error(body.error ?? 'Could not connect to video server.')
+    const fallback =
+      response.status === 404
+        ? 'Video API is unavailable. Restart with npm run dev (local) or redeploy on Vercel.'
+        : 'Could not connect to video server.'
+    throw new Error(body.error ?? fallback)
   }
 
   return { token: body.token, serverUrl: body.serverUrl }
@@ -114,6 +124,17 @@ export async function updateClassSessionStatus(
   if (extra?.endedAt) patch.ended_at = extra.endedAt
 
   const { error } = await supabase.from('class_sessions').update(patch).eq('id', sessionId)
+  if (error) throw error
+}
+
+/** Re-ring the student while the teacher stays in the active class. */
+export async function ringStudentAgain(sessionId: string) {
+  const { error } = await supabase
+    .from('class_sessions')
+    .update({ status: 'ringing' })
+    .eq('id', sessionId)
+    .in('status', ['active', 'ringing'])
+
   if (error) throw error
 }
 
@@ -200,6 +221,52 @@ export function subscribeToClassSessions(
     if (entry!.listeners.size === 0) {
       void supabase.removeChannel(entry!.channel)
       sessionChannels.delete(key)
+    }
+  }
+}
+
+type SessionListener = (session: ClassSession) => void
+
+const sessionByIdChannels = new Map<
+  string,
+  { channel: ReturnType<typeof supabase.channel>; listeners: Set<SessionListener> }
+>()
+
+export function subscribeToClassSessionById(
+  sessionId: string,
+  onChange: SessionListener,
+) {
+  let entry = sessionByIdChannels.get(sessionId)
+  if (!entry) {
+    const listeners = new Set<SessionListener>()
+    const channel = supabase
+      .channel(`class_session:${sessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'class_sessions',
+          filter: `id=eq.${sessionId}`,
+        },
+        (payload) => {
+          const row = payload.new as Record<string, unknown>
+          const session = mapSession(row)
+          listeners.forEach((l) => l(session))
+        },
+      )
+      .subscribe()
+
+    entry = { channel, listeners }
+    sessionByIdChannels.set(sessionId, entry)
+  }
+
+  entry.listeners.add(onChange)
+  return () => {
+    entry!.listeners.delete(onChange)
+    if (entry!.listeners.size === 0) {
+      void supabase.removeChannel(entry!.channel)
+      sessionByIdChannels.delete(sessionId)
     }
   }
 }

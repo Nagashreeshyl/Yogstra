@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
+import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
 import {
   fetchStudentRingingSession,
   subscribeToClassSessions,
@@ -39,6 +40,10 @@ export function IncomingCallProvider({ children }: { children: React.ReactNode }
       void refresh()
     })
   }, [user, refresh])
+
+  useAppIntervalRefresh(() => {
+    void refresh()
+  }, Boolean(user?.role === 'student'))
 
   const handleAccept = async () => {
     if (!ringingSession) return

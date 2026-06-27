@@ -1,6 +1,8 @@
 import { useApp } from '../context/AppContext'
 import { useAsyncData } from '../hooks/useAsyncData'
+import { useCallback } from 'react'
 import { useLiveSync } from '../hooks/useLiveSync'
+import { useAppIntervalRefresh } from '../hooks/useIntervalRefresh'
 import { fetchPosts } from '../services/posts'
 import { fetchTeachers } from '../services/teachers'
 import { filterTeachers } from '../utils/filterTeachers'
@@ -19,6 +21,13 @@ export function ExplorePage() {
 
   useLiveSync(refetchTeachers, ['teachers'])
   useLiveSync(refetchPosts, ['posts'])
+
+  const refreshAll = useCallback(() => {
+    void refetchTeachers(true)
+    void refetchPosts(true)
+  }, [refetchTeachers, refetchPosts])
+
+  useAppIntervalRefresh(refreshAll)
 
   const allTeachers = teachers ?? []
   const featured = filterTeachers(allTeachers, searchQuery, filters, selectedCategory).slice(0, 3)

@@ -2,7 +2,9 @@ import { Link } from 'react-router-dom'
 import { Users, Calendar, IndianRupee, Star, MessageCircle, Bell } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { useAsyncData } from '../hooks/useAsyncData'
+import { useCallback } from 'react'
 import { useLiveSync } from '../hooks/useLiveSync'
+import { useAppIntervalRefresh } from '../hooks/useIntervalRefresh'
 import { fetchPosts } from '../services/posts'
 import { fetchTodaySchedules } from '../services/schedules'
 import {
@@ -44,6 +46,16 @@ export function TeacherDashboardPage() {
   useLiveSync(refetchProfile, ['teachers'], Boolean(teacherId))
   useLiveSync(refetchSchedule, ['schedules'], Boolean(teacherId))
   useLiveSync(refetchPosts, ['posts'])
+
+  const refreshAll = useCallback(() => {
+    void refetchStudents(true)
+    void refetchSchedule(true)
+    void refetchEarnings(true)
+    void refetchProfile(true)
+    void refetchPosts(true)
+  }, [refetchStudents, refetchSchedule, refetchEarnings, refetchProfile, refetchPosts])
+
+  useAppIntervalRefresh(refreshAll, Boolean(teacherId))
 
   const stats = [
     { label: 'Total Students', value: String(studentCount ?? 0), icon: Users },

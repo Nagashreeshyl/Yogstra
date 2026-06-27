@@ -6,6 +6,7 @@ import {
   sendDirectMessage,
   subscribeToDirectMessages,
 } from '../services/directChat'
+import { playMessageReceivedSound } from '../utils/notificationSounds'
 
 function createOptimisticMessage(
   threadId: string,
@@ -118,6 +119,9 @@ export function useDirectChatMessages(
       })
 
     const unsubscribe = subscribeToDirectMessages(threadId, (message) => {
+      if (message.senderId !== userId) {
+        playMessageReceivedSound()
+      }
       pendingRef.current = pendingRef.current.filter(
         (m) =>
           m.senderId !== message.senderId ||

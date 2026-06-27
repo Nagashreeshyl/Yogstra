@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AppProvider } from './context/AppContext'
+import { AppRefreshProvider } from './context/AppRefreshContext'
 import { AppLayout } from './components/layout/AppLayout'
 import { LoggedInRedirect } from './components/auth/LoggedInRedirect'
 import { StudentDashboardLayout } from './components/layout/StudentDashboardLayout'
@@ -45,6 +46,7 @@ import { AdminSettingsPage } from './pages/admin/AdminSettingsPage'
 export default function App() {
   return (
     <AppProvider>
+      <AppRefreshProvider>
       <BrowserRouter>
         <Routes>
           <Route
@@ -131,6 +133,7 @@ export default function App() {
           </Route>
         </Routes>
       </BrowserRouter>
+      </AppRefreshProvider>
     </AppProvider>
   )
 }

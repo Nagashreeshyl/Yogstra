@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { MapPin, BadgeCheck, Users, MessageCircle, ShoppingBag } from 'lucide-react'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { useActiveClassPurchase } from '../hooks/useActiveClassPurchase'
-import { useLiveSync } from '../hooks/useLiveSync'
+import { useLiveDataRefresh } from '../hooks/useLiveDataRefresh'
 import { fetchTeacherById } from '../services/teachers'
 import { requestTeacherWithIntro } from '../services/teacherRequest'
 import { ensureDirectChat, formatChatError } from '../services/directChat'
@@ -34,7 +34,7 @@ export function TeacherProfilePage() {
     [id],
   )
 
-  useLiveSync(refetch, ['teachers'], Boolean(id))
+  useLiveDataRefresh(refetch, ['teachers'], Boolean(id))
 
   const isStudent = user?.role === 'student'
 

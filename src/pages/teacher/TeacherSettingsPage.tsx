@@ -2,7 +2,7 @@ import { useRef, useState, useEffect, useCallback, useMemo } from 'react'
 import { Camera, ImageIcon } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import { useLiveSync } from '../../hooks/useLiveSync'
+import { useLiveDataRefresh } from '../../hooks/useLiveDataRefresh'
 import { fetchTeacherById, updateTeacherSettings } from '../../services/teachers'
 import { uploadTeacherAvatar, uploadTeacherCover } from '../../services/avatars'
 import { prepareImageForCrop } from '../../utils/imageCrop'
@@ -40,7 +40,7 @@ export function TeacherSettingsPage() {
     [user?.id],
   )
 
-  useLiveSync(refetch, ['teachers'], Boolean(user?.id))
+  useLiveDataRefresh(refetch, ['teachers'], Boolean(user?.id))
 
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')

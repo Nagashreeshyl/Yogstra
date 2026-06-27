@@ -1,31 +1,40 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { studentHasPaidCoaching } from '../services/liveClasses'
+import { useLiveDataRefresh } from './useLiveDataRefresh'
 
 export function useStudentCoachingAccess(studentId: string | undefined) {
   const [hasAccess, setHasAccess] = useState(false)
   const [loading, setLoading] = useState(Boolean(studentId))
 
-  useEffect(() => {
+  const refresh = useCallback(async () => {
     if (!studentId) {
       setHasAccess(false)
       setLoading(false)
       return
     }
 
-    let cancelled = false
     setLoading(true)
-    void studentHasPaidCoaching(studentId)
-      .then((value) => {
-        if (!cancelled) setHasAccess(value)
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-
-    return () => {
-      cancelled = true
+    try {
+      const value = await studentHasPaidCoaching(studentId)
+      setHasAccess(value)
+    } catch {
+      setHasAccess(false)
+    } finally {
+      setLoading(false)
     }
   }, [studentId])
 
-  return { hasAccess, loading }
+  useEffect(() => {
+    void refresh()
+  }, [refresh])
+
+  useLiveDataRefresh(
+    () => {
+      void refresh()
+    },
+    ['bookings', 'schedules'],
+    Boolean(studentId),
+  )
+
+  return { hasAccess, loading, refresh }
 }

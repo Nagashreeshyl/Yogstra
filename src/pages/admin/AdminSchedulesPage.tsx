@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
 import { fetchAllTeachersAdmin } from '../../services/teachers'
 import { fetchSchedulesByTeacher } from '../../services/schedules'
 import { Select } from '../../components/ui/Select'
@@ -7,16 +8,23 @@ import { Badge } from '../../components/ui/Badge'
 import { ScheduleCalendarSkeleton } from '../../components/ui/Skeleton'
 
 export function AdminSchedulesPage() {
-  const { data: teachers } = useAsyncData(() => fetchAllTeachersAdmin())
+  const { data: teachers, refetch: refetchTeachers } = useAsyncData(() => fetchAllTeachersAdmin())
   const [selectedTeacher, setSelectedTeacher] = useState('')
 
   const teacherId = selectedTeacher || teachers?.[0]?.id || ''
   const teacher = teachers?.find((t) => t.id === teacherId)
 
-  const { data: schedules, loading } = useAsyncData(
+  const { data: schedules, loading, refetch: refetchSchedules } = useAsyncData(
     () => (teacherId ? fetchSchedulesByTeacher(teacherId) : Promise.resolve([])),
     [teacherId],
   )
+
+  const refreshAll = useCallback(() => {
+    void refetchTeachers(true)
+    if (teacherId) void refetchSchedules(true)
+  }, [refetchTeachers, refetchSchedules, teacherId])
+
+  useAppIntervalRefresh(refreshAll)
 
   return (
     <div className="p-8">

@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
 import { fetchAllTeachersAdmin, removeTeacher, updateTeacherStatus } from '../../services/teachers'
 import { AdminTable, AdminPagination } from '../../components/admin/AdminTable'
 import { Button } from '../../components/ui/Button'
@@ -17,6 +18,10 @@ export function AdminTeachersPage() {
   const [removeTarget, setRemoveTarget] = useState<{ id: string; name: string } | null>(null)
   const [removing, setRemoving] = useState(false)
   const { data: teachers, loading, refetch } = useAsyncData(() => fetchAllTeachersAdmin())
+
+  useAppIntervalRefresh(() => {
+    void refetch(true)
+  })
 
   const filtered = useMemo(() => {
     return (teachers ?? []).filter((t) => {

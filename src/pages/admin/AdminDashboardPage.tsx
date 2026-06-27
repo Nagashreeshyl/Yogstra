@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
 import {
   fetchActiveBookingCount,
   fetchMonthlyRevenue,
@@ -38,6 +39,17 @@ export function AdminDashboardPage() {
     const unsubscribe = subscribeToAdminDashboard(refresh)
     return unsubscribe
   }, [refetchTeachers, refetchStudents, refetchBookings, refetchRevenue, refetchPending, refetchActivity])
+
+  const refreshAll = useCallback(() => {
+    void refetchTeachers(true)
+    void refetchStudents(true)
+    void refetchBookings(true)
+    void refetchRevenue(true)
+    void refetchPending(true)
+    void refetchActivity(true)
+  }, [refetchTeachers, refetchStudents, refetchBookings, refetchRevenue, refetchPending, refetchActivity])
+
+  useAppIntervalRefresh(refreshAll)
 
   const handleApprove = async (id: string) => {
     await updateTeacherStatus(id, 'verified')

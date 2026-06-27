@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Flag } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
 import {
   fetchReportHistory,
   fetchReportedChatConversations,
@@ -35,10 +36,10 @@ export function AdminChatsPage() {
   const loading = tab === 'open' ? openLoading : historyLoading
   const error = openError
 
-  const refetch = () => {
+  const refetch = useCallback(() => {
     void refetchOpen(true)
     void refetchHistory(true)
-  }
+  }, [refetchOpen, refetchHistory])
 
   useEffect(() => {
     const refresh = () => refetch()
@@ -48,7 +49,9 @@ export function AdminChatsPage() {
       unsubMessages()
       unsubReports()
     }
-  }, [refetchOpen, refetchHistory])
+  }, [refetch])
+
+  useAppIntervalRefresh(refetch)
 
   const selected =
     conversations?.find((c) => c.reportId === selectedReportId) ?? conversations?.[0] ?? null

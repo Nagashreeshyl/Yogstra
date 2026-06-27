@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import { useLiveSync } from '../../hooks/useLiveSync'
+import { useLiveDataRefresh } from '../../hooks/useLiveDataRefresh'
 import { fetchTeacherSchedulesForMonth } from '../../services/classOrders'
 import { TeacherScheduleCalendar } from '../../components/schedule/TeacherScheduleCalendar'
 
@@ -21,7 +21,7 @@ export function TeacherSchedulePage() {
     [user?.id, monthKey.year, monthKey.month],
   )
 
-  useLiveSync(refetch, ['schedules'], Boolean(user?.id))
+  useLiveDataRefresh(refetch, ['schedules'], Boolean(user?.id))
 
   return (
     <div className="p-8 max-w-4xl">
