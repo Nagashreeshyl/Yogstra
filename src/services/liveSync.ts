@@ -87,7 +87,12 @@ export const subscribeToPayouts = createLiveChannel('live:payouts', [
   { table: 'payouts' },
 ])
 
-export type LiveSyncScope = 'teachers' | 'bookings' | 'posts' | 'schedules' | 'payouts'
+/** Schedules, paid class orders, and live video sessions. */
+export const subscribeToClassSessionsLive = createLiveChannel('live:class_sessions', [
+  { table: 'class_sessions' },
+])
+
+export type LiveSyncScope = 'teachers' | 'bookings' | 'posts' | 'schedules' | 'payouts' | 'classSessions'
 
 export const LIVE_SYNC_SUBSCRIBERS: Record<
   LiveSyncScope,
@@ -98,6 +103,7 @@ export const LIVE_SYNC_SUBSCRIBERS: Record<
   posts: subscribeToPosts,
   schedules: subscribeToSchedules,
   payouts: subscribeToPayouts,
+  classSessions: subscribeToClassSessionsLive,
 }
 
 export function subscribeToLiveScopes(

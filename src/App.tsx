@@ -29,6 +29,8 @@ import { TeacherCommunityPage } from './pages/teacher/TeacherCommunityPage'
 import { TeacherMessagesPage } from './pages/teacher/TeacherMessagesPage'
 import { TeacherNotificationsPage } from './pages/teacher/TeacherNotificationsPage'
 import { TeacherCouponsPage } from './pages/teacher/TeacherCouponsPage'
+import { TeacherClassesPage } from './pages/teacher/TeacherClassesPage'
+import { StudentClassesPage } from './pages/student/StudentClassesPage'
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage'
 import { AdminTeachersPage } from './pages/admin/AdminTeachersPage'
 import { AdminStudentsPage } from './pages/admin/AdminStudentsPage'
@@ -88,6 +90,8 @@ export default function App() {
               <Route path="competitions" element={<CompetitionsPage />} />
               <Route path="shop" element={<ShopPage />} />
               <Route path="messages" element={<StudentMessagesPage />} />
+              <Route path="classes" element={<StudentClassesPage />} />
+              <Route path="classes/room/:sessionId" element={<StudentClassesPage />} />
               <Route path="settings" element={<StudentSettingsPage />} />
             </Route>
             <Route path="student/messages" element={<Navigate to="/dashboard/student/messages" replace />} />
@@ -99,6 +103,8 @@ export default function App() {
               <Route path="students" element={<TeacherStudentsPage />} />
               <Route path="students/:id" element={<StudentProfilePage />} />
               <Route path="schedule" element={<TeacherSchedulePage />} />
+              <Route path="classes" element={<TeacherClassesPage />} />
+              <Route path="classes/room/:sessionId" element={<TeacherClassesPage />} />
               <Route path="community" element={<TeacherCommunityPage />} />
               <Route path="messages" element={<TeacherMessagesPage />} />
               <Route path="notifications" element={<TeacherNotificationsPage />} />

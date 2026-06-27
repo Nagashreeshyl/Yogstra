@@ -8,6 +8,7 @@ import { Avatar } from '../ui/Avatar'
 const teacherNav = [
   { to: '/dashboard/teacher', label: 'Dashboard', end: true },
   { to: '/dashboard/teacher/students', label: 'My Students' },
+  { to: '/dashboard/teacher/classes', label: 'Classes' },
   { to: '/dashboard/teacher/schedule', label: 'Schedule' },
   { to: '/dashboard/teacher/community', label: 'Community' },
   { to: '/dashboard/teacher/messages', label: 'Messages', notify: 'messages' as const },

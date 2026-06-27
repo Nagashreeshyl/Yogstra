@@ -2,9 +2,10 @@ import { NavLink } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { useMessageNotifications } from '../../hooks/useMessageNotifications'
+import { useStudentCoachingAccess } from '../../hooks/useStudentCoachingAccess'
 import { Avatar } from '../ui/Avatar'
 
-const studentNav = [
+const baseStudentNav = [
   { to: '/dashboard/student/explore', label: 'Explore', end: true },
   { to: '/dashboard/student/teachers', label: 'Find Teachers' },
   { to: '/dashboard/student/community', label: 'Community' },
@@ -15,8 +16,17 @@ const studentNav = [
 export function StudentSidebar() {
   const { user, logout } = useApp()
   const { unreadTotal, incomingRequests } = useMessageNotifications(user?.id, 'student')
+  const { hasAccess: hasClasses } = useStudentCoachingAccess(user?.id)
 
   const messageBadge = unreadTotal > 0 ? unreadTotal : incomingRequests
+
+  const studentNav = hasClasses
+    ? [
+        ...baseStudentNav.slice(0, 3),
+        { to: '/dashboard/student/classes', label: 'Classes', notify: false as const },
+        ...baseStudentNav.slice(3),
+      ]
+    : baseStudentNav
 
   return (
     <aside className="w-56 shrink-0 bg-charcoal flex flex-col h-full">
