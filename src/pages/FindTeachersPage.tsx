@@ -24,8 +24,8 @@ export function FindTeachersPage() {
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
-    <div className="p-8">
-      <h1 className="font-heading text-3xl font-medium mb-6">Find Teachers</h1>
+    <div className="p-4 sm:p-6 lg:p-8">
+      <h1 className="font-heading text-2xl sm:text-3xl font-medium mb-6">Find Teachers</h1>
 
       <div className="space-y-8">
         <SearchBar />
@@ -36,7 +36,7 @@ export function FindTeachersPage() {
         ) : filtered.length === 0 ? (
           <p className="text-charcoal/50 text-center py-12">No teachers match your filters.</p>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {paginated.map((t) => (
               <TeacherCard key={t.id} teacher={t} />
             ))}

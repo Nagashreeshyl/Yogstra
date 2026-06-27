@@ -60,7 +60,7 @@ export function StudentProfilePage() {
 
   if (!student) {
     return (
-      <div className="p-8 text-center max-w-lg mx-auto">
+      <div className="p-4 sm:p-6 lg:p-8 text-center max-w-lg mx-auto">
         <p className="text-charcoal/60 mb-4">Student not found.</p>
         <Button onClick={() => navigate(-1)}>Go back</Button>
       </div>

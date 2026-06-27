@@ -24,7 +24,7 @@ export function TeacherSchedulePage() {
   useLiveDataRefresh(refetch, ['schedules'], Boolean(user?.id))
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
       <h1 className="font-heading text-3xl font-medium mb-2">Schedule</h1>
       <p className="text-sm text-charcoal/50 mb-8">
         Your calendar updates automatically when students book and pay for classes.

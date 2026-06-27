@@ -250,7 +250,7 @@ export function BuyClassModal({
             <option value="month">1 month</option>
           </Select>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
               label="Start date"
               type="date"

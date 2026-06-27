@@ -50,7 +50,7 @@ export function TeacherProfilePage() {
 
   if (!teacher) {
     return (
-      <div className="p-8 text-center">
+      <div className="p-4 sm:p-6 lg:p-8 text-center">
         <p className="text-charcoal/50 mb-4">Teacher not found.</p>
         <Button onClick={() => navigate('/teachers')}>Back to Teachers</Button>
       </div>
@@ -124,7 +124,7 @@ export function TeacherProfilePage() {
 
   return (
     <>
-      <div className="p-8 max-w-4xl">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
         <div className="flex flex-col sm:flex-row gap-8 mb-8 pb-8 border-b border-border">
           <Avatar src={teacher.photo} name={teacher.name} size={160} />
           <div className="flex-1">

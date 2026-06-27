@@ -69,8 +69,8 @@ export function AdminChatsPage() {
   }
 
   return (
-    <div className="p-8 h-full">
-      <h1 className="font-heading text-3xl font-medium mb-2">Reported Chats</h1>
+    <div className="p-4 sm:p-6 lg:p-8 h-full flex flex-col min-h-0">
+      <h1 className="font-heading text-2xl sm:text-3xl font-medium mb-2">Reported Chats</h1>
       <p className="text-sm text-charcoal/50 mb-6 max-w-2xl">
         Conversations appear here only when reported. Snapshots include deleted messages.
       </p>
@@ -111,8 +111,12 @@ export function AdminChatsPage() {
           </p>
         </div>
       ) : (
-        <div className="flex gap-6 h-[calc(100vh-260px)]">
-          <div className="w-80 shrink-0 border border-border rounded-sm overflow-y-auto bg-cream">
+        <div className="flex flex-col md:flex-row gap-4 md:gap-6 flex-1 min-h-0 md:h-[calc(100vh-260px)]">
+          <div
+            className={`w-full md:w-80 shrink-0 border border-border rounded-sm overflow-y-auto bg-cream max-h-[40vh] md:max-h-none ${
+              selectedReportId ? 'hidden md:block' : 'block'
+            }`}
+          >
             {conversations!.map((conv) => (
               <button
                 key={conv.reportId}
@@ -141,10 +145,17 @@ export function AdminChatsPage() {
           </div>
 
           {selected && (
-            <Card className="flex-1 flex flex-col overflow-hidden bg-cream-dark">
-              <div className="px-6 py-4 border-b border-border bg-cream space-y-3">
+            <Card className={`flex-1 flex flex-col overflow-hidden bg-cream-dark min-h-[50vh] md:min-h-0 ${selectedReportId ? 'flex' : 'hidden md:flex'}`}>
+              <div className="px-4 sm:px-6 py-4 border-b border-border bg-cream space-y-3">
                 <div className="flex items-start justify-between gap-4 flex-wrap">
-                  <div>
+                  <div className="min-w-0 flex-1">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedReportId(null)}
+                      className="md:hidden mb-2 text-sm text-teal font-medium cursor-pointer"
+                    >
+                      ← Back to list
+                    </button>
                     <p className="font-medium">
                       {selected.participantOneName}{' '}
                       <span className="text-charcoal/40">↔</span>{' '}

@@ -69,7 +69,7 @@ export function AppSidebar() {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-cream/10">
+      <div className="p-4 border-t border-cream/10 pb-[max(1rem,env(safe-area-inset-bottom))]">
         {authLoading ? (
           <p className="text-xs text-cream/40 px-2">Loading...</p>
         ) : isLoggedIn && user ? (

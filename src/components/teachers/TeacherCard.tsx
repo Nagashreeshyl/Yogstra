@@ -10,8 +10,6 @@ interface TeacherCardProps {
   compact?: boolean
 }
 
-const CARD_HEIGHT = 440
-
 export function TeacherCard({ teacher, compact = false }: TeacherCardProps) {
   const navigate = useNavigate()
   const cardImage = teacher.coverPhoto || teacher.photo
@@ -37,14 +35,7 @@ export function TeacherCard({ teacher, compact = false }: TeacherCardProps) {
 
   return (
     <div
-      style={{
-        position: 'relative',
-        width: '100%',
-        height: `${CARD_HEIGHT}px`,
-        borderRadius: '12px',
-        overflow: 'hidden',
-        backgroundColor: '#5BB8C4',
-      }}
+      className="relative w-full h-[300px] sm:h-[380px] lg:h-[440px] rounded-xl overflow-hidden bg-teal"
     >
       {cardImage ? (
         <img

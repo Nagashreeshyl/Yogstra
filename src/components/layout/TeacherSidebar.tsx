@@ -64,7 +64,7 @@ export function TeacherSidebar() {
           )
         })}
       </nav>
-      <div className="p-4 border-t border-charcoal/20 space-y-3">
+      <div className="p-4 border-t border-charcoal/20 space-y-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
         {user && (
           <div className="flex items-center gap-3 px-2">
             <Avatar src={user.avatar} name={user.name} size={36} />

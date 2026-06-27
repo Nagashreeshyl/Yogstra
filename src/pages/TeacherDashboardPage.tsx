@@ -80,8 +80,8 @@ export function TeacherDashboardPage() {
     teacherProfile?.verified && !isTeacherProfileComplete(teacherProfile)
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-8">
-      <h1 className="font-heading text-3xl font-medium mb-8">Dashboard</h1>
+    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-4 sm:py-6 lg:py-8">
+      <h1 className="font-heading text-2xl sm:text-3xl font-medium mb-6 lg:mb-8">Dashboard</h1>
 
       {profileIncomplete && (
         <div className="mb-6 rounded-sm border border-amber-200 bg-amber-50 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

@@ -176,7 +176,7 @@ export function TeacherClassesPage() {
       {infoToast && (
         <Toast message={infoToast} type="info" onClose={() => setInfoToast(null)} />
       )}
-      <div className="p-6 sm:p-8 max-w-6xl mx-auto">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
         <div className="flex items-center gap-2 mb-2">
           <Video size={22} className="text-teal" />
           <h1 className="font-heading text-2xl sm:text-3xl font-medium">Classes</h1>
@@ -250,7 +250,7 @@ export function TeacherClassesPage() {
                   : null
 
                 return (
-                  <Card key={student.id} className="p-4 flex items-center justify-between gap-4">
+                  <Card key={student.id} className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <Avatar src={student.avatar} name={student.name} size={48} />
                       <div className="min-w-0">

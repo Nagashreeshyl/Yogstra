@@ -54,8 +54,8 @@ export function AdminTable({
         )}
       </div>
 
-      <div className="border border-border rounded-sm overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="border border-border rounded-sm overflow-x-auto">
+        <table className="w-full text-sm min-w-[640px]">
           <thead>
             <tr className="bg-cream-dark border-b border-border">
               {headers.map((h) => (

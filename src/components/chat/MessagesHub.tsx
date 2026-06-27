@@ -179,7 +179,9 @@ export function MessagesHub() {
       if (loading) return
     }
     if (selectedUserId && users.some((u) => u.id === selectedUserId)) return
-    if (users.length && !selectedUserId && !pending) {
+    // Desktop split-pane: pre-select first contact. Mobile: stay on list until user picks someone.
+    const isSplitPane = window.matchMedia('(min-width: 768px)').matches
+    if (isSplitPane && users.length && !selectedUserId && !pending) {
       setSelectedUserId(users[0].id)
     }
   }, [users, selectedUserId, loading, navState.participant?.id])
@@ -226,64 +228,91 @@ export function MessagesHub() {
     [students],
   )
 
-  return (
-    <div className="p-4 sm:p-8 h-full flex flex-col min-h-0">
-      <div className="flex items-center flex-wrap gap-2 mb-4 shrink-0">
-        <h1 className="text-xl font-semibold">Messages</h1>
-        {unreadTotal > 0 && (
-          <span className="text-xs font-semibold text-cream bg-teal px-2.5 py-1 rounded-full">
-            {unreadTotal} unread
-          </span>
-        )}
-        {incomingCount > 0 && (
-          <span className="text-xs font-semibold text-teal bg-teal-soft px-2 py-1 rounded-full">
-            {incomingCount} new request{incomingCount === 1 ? '' : 's'}
-          </span>
-        )}
-        {outgoingCount > 0 && (
-          <span className="text-xs font-semibold text-amber-800 bg-amber-100 px-2 py-1 rounded-full">
-            {outgoingCount} sent
-          </span>
-        )}
-      </div>
+  const inChatView = Boolean(awaitingNavTarget || selectedUser)
 
-      {fetchError && (
-        <p className="text-sm text-red-600 mb-4 border border-red-200 bg-cream px-4 py-3 rounded-sm">
+  useEffect(() => {
+    if (!inChatView) return
+    const isMobile = window.matchMedia('(max-width: 767px)').matches
+    if (!isMobile) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [inChatView])
+
+  return (
+    <div
+      className={`h-full flex flex-col min-h-0 ${
+        inChatView ? 'p-0 md:p-4 sm:p-6 lg:p-8' : 'p-4 sm:p-6 lg:p-8'
+      }`}
+    >
+      {!inChatView && (
+        <>
+          <div className="flex items-center flex-wrap gap-2 mb-4 shrink-0">
+            <h1 className="text-xl font-semibold">Messages</h1>
+            {unreadTotal > 0 && (
+              <span className="text-xs font-semibold text-cream bg-teal px-2.5 py-1 rounded-full">
+                {unreadTotal} unread
+              </span>
+            )}
+            {incomingCount > 0 && (
+              <span className="text-xs font-semibold text-teal bg-teal-soft px-2 py-1 rounded-full">
+                {incomingCount} new request{incomingCount === 1 ? '' : 's'}
+              </span>
+            )}
+            {outgoingCount > 0 && (
+              <span className="text-xs font-semibold text-amber-800 bg-amber-100 px-2 py-1 rounded-full">
+                {outgoingCount} sent
+              </span>
+            )}
+          </div>
+
+          {fetchError && (
+            <p className="text-sm text-red-600 mb-4 border border-red-200 bg-cream px-4 py-3 rounded-sm">
+              {fetchError}
+            </p>
+          )}
+
+          <div className="flex gap-1 mb-4 shrink-0 border-b border-border">
+            {(['students', 'teachers'] as const).map((t) => {
+              const tabUnread = t === 'students' ? studentsTabUnread : teachersTabUnread
+              const tabRequests = t === 'students' ? studentsTabBadge : 0
+              const tabIndicator = tabUnread + tabRequests
+
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => handleTabChange(t)}
+                  className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold capitalize cursor-pointer border-b-2 -mb-px transition-colors ${
+                    tab === t
+                      ? 'border-teal text-charcoal'
+                      : 'border-transparent text-charcoal/45 hover:text-charcoal/70'
+                  }`}
+                >
+                  {t}
+                  {tabIndicator > 0 && (
+                    <span
+                      className={`min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center rounded-full text-[10px] font-bold ${
+                        tabUnread > 0 ? 'bg-teal text-cream' : 'bg-amber-500 text-cream'
+                      }`}
+                    >
+                      {tabIndicator > 99 ? '99+' : tabIndicator}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </>
+      )}
+
+      {inChatView && fetchError && (
+        <p className="text-sm text-red-600 mb-4 border border-red-200 bg-cream px-4 py-3 rounded-sm shrink-0">
           {fetchError}
         </p>
       )}
-
-      <div className="flex gap-1 mb-4 shrink-0 border-b border-border">
-        {(['students', 'teachers'] as const).map((t) => {
-          const tabUnread = t === 'students' ? studentsTabUnread : teachersTabUnread
-          const tabRequests = t === 'students' ? studentsTabBadge : 0
-          const tabIndicator = tabUnread + tabRequests
-
-          return (
-            <button
-              key={t}
-              type="button"
-              onClick={() => handleTabChange(t)}
-              className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold capitalize cursor-pointer border-b-2 -mb-px transition-colors ${
-                tab === t
-                  ? 'border-teal text-charcoal'
-                  : 'border-transparent text-charcoal/45 hover:text-charcoal/70'
-              }`}
-            >
-              {t}
-              {tabIndicator > 0 && (
-                <span
-                  className={`min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center rounded-full text-[10px] font-bold ${
-                    tabUnread > 0 ? 'bg-teal text-cream' : 'bg-amber-500 text-cream'
-                  }`}
-                >
-                  {tabIndicator > 99 ? '99+' : tabIndicator}
-                </span>
-              )}
-            </button>
-          )
-        })}
-      </div>
 
       <div className="flex flex-col md:flex-row gap-4 flex-1 min-h-0 md:h-[calc(100vh-200px)]">
         <UserDirectory
@@ -294,14 +323,31 @@ export function MessagesHub() {
           currentUserRole={userRole}
           loading={loading && !users.length}
           onSelect={setSelectedUserId}
+          className={
+            inChatView
+              ? 'hidden md:flex md:h-full md:w-72'
+              : 'flex flex-1 min-h-0 md:flex-none md:h-full md:w-72'
+          }
         />
 
         {awaitingNavTarget ? (
-          <div className="flex-1 min-h-[420px] hidden md:block">
+          <div
+            className={
+              inChatView
+                ? 'fixed inset-0 z-[55] flex flex-col h-[100dvh] max-h-[100dvh] overflow-hidden bg-cream md:static md:z-auto md:inset-auto md:h-auto md:max-h-none md:flex-1 md:min-h-0'
+                : 'hidden md:block flex-1 min-h-0'
+            }
+          >
             <ChatWindowSkeleton />
           </div>
         ) : selectedUser && user ? (
-          <div className="flex-1 min-h-[420px] md:min-h-0">
+          <div
+            className={
+              inChatView
+                ? 'fixed inset-0 z-[55] flex flex-col h-[100dvh] max-h-[100dvh] overflow-hidden bg-cream md:static md:z-auto md:inset-auto md:h-auto md:max-h-none md:flex-1 md:min-h-0'
+                : 'hidden md:flex flex-1 min-h-0 flex-col'
+            }
+          >
             <DirectChatPanel
               key={`${selectedUser.id}-${selectedUser.threadId ?? 'new'}-${selectedUser.threadStatus ?? 'none'}-${selectedUser.threadHidden ?? false}`}
               user={selectedUser}
@@ -311,6 +357,7 @@ export function MessagesHub() {
               onThreadChange={refreshLists}
               onRead={handleThreadRead}
               onThreadHidden={handleThreadHidden}
+              onBack={() => setSelectedUserId(null)}
             />
           </div>
         ) : loading && !users.length ? (
@@ -319,7 +366,7 @@ export function MessagesHub() {
           </div>
         ) : (
           !loading && (
-            <div className="flex-1 hidden md:flex items-center justify-center border border-border rounded-sm text-sm text-charcoal/50 bg-cream">
+            <div className="flex-1 hidden md:flex items-center justify-center border border-border rounded-sm text-sm text-charcoal/50 bg-cream min-h-[200px]">
               Select someone to start chatting
             </div>
           )

@@ -151,7 +151,7 @@ export function StudentClassesPage(_props: StudentClassesPageProps) {
       {infoToast && (
         <Toast message={infoToast} type="info" onClose={() => setInfoToast(null)} />
       )}
-      <div className="p-6 sm:p-8 max-w-3xl mx-auto">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto">
         <div className="flex items-center gap-2 mb-2">
           <Video size={22} className="text-teal" />
           <h1 className="font-heading text-2xl sm:text-3xl font-medium">Classes</h1>
@@ -218,7 +218,7 @@ export function StudentClassesPage(_props: StudentClassesPageProps) {
               return (
                 <Card
                   key={teacher.id}
-                  className={`p-4 flex items-center justify-between gap-4 ${
+                  className={`p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${
                     teacher.isScheduledNow ? 'border-teal/40 bg-teal-soft/20' : ''
                   }`}
                 >

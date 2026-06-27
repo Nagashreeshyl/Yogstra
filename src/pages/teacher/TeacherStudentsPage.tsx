@@ -22,7 +22,7 @@ export function TeacherStudentsPage() {
   useLiveDataRefresh(refetch, ['bookings'], Boolean(user?.id))
 
   return (
-    <div className="p-8 max-w-3xl">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-3xl">
       <h1 className="text-xl font-semibold mb-6">My Students</h1>
 
       {loading ? (

@@ -26,6 +26,7 @@ interface DirectChatPanelProps {
   onThreadChange: () => void
   onRead?: (threadId: string) => void
   onThreadHidden?: () => void
+  onBack?: () => void
 }
 
 export function DirectChatPanel({
@@ -36,6 +37,7 @@ export function DirectChatPanel({
   onThreadChange,
   onRead,
   onThreadHidden,
+  onBack,
 }: DirectChatPanelProps) {
   const [localUser, setLocalUser] = useState(user)
   const [requesting, setRequesting] = useState(false)
@@ -195,7 +197,8 @@ export function DirectChatPanel({
 
   if (canMessage && !isHidden) {
     return (
-      <WhatsAppChatWindow
+      <div className="h-full min-h-0 flex flex-col flex-1">
+        <WhatsAppChatWindow
         threadId={localUser.threadId!}
         currentUserId={currentUserId}
         currentUserName={currentUserName}
@@ -207,7 +210,9 @@ export function DirectChatPanel({
         currentUserRole={currentUserRole}
         onRead={onRead}
         onThreadHidden={onThreadHidden}
+        onBack={onBack}
       />
+      </div>
     )
   }
 

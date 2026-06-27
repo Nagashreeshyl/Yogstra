@@ -1,4 +1,4 @@
-import { BadgeCheck, CornerUpLeft, Search, Send, ShoppingBag, X } from 'lucide-react'
+import { ArrowLeft, BadgeCheck, CornerUpLeft, Search, Send, ShoppingBag, X } from 'lucide-react'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Avatar } from '../ui/Avatar'
@@ -38,6 +38,7 @@ interface WhatsAppChatWindowProps {
   currentUserRole?: 'student' | 'teacher'
   onRead?: (threadId: string) => void
   onThreadHidden?: () => void
+  onBack?: () => void
 }
 
 export function WhatsAppChatWindow({
@@ -52,6 +53,7 @@ export function WhatsAppChatWindow({
   currentUserRole = 'student',
   onRead,
   onThreadHidden,
+  onBack,
 }: WhatsAppChatWindowProps) {
   const navigate = useNavigate()
   const { messages, loading, sending, error, bottomRef, send, reload } = useDirectChatMessages(
@@ -184,8 +186,22 @@ export function WhatsAppChatWindow({
 
   return (
     <>
-      <div className="flex flex-col h-full min-h-0 bg-cream-dark border border-border rounded-sm overflow-hidden">
-        <div className="px-4 py-3 border-b border-cream/10 bg-charcoal shrink-0 flex items-center gap-2 min-w-0">
+      <div className="flex flex-col flex-1 h-full min-h-0 bg-cream-dark md:border md:border-border md:rounded-sm overflow-hidden">
+        <div
+          className={`px-4 py-3 border-b border-cream/10 bg-charcoal shrink-0 flex items-center gap-2 min-w-0 ${
+            onBack ? 'pt-[max(0.75rem,env(safe-area-inset-top))]' : ''
+          }`}
+        >
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="md:hidden p-1.5 -ml-1 text-cream/70 hover:text-cream rounded-sm cursor-pointer shrink-0"
+              aria-label="Back to conversations"
+            >
+              <ArrowLeft size={20} />
+            </button>
+          )}
           <button
             type="button"
             onClick={() => navigate(profilePath)}
@@ -205,7 +221,7 @@ export function WhatsAppChatWindow({
                   <span className="text-[10px] text-cream/40 uppercase tracking-wide">Muted</span>
                 )}
               </div>
-              <p className="text-xs text-cream/45">Tap to view profile</p>
+              <p className="text-xs text-cream/45 hidden sm:block">Tap to view profile</p>
             </div>
           </button>
           <div className="flex items-center gap-1 shrink-0">
@@ -266,7 +282,8 @@ export function WhatsAppChatWindow({
           </p>
         )}
 
-        <div className="relative flex-1 overflow-y-auto px-4 sm:px-5 py-4 space-y-4 min-h-0 bg-cream-dark">
+        <div className="relative flex-1 min-h-0 overflow-y-auto bg-cream-dark flex flex-col">
+          <div className="mt-auto px-4 sm:px-5 py-4 space-y-4">
           <ChatEphemeralToast
             message={ephemeralNotice}
             onDismiss={() => setEphemeralNotice(null)}
@@ -375,6 +392,7 @@ export function WhatsAppChatWindow({
             })
           )}
           <div ref={bottomRef} />
+          </div>
         </div>
 
         {error && (
@@ -401,7 +419,9 @@ export function WhatsAppChatWindow({
 
         <form
           onSubmit={handleSubmit}
-          className="px-3 py-2.5 border-t border-border bg-cream-dark shrink-0 flex items-center gap-2"
+          className={`px-3 pt-2.5 border-t border-border bg-cream-dark shrink-0 flex items-center gap-2 ${
+            onBack ? 'pb-[max(0.5rem,env(safe-area-inset-bottom))]' : 'pb-2.5'
+          }`}
         >
           <input
             type="text"

@@ -30,7 +30,7 @@ export function AdminBookingsPage() {
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <h1 className="font-heading text-3xl font-medium mb-8">Bookings</h1>
 
       {loading ? (

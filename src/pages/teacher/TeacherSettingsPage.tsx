@@ -316,7 +316,15 @@ export function TeacherSettingsPage() {
           />
         }
       >
-        <div className="flex gap-1 border-b border-border mb-6">
+        <div className="md:hidden mb-6">
+          <SettingsSidebar
+            name={fullName || user?.name || ''}
+            avatarPreview={avatarPreview}
+            coverPreview={coverPreview}
+            completion={completion}
+          />
+        </div>
+        <div className="flex gap-1 border-b border-border mb-6 overflow-x-auto">
           {(['profile', 'pricing'] as const).map((tab) => (
             <button
               key={tab}
@@ -449,7 +457,7 @@ export function TeacherSettingsPage() {
         >
           <Input label="Name *" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
           <Input label="Phone *" value={phone} onChange={(e) => setPhone(e.target.value)} required />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input label="City *" value={city} onChange={(e) => setCity(e.target.value)} required />
             <Input label="State *" value={state} onChange={(e) => setState(e.target.value)} required />
           </div>
@@ -535,7 +543,7 @@ export function TeacherSettingsPage() {
             >
               <div>
                 <h2 className="text-sm font-semibold mb-3">1-on-1 classes</h2>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
                     label="1 week (₹) *"
                     type="text"
@@ -558,7 +566,7 @@ export function TeacherSettingsPage() {
               </div>
               <div>
                 <h2 className="text-sm font-semibold mb-3">Group classes (1-to-many)</h2>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
                     label="1 week (₹) *"
                     type="text"

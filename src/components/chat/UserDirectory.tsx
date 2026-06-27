@@ -15,6 +15,7 @@ interface UserDirectoryProps {
   currentUserRole: 'student' | 'teacher'
   loading: boolean
   onSelect: (userId: string) => void
+  className?: string
 }
 
 export function UserDirectory({
@@ -25,21 +26,28 @@ export function UserDirectory({
   currentUserRole,
   loading,
   onSelect,
+  className = '',
 }: UserDirectoryProps) {
   if (loading) {
-    return <UserDirectorySkeleton />
+    return (
+      <div className={className}>
+        <UserDirectorySkeleton />
+      </div>
+    )
   }
 
   if (users.length === 0) {
     return (
-      <div className="border border-border rounded-sm p-6 text-sm text-charcoal/50 bg-cream h-full">
+      <div className={`border border-border rounded-sm p-6 text-sm text-charcoal/50 bg-cream md:h-full ${className}`}>
         No {tab} found yet.
       </div>
     )
   }
 
   return (
-    <div className="border border-border rounded-sm overflow-hidden bg-cream shrink-0 w-full md:w-72 h-full flex flex-col">
+    <div
+      className={`overflow-hidden bg-cream shrink-0 w-full flex flex-col md:border md:border-border md:rounded-sm md:h-full md:w-72 ${className}`}
+    >
       <div className="overflow-y-auto flex-1">
         {users.map((user) => {
           const requestRequired = requiresChatRequest(currentUserRole, user.role)

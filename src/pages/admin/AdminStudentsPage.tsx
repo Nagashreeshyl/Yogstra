@@ -45,7 +45,7 @@ export function AdminStudentsPage() {
   const getTeacherName = (id?: string) => (teachers ?? []).find((t) => t.id === id)?.name || '—'
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <h1 className="font-heading text-3xl font-medium mb-8">Students</h1>
 
       {loading ? (

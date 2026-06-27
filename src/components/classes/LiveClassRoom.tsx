@@ -153,7 +153,7 @@ export function LiveClassRoom({
   }
 
   return (
-    <div className="fixed inset-0 z-[100] bg-charcoal">
+    <div className="fixed inset-0 z-[100] bg-charcoal pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
       {callPhase === 'confirm_end' && role === 'teacher' && (
         <ClassSessionStatusWatcher sessionId={session.id} onTerminalStatus={handleRemoteEnd} />
       )}
