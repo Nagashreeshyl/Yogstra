@@ -72,17 +72,23 @@ export interface TeacherSettingsData {
   certifications: string
   monthlyFee: number
   specializations: string[]
+  avatarUrl?: string | null
 }
 
 export async function updateTeacherSettings(teacherId: string, data: TeacherSettingsData) {
+  const profileUpdate: Record<string, unknown> = {
+    full_name: data.fullName,
+    phone: data.phone,
+    city: data.city,
+    state: data.state,
+  }
+  if (data.avatarUrl !== undefined) {
+    profileUpdate.avatar_url = data.avatarUrl
+  }
+
   const { error: profileError } = await supabase
     .from('profiles')
-    .update({
-      full_name: data.fullName,
-      phone: data.phone,
-      city: data.city,
-      state: data.state,
-    })
+    .update(profileUpdate)
     .eq('id', teacherId)
 
   if (profileError) throw profileError

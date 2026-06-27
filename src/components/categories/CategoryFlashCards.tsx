@@ -41,7 +41,7 @@ export function CategoryFlashCards({ onSelect }: CategoryFlashCardsProps) {
               className={`shrink-0 w-28 flex flex-col items-center gap-3 p-4 border rounded-sm transition-colors cursor-pointer ${
                 isActive
                   ? 'border-teal bg-teal-soft'
-                  : 'border-border bg-cream-dark hover:border-teal/50'
+                  : 'border-border bg-cream hover:border-teal/50'
               }`}
             >
               <div className="w-12 h-12 flex items-center justify-center">

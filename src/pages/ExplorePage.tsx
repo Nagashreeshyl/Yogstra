@@ -20,28 +20,33 @@ export function ExplorePage() {
   const fallbackFeatured = allTeachers.filter((t) => t.verified).slice(0, 3)
 
   return (
-    <div className="p-8">
-      <div className="flex gap-8">
-        <div className="flex-[3] min-w-0 space-y-8">
+    <div className="mx-auto max-w-6xl px-6 py-8">
+      <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
+        <div className="flex-1 min-w-0 space-y-8">
           <SearchBar />
           <CategoryFlashCards />
-          {postsLoading ? (
-            <p className="text-charcoal/50 text-sm">Loading feed...</p>
-          ) : postsError ? (
-            <p className="text-sm text-red-600 border border-red-200 bg-red-50 px-4 py-3 rounded-sm">
-              Could not load posts: {postsError}
-            </p>
-          ) : (posts ?? []).length === 0 ? (
-            <div className="border border-border rounded-sm p-8 text-center">
-              <p className="text-charcoal/60 text-sm">No community posts yet.</p>
-              <p className="text-charcoal/40 text-xs mt-1">Posts from Supabase will appear here.</p>
-            </div>
-          ) : (
-            <CommunityFeed posts={posts ?? []} />
-          )}
+
+          <section>
+            {postsLoading ? (
+              <p className="text-charcoal/50 text-sm">Loading feed...</p>
+            ) : postsError ? (
+              <p className="text-sm text-red-600 border border-red-200 bg-red-50 px-4 py-3 rounded-sm">
+                Could not load posts: {postsError}
+              </p>
+            ) : (posts ?? []).length === 0 ? (
+              <div className="border border-border rounded-sm p-8 text-center max-w-[520px]">
+                <p className="text-charcoal/60 text-sm">No community posts yet.</p>
+                <p className="text-charcoal/40 text-xs mt-1">Posts from Supabase will appear here.</p>
+              </div>
+            ) : (
+              <div className="max-w-[470px]">
+                <CommunityFeed posts={posts ?? []} variant="instagram" />
+              </div>
+            )}
+          </section>
         </div>
 
-        <aside className="flex-[1] min-w-[260px] max-w-[300px] shrink-0 hidden lg:block">
+        <aside className="w-full lg:w-[280px] shrink-0 space-y-8">
           {teachersLoading ? (
             <p className="text-charcoal/50 text-sm">Loading teachers...</p>
           ) : teachersError ? (

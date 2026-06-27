@@ -5,21 +5,24 @@ export function useAsyncData<T>(fetcher: () => Promise<T>, deps: unknown[] = [])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const refetch = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+  const refetch = useCallback(async (silent = false) => {
+    if (!silent) {
+      setLoading(true)
+      setError(null)
+    }
     try {
       const result = await fetcher()
       setData(result)
+      if (silent) setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }, deps) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    refetch()
+    void refetch(false)
   }, [refetch])
 
   return { data, loading, error, refetch, setData }

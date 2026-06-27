@@ -1,4 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
+import ReactCrop, { centerCrop, makeAspectCrop, type Crop, type PixelCrop } from 'react-image-crop'
+import 'react-image-crop/dist/ReactCrop.css'
+import { cropImageToBlob, percentToPixelCrop, prepareImageForCrop } from '../../utils/imageCrop'
 import { X, ImagePlus, Film } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { Button } from '../ui/Button'
@@ -22,6 +25,26 @@ export function CreatePostModal({ isOpen, onClose, onPost }: CreatePostModalProp
   const [caption, setCaption] = useState('')
   const [media, setMedia] = useState<MediaPreview | null>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const [showCropModal, setShowCropModal] = useState(false)
+  const [cropImage, setCropImage] = useState<string>('')
+  const [crop, setCrop] = useState<Crop>()
+  const [cropImageSize, setCropImageSize] = useState({ width: 0, height: 0 })
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
+  const imgRef = useRef<HTMLImageElement>(null)
+  const pixelCropRef = useRef<PixelCrop | null>(null)
+
+  const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget
+    const width = img.clientWidth
+    const height = img.clientHeight
+    const nextCrop = centerCrop(
+      makeAspectCrop({ unit: '%', width: 90 }, 16 / 9, width, height),
+      width,
+      height,
+    )
+    setCrop(nextCrop)
+    pixelCropRef.current = percentToPixelCrop(nextCrop, width, height)
+  }
 
   const reset = useCallback(() => {
     setCaption('')
@@ -41,17 +64,74 @@ export function CreatePostModal({ isOpen, onClose, onPost }: CreatePostModalProp
     if (!isOpen) reset()
   }, [isOpen, reset])
 
-  const handleFile = (file: File) => {
+  const handleFile = async (file: File) => {
     if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) return
 
-    if (media) URL.revokeObjectURL(media.url)
+    if (file.type.startsWith('image/')) {
+      setPendingFile(file)
+      setCrop(undefined)
+      pixelCropRef.current = null
+      try {
+        const prepared = await prepareImageForCrop(file)
+        setCropImage(prepared.src)
+        setCropImageSize({ width: prepared.width, height: prepared.height })
+        setShowCropModal(true)
+      } catch {
+        setPendingFile(null)
+      }
+    } else {
+      if (media) URL.revokeObjectURL(media.url)
 
-    const url = URL.createObjectURL(file)
-    setMedia({
-      url,
-      type: file.type.startsWith('video/') ? 'video' : 'image',
-      file,
-    })
+      const url = URL.createObjectURL(file)
+      setMedia({
+        url,
+        type: 'video',
+        file,
+      })
+    }
+  }
+
+  const handleCropConfirm = async () => {
+    const pixelCrop =
+      pixelCropRef.current ??
+      (crop && imgRef.current?.clientWidth
+        ? percentToPixelCrop(crop, imgRef.current.clientWidth, imgRef.current.clientHeight)
+        : null)
+
+    if (!imgRef.current || !pendingFile || !pixelCrop?.width || !pixelCrop?.height) return
+
+    try {
+      const croppedBlob = await cropImageToBlob(
+        imgRef.current,
+        pixelCrop,
+        800,
+        450,
+      )
+      const croppedFile = new File([croppedBlob], 'post-image.jpg', { type: 'image/jpeg' })
+
+      if (media) URL.revokeObjectURL(media.url)
+
+      const url = URL.createObjectURL(croppedFile)
+      setMedia({
+        url,
+        type: 'image',
+        file: croppedFile,
+      })
+
+      setShowCropModal(false)
+      setPendingFile(null)
+    } catch (err) {
+      console.error('Crop error:', err)
+    }
+  }
+
+  const handleCropCancel = () => {
+    setShowCropModal(false)
+    setCropImage('')
+    setCrop(undefined)
+    setCropImageSize({ width: 0, height: 0 })
+    pixelCropRef.current = null
+    setPendingFile(null)
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -210,6 +290,53 @@ export function CreatePostModal({ isOpen, onClose, onPost }: CreatePostModalProp
           </div>
         </div>
       </div>
+
+      {showCropModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ backgroundColor: '#FAF7F2', padding: '24px', borderRadius: '8px', maxWidth: '600px', width: '90%' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '500', marginBottom: '16px', textAlign: 'center' }}>Crop Your Image</h3>
+            <div style={{ marginBottom: '16px' }}>
+              <ReactCrop
+                crop={crop}
+                onChange={(pixelCrop, percentCrop) => {
+                  setCrop(percentCrop)
+                  pixelCropRef.current = pixelCrop
+                }}
+                onComplete={(pixelCrop) => {
+                  pixelCropRef.current = pixelCrop
+                }}
+                aspect={16 / 9}
+              >
+                <img
+                  ref={imgRef}
+                  src={cropImage}
+                  alt="Crop preview"
+                  width={cropImageSize.width}
+                  height={cropImageSize.height}
+                  onLoad={onImageLoad}
+                  style={{ display: 'block', maxWidth: '100%', height: 'auto' }}
+                />
+              </ReactCrop>
+            </div>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={handleCropCancel}
+                style={{ padding: '10px 20px', border: '1px solid #E8DCC8', borderRadius: '4px', backgroundColor: 'white', cursor: 'pointer', fontSize: '14px' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleCropConfirm}
+                style={{ padding: '10px 20px', border: 'none', borderRadius: '4px', backgroundColor: '#5BB8C4', color: 'white', cursor: 'pointer', fontSize: '14px' }}
+              >
+                Use This Image
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

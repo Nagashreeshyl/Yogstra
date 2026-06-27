@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Users, Calendar, IndianRupee, Star, MessageCircle } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { useAsyncData } from '../hooks/useAsyncData'
@@ -10,6 +11,7 @@ import {
   updateBookingStatus,
 } from '../services/bookings'
 import { fetchTeacherById } from '../services/teachers'
+import { Avatar } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
@@ -62,7 +64,7 @@ export function TeacherDashboardPage() {
   ]
 
   return (
-    <div className="p-8">
+    <div className="mx-auto max-w-6xl px-6 py-8">
       <h1 className="font-heading text-3xl font-medium mb-8">Dashboard</h1>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -136,22 +138,41 @@ export function TeacherDashboardPage() {
             {(posts ?? []).length === 0 ? (
               <p className="text-sm text-charcoal/50">No community posts yet.</p>
             ) : (
-              posts!.map((post) => (
-                <Card key={post.id} className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    {post.studentAvatar ? (
-                      <img src={post.studentAvatar} alt="" className="w-6 h-6 rounded-full" />
-                    ) : (
-                      <div className="w-6 h-6 rounded-full bg-teal-soft" />
+              <>
+                {posts!.map((post) => (
+                  <Card key={post.id} className="p-4 overflow-hidden">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Avatar src={post.studentAvatar} name={post.studentName} size={28} />
+                      <span className="text-sm font-medium">{post.studentName}</span>
+                    </div>
+                    {post.image && !post.video && (
+                      <div className="w-full aspect-[4/5] overflow-hidden rounded-sm mb-2 bg-cream-dark">
+                        <img
+                          src={post.image}
+                          alt=""
+                          className="w-full h-full object-cover object-center"
+                        />
+                      </div>
                     )}
-                    <span className="text-sm font-medium">{post.studentName}</span>
-                  </div>
-                  <p className="text-sm text-charcoal/70 line-clamp-2">{post.text}</p>
-                  <button type="button" className="flex items-center gap-1.5 text-xs text-teal mt-3 cursor-pointer">
-                    <MessageCircle size={14} /> Add Comment
-                  </button>
-                </Card>
-              ))
+                    {post.video && (
+                      <video
+                        src={post.video}
+                        controls
+                        className="w-full aspect-[4/5] max-h-[280px] rounded-sm mb-2 object-cover bg-cream-dark"
+                      />
+                    )}
+                    {post.text && (
+                      <p className="text-sm text-charcoal/70 line-clamp-2">{post.text}</p>
+                    )}
+                    <Link
+                      to="/dashboard/teacher/community"
+                      className="flex items-center gap-1.5 text-xs text-teal mt-3"
+                    >
+                      <MessageCircle size={14} /> View in Community
+                    </Link>
+                  </Card>
+                ))}
+              </>
             )}
           </div>
         </div>

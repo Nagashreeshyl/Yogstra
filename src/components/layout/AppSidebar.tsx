@@ -4,6 +4,7 @@ import {
 } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { getDashboardPath } from '../../utils/authRouting'
+import { Avatar } from '../ui/Avatar'
 
 const navItems = [
   { to: '/', label: 'Explore', icon: Compass },
@@ -14,7 +15,7 @@ const navItems = [
 ]
 
 const studentOnlyNav = [
-  { to: '/student/messages', label: 'Messages', icon: MessageCircle },
+  { to: '/dashboard/student/messages', label: 'Messages', icon: MessageCircle },
 ]
 
 export function AppSidebar() {
@@ -22,15 +23,12 @@ export function AppSidebar() {
 
   const handleAuth = () => setShowRoleModal(true)
   const homeLink = user ? getDashboardPath(user) : '/'
-  const initials = user?.name
-    ? user.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
-    : ''
 
   return (
-    <aside className="w-56 shrink-0 border-r border-border bg-cream flex flex-col h-full">
-      <div className="p-6 border-b border-border">
+    <aside className="w-56 shrink-0 bg-charcoal flex flex-col h-full">
+      <div className="p-6 border-b border-cream/10">
         <Link to={homeLink} className="block">
-          <h1 className="font-heading text-2xl font-semibold text-charcoal tracking-tight">
+          <h1 className="font-heading text-xl font-semibold text-cream tracking-tight">
             Yogstra
           </h1>
         </Link>
@@ -45,15 +43,15 @@ export function AppSidebar() {
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-sm text-sm transition-colors ${
                 isActive
-                  ? 'bg-teal-soft text-charcoal font-medium'
-                  : 'text-charcoal/70 hover:text-charcoal hover:bg-cream-dark'
+                  ? 'bg-teal/20 text-cream font-medium'
+                  : 'text-cream/60 hover:text-cream hover:bg-charcoal/50'
               }`
             }
           >
             <Icon size={18} strokeWidth={1.5} />
             <span className="flex-1">{label}</span>
             {badge && (
-              <span className="text-[10px] px-1.5 py-0.5 border border-border rounded-sm text-charcoal/50">
+              <span className="text-[10px] px-1.5 py-0.5 border border-cream/20 rounded-sm text-cream/50">
                 v2
               </span>
             )}
@@ -63,7 +61,7 @@ export function AppSidebar() {
           <Link
             key={to}
             to={to}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-sm text-sm transition-colors text-charcoal/70 hover:text-charcoal hover:bg-cream-dark"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-sm text-sm transition-colors text-cream/60 hover:text-cream hover:bg-charcoal/50"
           >
             <Icon size={18} strokeWidth={1.5} />
             <span className="flex-1">{label}</span>
@@ -71,35 +69,31 @@ export function AppSidebar() {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-border">
+      <div className="p-4 border-t border-cream/10">
         {authLoading ? (
-          <p className="text-xs text-charcoal/40 px-2">Loading...</p>
+          <p className="text-xs text-cream/40 px-2">Loading...</p>
         ) : isLoggedIn && user ? (
           <div className="space-y-3">
             <div className="flex items-center gap-3 px-2">
-              {user.avatar ? (
-                <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full object-cover" />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-teal-soft flex items-center justify-center text-xs font-medium">
-                  {initials}
-                </div>
-              )}
+              <Avatar src={user.avatar} name={user.name} size={36} />
               <div className="min-w-0">
-                <p className="text-sm font-medium truncate">{user.name}</p>
-                <p className="text-xs text-charcoal/50 capitalize">{user.role}</p>
+                <p className="text-sm font-medium truncate text-cream">{user.name}</p>
+                <p className="text-xs text-cream/50 capitalize">{user.role}</p>
               </div>
             </div>
-            <Link
-              to={getDashboardPath(user)}
-              className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium text-charcoal hover:bg-teal-soft rounded-sm transition-colors"
-            >
-              <LayoutDashboard size={16} />
-              Go to Dashboard
-            </Link>
+            {user.role !== 'student' && (
+              <Link
+                to={getDashboardPath(user)}
+                className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium text-cream hover:bg-teal/20 rounded-sm transition-colors"
+              >
+                <LayoutDashboard size={16} />
+                Go to Dashboard
+              </Link>
+            )}
             <button
               type="button"
               onClick={() => logout()}
-              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-charcoal/70 hover:text-charcoal hover:bg-cream-dark rounded-sm transition-colors cursor-pointer"
+              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-cream/60 hover:text-cream hover:bg-charcoal/50 rounded-sm transition-colors cursor-pointer"
             >
               <LogOut size={16} />
               Logout
@@ -109,14 +103,14 @@ export function AppSidebar() {
           <div className="space-y-1">
             <button
               onClick={handleAuth}
-              className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-charcoal/70 hover:text-charcoal hover:bg-cream-dark rounded-sm transition-colors cursor-pointer"
+              className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-cream/60 hover:text-cream hover:bg-charcoal/50 rounded-sm transition-colors cursor-pointer"
             >
               <LogIn size={16} />
               Login
             </button>
             <button
               onClick={handleAuth}
-              className="flex items-center gap-2 w-full px-3 py-2.5 text-sm font-medium text-charcoal hover:bg-teal-soft rounded-sm transition-colors cursor-pointer"
+              className="flex items-center gap-2 w-full px-3 py-2.5 text-sm font-medium text-cream hover:bg-teal/20 rounded-sm transition-colors cursor-pointer"
             >
               <UserPlus size={16} />
               Sign Up

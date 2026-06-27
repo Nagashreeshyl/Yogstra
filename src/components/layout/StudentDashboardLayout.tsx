@@ -1,12 +1,12 @@
 import { Outlet } from 'react-router-dom'
-import { AppSidebar } from './AppSidebar'
+import { StudentSidebar } from './StudentSidebar'
 import { RoleSelectionModal } from '../auth/RoleSelectionModal'
 
 export function StudentDashboardLayout() {
   return (
     <div className="flex h-full bg-cream">
-      <AppSidebar />
-      <main className="flex-1 overflow-y-auto">
+      <StudentSidebar />
+      <main className="flex-1 overflow-y-auto bg-cream min-h-full">
         <Outlet />
       </main>
       <RoleSelectionModal />

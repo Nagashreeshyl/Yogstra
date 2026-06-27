@@ -67,14 +67,16 @@ export function StudentAuthPage() {
           <h1 className="font-heading text-3xl font-semibold mb-2">Yogstra</h1>
         </div>
 
-        <div className="flex border border-border rounded-sm mb-6 overflow-hidden">
+        <div className="flex border border-border rounded-sm mb-6 overflow-hidden p-1 bg-cream">
           {(['login', 'signup'] as const).map((m) => (
             <button
               key={m}
               type="button"
               onClick={() => { setMode(m); setError(null); setSuccess(null) }}
-              className={`flex-1 py-2.5 text-sm font-medium capitalize cursor-pointer transition-colors ${
-                mode === m ? 'bg-teal-soft text-charcoal' : 'text-charcoal/50 hover:bg-cream-dark'
+              className={`flex-1 py-2.5 text-sm font-medium capitalize cursor-pointer transition-colors rounded-sm ${
+                mode === m
+                  ? 'bg-charcoal text-cream font-medium'
+                  : 'text-charcoal/50 hover:text-charcoal hover:bg-cream-dark'
               }`}
             >
               {m === 'login' ? 'Login' : 'Sign Up'}

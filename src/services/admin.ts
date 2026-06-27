@@ -35,51 +35,121 @@ export async function fetchTeacherPayouts(teacherId: string): Promise<Payout[]> 
 }
 
 export async function fetchChatConversations(): Promise<ChatConversation[]> {
-  const { data, error } = await supabase
-    .from('messages')
-    .select(`
-      *,
-      sender:profiles!sender_id (*),
-      booking:bookings (
-        *,
-        student:profiles!student_id (*),
-        teacher:profiles!teacher_id (*)
-      )
-    `)
-    .order('created_at', { ascending: true })
+  const { data: threads, error: threadsError } = await supabase
+    .from('chat_threads')
+    .select('*')
+    .eq('status', 'accepted')
+    .order('updated_at', { ascending: false })
 
-  if (error) throw error
-
-  const convMap = new Map<string, ChatConversation>()
-
-  for (const msg of data ?? []) {
-    const bookingId = msg.booking_id ?? msg.id
-    const booking = Array.isArray(msg.booking) ? msg.booking[0] : msg.booking
-    const teacher = booking?.teacher
-    const student = booking?.student
-    const teacherName = teacher?.full_name ?? 'Teacher'
-    const studentName = student?.full_name ?? 'Student'
-
-    if (!convMap.has(bookingId)) {
-      convMap.set(bookingId, {
-        id: bookingId,
-        teacherName,
-        studentName,
-        lastMessage: msg.content ?? '',
-        messages: [],
-      })
-    }
-
-    const conv = convMap.get(bookingId)!
-    conv.messages.push({
-      sender: msg.sender?.full_name ?? 'Unknown',
-      text: msg.content ?? '',
-      time: formatTime(msg.created_at),
-    })
-    conv.lastMessage = msg.content ?? ''
+  if (threadsError) {
+    if (threadsError.code === 'PGRST205' || threadsError.code === '42P01') return []
+    throw threadsError
   }
 
-  return Array.from(convMap.values())
+  if (!threads?.length) return []
+
+  const threadIds = threads.map((t) => t.id)
+  const participantIds = [
+    ...new Set(threads.flatMap((t) => [t.participant_a, t.participant_b])),
+  ]
+
+  const { data: profiles, error: profilesError } = await supabase
+    .from('profiles')
+    .select('id, full_name, role')
+    .in('id', participantIds)
+
+  if (profilesError) throw profilesError
+
+  const profileMap = new Map(
+    (profiles ?? []).map((p) => [p.id, { name: p.full_name ?? 'User', role: p.role ?? 'user' }]),
+  )
+
+  const { data: messages, error: messagesError } = await supabase
+    .from('direct_messages')
+    .select('*, sender:profiles!sender_id(full_name)')
+    .in('thread_id', threadIds)
+    .order('created_at', { ascending: true })
+
+  if (messagesError) {
+    if (messagesError.code === 'PGRST205' || messagesError.code === '42P01') return []
+    throw messagesError
+  }
+
+  const messagesByThread = new Map<string, typeof messages>()
+  for (const msg of messages ?? []) {
+    const list = messagesByThread.get(msg.thread_id) ?? []
+    list.push(msg)
+    messagesByThread.set(msg.thread_id, list)
+  }
+
+  return threads.map((thread) => {
+    const one = profileMap.get(thread.participant_a)
+    const two = profileMap.get(thread.participant_b)
+    const threadMessages = messagesByThread.get(thread.id) ?? []
+    const mappedMessages = threadMessages.map((msg) => {
+      const sender = Array.isArray(msg.sender) ? msg.sender[0] : msg.sender
+      return {
+        sender: sender?.full_name ?? 'Unknown',
+        text: msg.content ?? '',
+        time: formatTime(msg.created_at),
+      }
+    })
+
+    return {
+      id: thread.id,
+      participantOneName: one?.name ?? 'User',
+      participantTwoName: two?.name ?? 'User',
+      participantOneRole: one?.role ?? 'user',
+      participantTwoRole: two?.role ?? 'user',
+      lastMessage: mappedMessages.at(-1)?.text ?? '',
+      messages: mappedMessages,
+    }
+  })
+}
+
+export function subscribeToAdminChats(onUpdate: () => void) {
+  const channel = supabase
+    .channel('admin_chats')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'direct_messages' },
+      () => onUpdate(),
+    )
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'chat_threads' },
+      () => onUpdate(),
+    )
+    .subscribe()
+
+  return () => {
+    void supabase.removeChannel(channel)
+  }
+}
+
+export function subscribeToAdminDashboard(onUpdate: () => void) {
+  const channel = supabase
+    .channel('admin_dashboard')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'profiles' },
+      () => onUpdate(),
+    )
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'bookings' },
+      () => onUpdate(),
+    )
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'teacher_profiles' },
+      () => onUpdate(),
+    )
+    .subscribe()
+
+  return () => {
+    void supabase.removeChannel(channel)
+  }
 }
 
 export async function fetchRecentActivity(): Promise<{ id: string; text: string; time: string }[]> {

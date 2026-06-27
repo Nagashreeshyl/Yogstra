@@ -48,6 +48,7 @@ export function mapTeacher(row: ProfileWithTeacher, email = ''): Teacher {
     email,
     phone: row.phone ?? '',
     photo: row.avatar_url ?? '',
+    coverPhoto: tp?.cover_url ?? '',
     specializations: tp?.specializations ?? [],
     rating: Number(tp?.rating ?? 0),
     experienceYears: expYears,

@@ -16,6 +16,7 @@ export interface Teacher {
   email: string
   phone: string
   photo: string
+  coverPhoto: string
   specializations: string[]
   rating: number
   experienceYears: number
@@ -43,6 +44,12 @@ export interface Student {
   joinedDate: string
   activeTeacherId?: string
   totalSessions: number
+}
+
+export interface StudentDetail extends Student {
+  city: string
+  state: string
+  activeTeacherName?: string
 }
 
 export interface CommunityPost {
@@ -93,8 +100,10 @@ export interface ScheduleClass {
 
 export interface ChatConversation {
   id: string
-  teacherName: string
-  studentName: string
+  participantOneName: string
+  participantTwoName: string
+  participantOneRole: string
+  participantTwoRole: string
   lastMessage: string
   messages: { sender: string; text: string; time: string }[]
 }
@@ -114,6 +123,30 @@ export interface MessageConversation {
   participantVerified?: boolean
   lastMessage?: string
   lastMessageAt?: string
+}
+
+export type ChatThreadStatus = 'pending' | 'accepted' | 'rejected'
+
+export interface MessagingUser {
+  id: string
+  name: string
+  avatar: string
+  role: 'student' | 'teacher'
+  verified?: boolean
+  threadId?: string
+  threadStatus?: ChatThreadStatus
+  requestedBy?: string
+  lastMessage?: string
+  lastMessageAt?: string
+  unreadCount?: number
+}
+
+export interface DirectChatMessage {
+  id: string
+  threadId: string
+  senderId: string
+  content: string
+  createdAt: string
 }
 
 export interface Payout {

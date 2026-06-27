@@ -6,7 +6,7 @@ export function TeacherDashboardLayout() {
   return (
     <div className="flex h-full bg-cream">
       <TeacherSidebar />
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto bg-cream min-h-full">
         <Outlet />
       </main>
       <RoleSelectionModal />

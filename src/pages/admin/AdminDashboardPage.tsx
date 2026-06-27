@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import {
   fetchActiveBookingCount,
@@ -8,28 +9,43 @@ import {
   fetchTeacherCount,
 } from '../../services/teachers'
 import { fetchStudentCount } from '../../services/students'
-import { fetchRecentActivity } from '../../services/admin'
+import { fetchRecentActivity, subscribeToAdminDashboard } from '../../services/admin'
 import { AdminTable, StatCard } from '../../components/admin/AdminTable'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { updateTeacherStatus } from '../../services/teachers'
 
 export function AdminDashboardPage() {
-  const { data: teacherCount } = useAsyncData(() => fetchTeacherCount())
-  const { data: studentCount } = useAsyncData(() => fetchStudentCount())
-  const { data: activeBookings } = useAsyncData(() => fetchActiveBookingCount())
-  const { data: revenue } = useAsyncData(() => fetchMonthlyRevenue())
-  const { data: pending, refetch } = useAsyncData(() => fetchPendingTeachers())
-  const { data: activities } = useAsyncData(() => fetchRecentActivity())
+  const { data: teacherCount, refetch: refetchTeachers } = useAsyncData(() => fetchTeacherCount())
+  const { data: studentCount, refetch: refetchStudents } = useAsyncData(() => fetchStudentCount())
+  const { data: activeBookings, refetch: refetchBookings } = useAsyncData(() =>
+    fetchActiveBookingCount(),
+  )
+  const { data: revenue, refetch: refetchRevenue } = useAsyncData(() => fetchMonthlyRevenue())
+  const { data: pending, refetch: refetchPending } = useAsyncData(() => fetchPendingTeachers())
+  const { data: activities, refetch: refetchActivity } = useAsyncData(() => fetchRecentActivity())
+
+  useEffect(() => {
+    const refresh = () => {
+      void refetchTeachers(true)
+      void refetchStudents(true)
+      void refetchBookings(true)
+      void refetchRevenue(true)
+      void refetchPending(true)
+      void refetchActivity(true)
+    }
+    const unsubscribe = subscribeToAdminDashboard(refresh)
+    return unsubscribe
+  }, [refetchTeachers, refetchStudents, refetchBookings, refetchRevenue, refetchPending, refetchActivity])
 
   const handleApprove = async (id: string) => {
     await updateTeacherStatus(id, 'verified')
-    await refetch()
+    await refetchPending(true)
   }
 
   const handleReject = async (id: string) => {
     await updateTeacherStatus(id, 'rejected')
-    await refetch()
+    await refetchPending(true)
   }
 
   return (

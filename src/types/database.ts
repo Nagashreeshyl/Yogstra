@@ -19,6 +19,7 @@ export interface DbTeacherProfile {
   total_students: number | null
   status: 'pending' | 'verified' | 'rejected' | null
   specializations: string[] | null
+  cover_url: string | null
 }
 
 export interface DbCategory {

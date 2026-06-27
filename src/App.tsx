@@ -1,6 +1,7 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AppProvider } from './context/AppContext'
 import { AppLayout } from './components/layout/AppLayout'
+import { StudentPublicRedirect } from './components/auth/StudentPublicRedirect'
 import { StudentDashboardLayout } from './components/layout/StudentDashboardLayout'
 import { TeacherDashboardLayout } from './components/layout/TeacherDashboardLayout'
 import { AdminLayout } from './components/admin/AdminLayout'
@@ -8,6 +9,7 @@ import { RequireRole, RequireVerifiedTeacher, RequireGuest } from './components/
 import { ExplorePage } from './pages/ExplorePage'
 import { FindTeachersPage } from './pages/FindTeachersPage'
 import { TeacherProfilePage } from './pages/TeacherProfilePage'
+import { StudentProfilePage } from './pages/StudentProfilePage'
 import { CommunityPage } from './pages/CommunityPage'
 import { CompetitionsPage } from './pages/CompetitionsPage'
 import { ShopPage } from './pages/ShopPage'
@@ -16,13 +18,14 @@ import { StudentAuthPage } from './pages/StudentAuthPage'
 import { TeacherLoginPage } from './pages/TeacherLoginPage'
 import { TeacherRegistrationPage } from './pages/TeacherRegistrationPage'
 import { TeacherPendingPage } from './pages/TeacherPendingPage'
-import { StudentDashboardPage } from './pages/StudentDashboardPage'
 import { StudentMessagesPage } from './pages/StudentMessagesPage'
+import { StudentSettingsPage } from './pages/student/StudentSettingsPage'
 import { TeacherDashboardPage } from './pages/TeacherDashboardPage'
 import { TeacherStudentsPage } from './pages/teacher/TeacherStudentsPage'
 import { TeacherSchedulePage } from './pages/teacher/TeacherSchedulePage'
 import { TeacherEarningsPage } from './pages/teacher/TeacherEarningsPage'
 import { TeacherSettingsPage } from './pages/teacher/TeacherSettingsPage'
+import { TeacherCommunityPage } from './pages/teacher/TeacherCommunityPage'
 import { TeacherMessagesPage } from './pages/teacher/TeacherMessagesPage'
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage'
 import { AdminTeachersPage } from './pages/admin/AdminTeachersPage'
@@ -40,10 +43,17 @@ export default function App() {
     <AppProvider>
       <BrowserRouter>
         <Routes>
-          <Route element={<AppLayout />}>
+          <Route
+            element={
+              <StudentPublicRedirect>
+                <AppLayout />
+              </StudentPublicRedirect>
+            }
+          >
             <Route index element={<ExplorePage />} />
             <Route path="teachers" element={<FindTeachersPage />} />
             <Route path="teachers/:id" element={<TeacherProfilePage />} />
+            <Route path="students/:id" element={<StudentProfilePage />} />
             <Route path="community" element={<CommunityPage />} />
             <Route path="competitions" element={<CompetitionsPage />} />
             <Route path="shop" element={<ShopPage />} />
@@ -61,11 +71,17 @@ export default function App() {
 
           <Route element={<RequireRole roles={['student']} />}>
             <Route path="dashboard/student" element={<StudentDashboardLayout />}>
-              <Route index element={<StudentDashboardPage />} />
-            </Route>
-            <Route path="student" element={<StudentDashboardLayout />}>
+              <Route index element={<Navigate to="explore" replace />} />
+              <Route path="explore" element={<ExplorePage />} />
+              <Route path="teachers" element={<FindTeachersPage />} />
+              <Route path="teachers/:id" element={<TeacherProfilePage />} />
+              <Route path="community" element={<CommunityPage />} />
+              <Route path="competitions" element={<CompetitionsPage />} />
+              <Route path="shop" element={<ShopPage />} />
               <Route path="messages" element={<StudentMessagesPage />} />
+              <Route path="settings" element={<StudentSettingsPage />} />
             </Route>
+            <Route path="student/messages" element={<Navigate to="/dashboard/student/messages" replace />} />
           </Route>
 
           <Route element={<RequireVerifiedTeacher />}>
@@ -73,12 +89,12 @@ export default function App() {
               <Route index element={<TeacherDashboardPage />} />
               <Route path="students" element={<TeacherStudentsPage />} />
               <Route path="schedule" element={<TeacherSchedulePage />} />
+              <Route path="community" element={<TeacherCommunityPage />} />
+              <Route path="messages" element={<TeacherMessagesPage />} />
               <Route path="earnings" element={<TeacherEarningsPage />} />
               <Route path="settings" element={<TeacherSettingsPage />} />
             </Route>
-            <Route path="teacher" element={<TeacherDashboardLayout />}>
-              <Route path="messages" element={<TeacherMessagesPage />} />
-            </Route>
+            <Route path="teacher/messages" element={<Navigate to="/dashboard/teacher/messages" replace />} />
           </Route>
 
           <Route element={<RequireRole roles={['admin']} />}>

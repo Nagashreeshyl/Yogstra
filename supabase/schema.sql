@@ -32,7 +32,8 @@ create table if not exists teacher_profiles (
   total_students integer default 0,
   status text default 'pending'
     check (status in ('pending', 'verified', 'rejected')),
-  specializations text[]
+  specializations text[],
+  cover_url text
 );
 
 -- Bookings

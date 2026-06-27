@@ -4,6 +4,7 @@ import { MapPin, BadgeCheck, Users } from 'lucide-react'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { fetchTeacherById } from '../services/teachers'
 import { useApp } from '../context/AppContext'
+import { Avatar } from '../components/ui/Avatar'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { StarRating } from '../components/ui/StarRating'
@@ -40,11 +41,7 @@ export function TeacherProfilePage() {
   return (
     <div className="p-8 max-w-4xl">
       <div className="flex flex-col sm:flex-row gap-8 mb-8 pb-8 border-b border-border">
-        <img
-          src={teacher.photo}
-          alt={teacher.name}
-          className="w-40 h-40 rounded-sm object-cover shrink-0"
-        />
+        <Avatar src={teacher.photo} name={teacher.name} size={160} />
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
             <h1 className="font-heading text-3xl font-medium">{teacher.name}</h1>

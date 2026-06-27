@@ -4,31 +4,29 @@ import { useApp } from '../../context/AppContext'
 import { useMessageNotifications } from '../../hooks/useMessageNotifications'
 import { Avatar } from '../ui/Avatar'
 
-const teacherNav = [
-  { to: '/dashboard/teacher', label: 'Dashboard', end: true },
-  { to: '/dashboard/teacher/students', label: 'My Students' },
-  { to: '/dashboard/teacher/schedule', label: 'Schedule' },
-  { to: '/dashboard/teacher/community', label: 'Community' },
-  { to: '/dashboard/teacher/messages', label: 'Messages', notify: true },
-  { to: '/dashboard/teacher/earnings', label: 'Earnings' },
-  { to: '/dashboard/teacher/settings', label: 'Profile Settings' },
+const studentNav = [
+  { to: '/dashboard/student/explore', label: 'Explore', end: true },
+  { to: '/dashboard/student/teachers', label: 'Find Teachers' },
+  { to: '/dashboard/student/community', label: 'Community' },
+  { to: '/dashboard/student/messages', label: 'Messages', notify: true },
+  { to: '/dashboard/student/settings', label: 'Profile' },
 ]
 
-export function TeacherSidebar() {
+export function StudentSidebar() {
   const { user, logout } = useApp()
-  const { unreadTotal, incomingRequests } = useMessageNotifications(user?.id, 'teacher')
+  const { unreadTotal, incomingRequests } = useMessageNotifications(user?.id, 'student')
 
   const messageBadge = unreadTotal > 0 ? unreadTotal : incomingRequests
 
   return (
     <aside className="w-56 shrink-0 bg-charcoal flex flex-col h-full">
       <div className="p-6 border-b border-charcoal/20">
-        <NavLink to="/dashboard/teacher" className="block">
+        <NavLink to="/dashboard/student/explore" className="block">
           <h1 className="font-heading text-xl font-semibold text-cream">Yogstra</h1>
         </NavLink>
       </div>
-      <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto">
-        {teacherNav.map(({ to, label, end, notify }) => (
+      <nav className="flex-1 py-4 px-3 space-y-0.5">
+        {studentNav.map(({ to, label, end, notify }) => (
           <NavLink
             key={to}
             to={to}
@@ -43,7 +41,11 @@ export function TeacherSidebar() {
           >
             <span>{label}</span>
             {notify && messageBadge > 0 && (
-              <span className="min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center rounded-full bg-teal text-cream text-[10px] font-bold">
+              <span
+                className={`min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center rounded-full text-[10px] font-bold text-cream ${
+                  unreadTotal > 0 ? 'bg-teal' : 'bg-amber-500'
+                }`}
+              >
                 {messageBadge > 99 ? '99+' : messageBadge}
               </span>
             )}
