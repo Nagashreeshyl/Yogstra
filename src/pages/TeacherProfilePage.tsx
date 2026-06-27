@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { MapPin, BadgeCheck, Users, MessageCircle, ShoppingBag } from 'lucide-react'
 import { useAsyncData } from '../hooks/useAsyncData'
+import { useActiveClassPurchase } from '../hooks/useActiveClassPurchase'
 import { useLiveSync } from '../hooks/useLiveSync'
 import { fetchTeacherById } from '../services/teachers'
 import { requestTeacherWithIntro } from '../services/teacherRequest'
@@ -36,6 +37,12 @@ export function TeacherProfilePage() {
   useLiveSync(refetch, ['teachers'], Boolean(id))
 
   const isStudent = user?.role === 'student'
+
+  const { hasActivePurchase, refetchActivePurchase } = useActiveClassPurchase(
+    user?.id,
+    id,
+    isStudent && Boolean(id),
+  )
 
   if (loading) {
     return <ProfilePageSkeleton />
@@ -163,15 +170,17 @@ export function TeacherProfilePage() {
                   <Button onClick={() => void handleRequest()} disabled={requesting}>
                     {requesting ? 'Sending request...' : 'Request Teacher'}
                   </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={() => void handleBuy()}
-                    disabled={openingBuy}
-                    className="gap-1.5"
-                  >
-                    <ShoppingBag size={16} />
-                    {openingBuy ? 'Opening...' : 'Buy Class'}
-                  </Button>
+                  {!hasActivePurchase && (
+                    <Button
+                      variant="secondary"
+                      onClick={() => void handleBuy()}
+                      disabled={openingBuy}
+                      className="gap-1.5"
+                    >
+                      <ShoppingBag size={16} />
+                      {openingBuy ? 'Opening...' : 'Buy Class'}
+                    </Button>
+                  )}
                   <Button variant="secondary" onClick={handleMessage} className="gap-1.5">
                     <MessageCircle size={16} />
                     Message
@@ -269,7 +278,7 @@ export function TeacherProfilePage() {
                   </div>
                 </div>
               </div>
-              {isStudent && (
+              {isStudent && !hasActivePurchase && (
                 <Button className="sm:col-span-2 gap-1.5 w-full sm:w-auto" onClick={() => void handleBuy()}>
                   <ShoppingBag size={16} />
                   Buy a class with {teacher.name.split(' ')[0]}
@@ -286,7 +295,10 @@ export function TeacherProfilePage() {
       {isStudent && user && buyThreadId && (
         <BuyClassModal
           isOpen={buyOpen}
-          onClose={() => setBuyOpen(false)}
+          onClose={() => {
+            setBuyOpen(false)
+            void refetchActivePurchase(true)
+          }}
           studentId={user.id}
           studentName={user.name}
           teacherId={teacher.id}

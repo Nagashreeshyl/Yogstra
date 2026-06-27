@@ -9,6 +9,66 @@ import { formatTime } from '../utils/format'
 export type ClassType = '1:1' | 'group'
 export type ClassDuration = 'week' | 'month'
 
+export type ActiveClassPurchase = {
+  orderId: string
+  expiresAt: Date
+  duration: ClassDuration
+}
+
+export function classOrderExpiresAt(scheduledAt: string, duration: ClassDuration): Date {
+  const expiry = new Date(scheduledAt)
+  if (duration === 'week') {
+    expiry.setDate(expiry.getDate() + 7)
+  } else {
+    expiry.setMonth(expiry.getMonth() + 1)
+  }
+  return expiry
+}
+
+export function isClassOrderActive(
+  order: {
+    scheduled_at: string
+    duration: ClassDuration | null
+    payment_status: string
+  },
+  now = new Date(),
+): boolean {
+  if (order.payment_status !== 'paid') return false
+  const duration = order.duration ?? 'month'
+  return now < classOrderExpiresAt(order.scheduled_at, duration)
+}
+
+export async function fetchActiveClassPurchase(
+  studentId: string,
+  teacherId: string,
+): Promise<ActiveClassPurchase | null> {
+  const { data, error } = await supabase
+    .from('class_orders')
+    .select('id, scheduled_at, duration, payment_status, created_at')
+    .eq('student_id', studentId)
+    .eq('teacher_id', teacherId)
+    .eq('payment_status', 'paid')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    if (error.code === 'PGRST205' || error.code === '42P01') return null
+    throw error
+  }
+
+  for (const row of data ?? []) {
+    const duration = (row.duration as ClassDuration | null) ?? 'month'
+    if (isClassOrderActive({ ...row, duration })) {
+      return {
+        orderId: row.id as string,
+        expiresAt: classOrderExpiresAt(row.scheduled_at as string, duration),
+        duration,
+      }
+    }
+  }
+
+  return null
+}
+
 export interface ClassOrderInput {
   studentId: string
   studentName: string

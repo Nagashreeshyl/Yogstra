@@ -6,6 +6,7 @@ import { Badge } from '../ui/Badge'
 import { Button } from '../ui/Button'
 import { ChatWindowSkeleton } from '../ui/Skeleton'
 import { useDirectChatMessages } from '../../hooks/useDirectChatMessages'
+import { useActiveClassPurchase } from '../../hooks/useActiveClassPurchase'
 import {
   deleteDirectMessageForBoth,
   deleteDirectMessageForMe,
@@ -71,7 +72,14 @@ export function WhatsAppChatWindow({
   })
   const [replyTo, setReplyTo] = useState<{ id: string; content: string } | null>(null)
 
-  const showBuyButton = currentUserRole === 'student' && participantRole === 'teacher'
+  const canBuyClass = currentUserRole === 'student' && participantRole === 'teacher'
+  const { hasActivePurchase, refetchActivePurchase } = useActiveClassPurchase(
+    currentUserId,
+    participantId,
+    canBuyClass,
+  )
+
+  const showBuyButton = canBuyClass && !hasActivePurchase
   const isBlocked = threadSettings.blocked
 
   const lastReadAt = messages.at(-1)?.createdAt
@@ -177,11 +185,11 @@ export function WhatsAppChatWindow({
   return (
     <>
       <div className="flex flex-col h-full min-h-0 bg-cream-dark border border-border rounded-sm overflow-hidden">
-        <div className="px-4 py-3 border-b border-cream/10 bg-charcoal shrink-0 flex items-center gap-3">
+        <div className="px-4 py-3 border-b border-cream/10 bg-charcoal shrink-0 flex items-center gap-2 min-w-0">
           <button
             type="button"
             onClick={() => navigate(profilePath)}
-            className="flex items-center gap-3 min-w-0 flex-1 text-left cursor-pointer rounded-sm hover:bg-cream/5 transition-colors -m-1 p-1"
+            className="flex items-center gap-3 min-w-0 flex-1 text-left cursor-pointer rounded-sm hover:bg-cream/5 transition-colors -m-1 p-1 overflow-hidden"
           >
             <Avatar src={participantAvatar} name={participantName} size={40} />
             <div className="min-w-0 flex-1">
@@ -200,25 +208,27 @@ export function WhatsAppChatWindow({
               <p className="text-xs text-cream/45">Tap to view profile</p>
             </div>
           </button>
-          {showBuyButton && (
-            <Button
-              size="sm"
-              className="shrink-0 gap-1.5 h-8 px-3 text-xs"
-              onClick={() => setShowBuyModal(true)}
-            >
-              <ShoppingBag size={14} />
-              Buy
-            </Button>
-          )}
-          <ChatHeaderMenu
-            muted={threadSettings.muted}
-            blocked={threadSettings.blocked}
-            onReport={() => setShowReportModal(true)}
-            onSearch={() => setShowSearch((v) => !v)}
-            onToggleMute={() => void handleToggleMute()}
-            onToggleBlock={() => void handleToggleBlock()}
-            onDeleteChat={() => setShowDeleteChatConfirm(true)}
-          />
+          <div className="flex items-center gap-1 shrink-0">
+            {showBuyButton && (
+              <Button
+                size="sm"
+                className="shrink-0 gap-1.5 h-8 px-3 text-xs"
+                onClick={() => setShowBuyModal(true)}
+              >
+                <ShoppingBag size={14} />
+                Buy
+              </Button>
+            )}
+            <ChatHeaderMenu
+              muted={threadSettings.muted}
+              blocked={threadSettings.blocked}
+              onReport={() => setShowReportModal(true)}
+              onSearch={() => setShowSearch((v) => !v)}
+              onToggleMute={() => void handleToggleMute()}
+              onToggleBlock={() => void handleToggleBlock()}
+              onDeleteChat={() => setShowDeleteChatConfirm(true)}
+            />
+          </div>
         </div>
 
         {showSearch && (
@@ -281,7 +291,7 @@ export function WhatsAppChatWindow({
               return (
                 <div
                   key={msg.id}
-                  className={`flex items-end gap-1 py-0.5 group ${
+                  className={`flex items-end gap-1 py-0.5 group max-w-full ${
                     isSent ? 'justify-end' : 'justify-start'
                   }`}
                 >
@@ -303,7 +313,7 @@ export function WhatsAppChatWindow({
                   )}
 
                   <div
-                    className={`relative min-w-[80px] max-w-[85%] rounded-xl ${
+                    className={`relative w-fit max-w-[min(72vw,17.5rem)] sm:max-w-[17.5rem] min-w-[4.5rem] rounded-xl ${
                       msg.deleteScope === 'both'
                         ? 'bg-charcoal/5 border border-dashed border-charcoal/20 text-charcoal/50 italic'
                         : isSent
@@ -311,8 +321,8 @@ export function WhatsAppChatWindow({
                           : 'bg-cream border border-border text-charcoal shadow-sm'
                     }`}
                   >
-                    <div className="px-5 py-3.5">
-                      <p className="text-[15px] leading-[1.5] whitespace-pre-wrap break-words">
+                    <div className="px-3.5 py-2.5">
+                      <p className="text-[15px] leading-[1.45] whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
                         <ChatMessageContent
                           text={display.text}
                           isSent={isSent}
@@ -436,10 +446,13 @@ export function WhatsAppChatWindow({
         onSubmit={handleReport}
       />
 
-      {showBuyButton && (
+      {canBuyClass && (
         <BuyClassModal
           isOpen={showBuyModal}
-          onClose={() => setShowBuyModal(false)}
+          onClose={() => {
+            setShowBuyModal(false)
+            void refetchActivePurchase(true)
+          }}
           studentId={currentUserId}
           studentName={currentUserName}
           teacherId={participantId}
