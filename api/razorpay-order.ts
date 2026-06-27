@@ -39,7 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const rawReceipt = req.body?.receipt ?? `yogstra_${Date.now()}`
   const receipt = String(rawReceipt).slice(0, 40)
-  const auth = Buffer.from(`${keyId}:${keySecret}`).toString('base64')
+  const auth = globalThis.btoa(`${keyId}:${keySecret}`)
 
   try {
     const response = await fetch('https://api.razorpay.com/v1/orders', {
