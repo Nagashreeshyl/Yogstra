@@ -1,4 +1,4 @@
-import { createLiveKitToken } from '../server/livekitToken'
+import { createLiveKitToken } from '../server/livekitToken.js'
 
 type TokenRequest = {
   roomName?: string

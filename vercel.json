@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/livekit-token.ts": {
+      "includeFiles": "server/livekitToken.ts"
+    }
+  },
   "rewrites": [
     {
       "source": "/((?!api/).*)",
