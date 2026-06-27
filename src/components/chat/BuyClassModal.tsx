@@ -4,6 +4,7 @@ import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { Textarea } from '../ui/Textarea'
 import { Select } from '../ui/Select'
+import { useApp } from '../../context/AppContext'
 import type { ClassDuration, ClassType } from '../../services/classOrders'
 import {
   completeClassOrderAfterPayment,
@@ -33,6 +34,7 @@ export function BuyClassModal({
   teacherName,
   threadId,
 }: BuyClassModalProps) {
+  const { user } = useApp()
   const [classType, setClassType] = useState<ClassType>('1:1')
   const [duration, setDuration] = useState<ClassDuration>('month')
   const [startDate, setStartDate] = useState('')
@@ -129,6 +131,35 @@ export function BuyClassModal({
     setSubmitting(true)
     setError(null)
 
+    let couponPayload = appliedCoupon
+    if (appliedCoupon) {
+      try {
+        const result = await validateStudentCoupon({
+          code: appliedCoupon.code,
+          studentId,
+          teacherId,
+          classType,
+          duration,
+        })
+        const finalAmount = result.discountedAmount(baseFee)
+        couponPayload = {
+          code: result.coupon.code,
+          couponId: result.coupon.id,
+          deliveryId: result.deliveryId,
+          discountPercent: result.coupon.discountPercent,
+          finalAmount,
+        }
+        setAppliedCoupon(couponPayload)
+      } catch (err) {
+        setAppliedCoupon(null)
+        setError(err instanceof Error ? err.message : 'Coupon is no longer valid.')
+        setSubmitting(false)
+        return
+      }
+    }
+
+    const payableAmount = couponPayload?.finalAmount ?? baseFee
+
     const orderInput: ClassOrderInput = {
       studentId,
       studentName,
@@ -140,24 +171,32 @@ export function BuyClassModal({
       startDate,
       scheduledAt,
       notes: notes.trim(),
-      amount: amountDue,
-      originalAmount: appliedCoupon ? baseFee : undefined,
-      discountPercent: appliedCoupon?.discountPercent,
-      couponId: appliedCoupon?.couponId,
-      couponDeliveryId: appliedCoupon?.deliveryId,
+      amount: payableAmount,
+      originalAmount: couponPayload ? baseFee : undefined,
+      discountPercent: couponPayload?.discountPercent,
+      couponId: couponPayload?.couponId,
+      couponDeliveryId: couponPayload?.deliveryId,
     }
 
     try {
       const orderId = await createClassOrder(orderInput)
 
       await openRazorpayCheckout({
-        amountInr: amountDue,
+        amountInr: payableAmount,
         studentName,
+        studentEmail: user?.email,
         teacherName,
         classType: classType === '1:1' ? '1-on-1' : 'Group',
+        receipt: orderId,
         onSuccess: async (paymentId) => {
-          await completeClassOrderAfterPayment(orderId, paymentId, orderInput)
-          onClose()
+          try {
+            await completeClassOrderAfterPayment(orderId, paymentId, orderInput)
+            onClose()
+          } catch (err) {
+            throw err instanceof Error
+              ? err
+              : new Error('Payment received but booking could not be saved. Contact support.')
+          }
         },
         onDismiss: () => {
           setSubmitting(false)

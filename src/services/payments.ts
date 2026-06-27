@@ -1,6 +1,17 @@
 declare global {
   interface Window {
-    Razorpay?: new (options: Record<string, unknown>) => { open: () => void }
+    Razorpay?: new (options: Record<string, unknown>) => {
+      open: () => void
+      on: (event: string, handler: (response: RazorpayFailureResponse) => void) => void
+    }
+  }
+}
+
+type RazorpayFailureResponse = {
+  error?: {
+    description?: string
+    reason?: string
+    code?: string
   }
 }
 
@@ -23,12 +34,57 @@ function loadRazorpayScript() {
   return scriptPromise
 }
 
+function normalizeInrAmount(amountInr: number) {
+  const rounded = Math.round(amountInr)
+  if (!Number.isFinite(rounded) || rounded <= 0) {
+    throw new Error('Invalid payment amount.')
+  }
+  const paise = rounded * 100
+  if (paise < 100) {
+    throw new Error('Minimum payment is ₹1.')
+  }
+  return { inr: rounded, paise }
+}
+
+async function createRazorpayOrder(amountInr: number, receipt?: string) {
+  const response = await fetch('/api/razorpay-order', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ amountInr, receipt }),
+  })
+
+  const contentType = response.headers.get('content-type') ?? ''
+  if (!contentType.includes('application/json')) {
+    if (import.meta.env.DEV) return null
+    throw new Error(
+      'Payment service is unavailable. Refresh the page and try again in a moment.',
+    )
+  }
+
+  const body = (await response.json().catch(() => ({}))) as {
+    orderId?: string
+    keyId?: string
+    error?: string
+  }
+
+  if (!response.ok || !body.orderId) {
+    throw new Error(body.error ?? 'Could not initialize Razorpay payment.')
+  }
+
+  return {
+    orderId: body.orderId,
+    keyId: body.keyId,
+  }
+}
+
 export async function openRazorpayCheckout(params: {
   amountInr: number
   studentName: string
+  studentEmail?: string
   teacherName: string
   classType: string
-  onSuccess: (paymentId: string) => void
+  receipt?: string
+  onSuccess: (paymentId: string) => void | Promise<void>
   onDismiss?: () => void
 }) {
   const key = import.meta.env.VITE_RAZORPAY_KEY_ID as string | undefined
@@ -38,30 +94,80 @@ export async function openRazorpayCheckout(params: {
     )
   }
 
+  const { inr, paise } = normalizeInrAmount(params.amountInr)
   await loadRazorpayScript()
 
-  const amountPaise = Math.round(params.amountInr * 100)
+  const serverOrder = await createRazorpayOrder(inr, params.receipt)
+  if (!serverOrder && !import.meta.env.DEV) {
+    throw new Error(
+      'Payment service is unavailable. Refresh the page and try again in a moment.',
+    )
+  }
 
   return new Promise<void>((resolve, reject) => {
-    const rzp = new window.Razorpay!({
-      key,
-      amount: amountPaise,
-      currency: 'INR',
+    let settled = false
+    const finish = (fn: () => void) => {
+      if (settled) return
+      settled = true
+      fn()
+    }
+
+    const prefill: Record<string, string> = { name: params.studentName }
+    if (params.studentEmail) prefill.email = params.studentEmail
+
+    const options: Record<string, unknown> = {
+      key: serverOrder?.keyId ?? key,
       name: 'Yogstra',
       description: `${params.classType} class with ${params.teacherName}`,
-      prefill: { name: params.studentName },
+      prefill,
       theme: { color: '#5BB8C4' },
       handler(response: { razorpay_payment_id: string }) {
-        params.onSuccess(response.razorpay_payment_id)
-        resolve()
+        void (async () => {
+          try {
+            await params.onSuccess(response.razorpay_payment_id)
+            finish(() => resolve())
+          } catch (err) {
+            params.onDismiss?.()
+            finish(() =>
+              reject(
+                err instanceof Error
+                  ? err
+                  : new Error('Payment succeeded but booking could not be completed.'),
+              ),
+            )
+          }
+        })()
       },
       modal: {
         ondismiss() {
           params.onDismiss?.()
-          reject(new Error('Payment cancelled.'))
+          finish(() => reject(new Error('Payment cancelled.')))
         },
       },
+    }
+
+    if (serverOrder?.orderId) {
+      options.order_id = serverOrder.orderId
+    } else {
+      options.amount = paise
+      options.currency = 'INR'
+    }
+
+    const rzp = new window.Razorpay!(options)
+
+    rzp.on('payment.failed', (response: RazorpayFailureResponse) => {
+      params.onDismiss?.()
+      finish(() =>
+        reject(
+          new Error(
+            response.error?.description ??
+              response.error?.reason ??
+              'Payment failed. Please try again.',
+          ),
+        ),
+      )
     })
+
     rzp.open()
   })
 }
