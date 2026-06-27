@@ -7,7 +7,7 @@ const teacherSelect = `
   teacher_profiles (*)
 `
 
-export async function fetchTeachers(verifiedOnly = false): Promise<Teacher[]> {
+export async function fetchTeachers(verifiedOnly = false, includeRemoved = false): Promise<Teacher[]> {
   const { data, error } = await supabase
     .from('profiles')
     .select(teacherSelect)
@@ -19,6 +19,8 @@ export async function fetchTeachers(verifiedOnly = false): Promise<Teacher[]> {
   let result = (data ?? []).map((row) => mapTeacher(row))
   if (verifiedOnly) {
     result = result.filter((t) => t.verified)
+  } else if (!includeRemoved) {
+    result = result.filter((t) => t.status !== 'Removed')
   }
   return result
 }
@@ -36,14 +38,46 @@ export async function fetchTeacherById(id: string): Promise<Teacher | null> {
 }
 
 export async function fetchAllTeachersAdmin(): Promise<Teacher[]> {
-  return fetchTeachers(false)
+  return fetchTeachers(false, true)
 }
 
-export async function updateTeacherStatus(id: string, status: 'verified' | 'rejected' | 'pending') {
+export async function updateTeacherStatus(
+  id: string,
+  status: 'verified' | 'rejected' | 'pending' | 'removed',
+) {
   const { error } = await supabase
     .from('teacher_profiles')
     .update({ status })
     .eq('id', id)
+
+  if (error) throw error
+}
+
+/** Admin removes a teacher — blocks dashboard access and cancels active bookings. */
+export async function removeTeacher(id: string) {
+  const { error: statusError } = await supabase
+    .from('teacher_profiles')
+    .update({ status: 'removed' })
+    .eq('id', id)
+
+  if (statusError) throw statusError
+
+  const { error: bookingError } = await supabase
+    .from('bookings')
+    .update({ status: 'cancelled' })
+    .eq('teacher_id', id)
+    .in('status', ['active', 'pending'])
+
+  if (bookingError) throw bookingError
+}
+
+/** Removed teachers can request verification again. */
+export async function reapplyAsTeacher(id: string) {
+  const { error } = await supabase
+    .from('teacher_profiles')
+    .update({ status: 'pending' })
+    .eq('id', id)
+    .eq('status', 'removed')
 
   if (error) throw error
 }

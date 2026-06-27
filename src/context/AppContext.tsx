@@ -10,6 +10,7 @@ import { supabase } from '../lib/supabase'
 import type { Category, FilterState, TeacherRegistrationData, UserRole } from '../types'
 import {
   ensureProfile,
+  fetchProfile,
   getSession,
   signIn,
   signOut,
@@ -125,6 +126,48 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.unsubscribe()
   }, [])
+
+  const teacherUserId = user?.role === 'teacher' ? user.id : null
+
+  useEffect(() => {
+    if (!teacherUserId) return
+
+    const channelName = `teacher_status:${teacherUserId}`
+    const existing = supabase.getChannels().find((c) => c.topic === `realtime:${channelName}`)
+    if (existing) void supabase.removeChannel(existing)
+
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'teacher_profiles',
+          filter: `id=eq.${teacherUserId}`,
+        },
+        async () => {
+          const profile = await fetchProfile(teacherUserId)
+          if (!profile) return
+
+          setUser(profile)
+          setRole(profile.role)
+
+          if (profile.teacherStatus === 'verified') {
+            window.location.href = '/dashboard/teacher'
+            return
+          }
+          if (profile.teacherStatus === 'removed' && window.location.pathname.startsWith('/dashboard/teacher')) {
+            window.location.href = '/auth/teacher/pending'
+          }
+        },
+      )
+      .subscribe()
+
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [teacherUserId])
 
   const requireAuth = useCallback(() => {
     if (!isLoggedIn) {

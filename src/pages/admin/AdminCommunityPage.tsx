@@ -2,7 +2,7 @@ import { useAsyncData } from '../../hooks/useAsyncData'
 import { fetchPosts, deletePost } from '../../services/posts'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
-import { Card } from '../../components/ui/Card'
+import { Avatar } from '../../components/ui/Avatar'
 import { useState } from 'react'
 
 export function AdminCommunityPage() {
@@ -23,25 +23,51 @@ export function AdminCommunityPage() {
 
       {loading ? (
         <p className="text-charcoal/50">Loading posts...</p>
+      ) : (posts ?? []).length === 0 ? (
+        <p className="text-charcoal/50">No community posts yet.</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {(posts ?? []).map((post) => (
-            <Card key={post.id} className="p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <img src={post.studentAvatar} alt="" className="w-8 h-8 rounded-full" />
-                <div>
-                  <p className="text-sm font-medium">{post.studentName}</p>
+            <article
+              key={post.id}
+              className="border border-border rounded-sm bg-cream overflow-hidden flex flex-col"
+            >
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+                <Avatar src={post.studentAvatar} name={post.studentName} size={40} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold truncate">{post.studentName}</p>
                   <p className="text-xs text-charcoal/50">{post.date}</p>
                 </div>
               </div>
-              <p className="text-sm text-charcoal/70 line-clamp-3 mb-3">{post.text}</p>
-              {post.image && (
-                <img src={post.image} alt="" className="w-full h-32 object-cover rounded-sm mb-3" />
+
+              {post.text && (
+                <p className="text-sm text-charcoal/80 px-4 py-3 leading-relaxed">{post.text}</p>
               )}
-              <Button variant="danger" size="sm" onClick={() => setConfirmRemove(post.id)}>
-                Remove
-              </Button>
-            </Card>
+
+              {post.image && (
+                <div className="w-full aspect-[4/5] max-h-[420px] overflow-hidden bg-charcoal/[0.03]">
+                  <img
+                    src={post.image}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+
+              {post.video && (
+                <video
+                  src={post.video}
+                  controls
+                  className="w-full max-h-[420px] object-contain bg-charcoal/[0.03]"
+                />
+              )}
+
+              <div className="px-4 py-3 border-t border-border mt-auto">
+                <Button variant="danger" size="sm" onClick={() => setConfirmRemove(post.id)}>
+                  Remove
+                </Button>
+              </div>
+            </article>
           ))}
         </div>
       )}
@@ -55,7 +81,7 @@ export function AdminCommunityPage() {
           <Button variant="secondary" className="flex-1" onClick={() => setConfirmRemove(null)}>
             Cancel
           </Button>
-          <Button variant="danger" className="flex-1" onClick={handleRemove}>
+          <Button variant="danger" className="flex-1" onClick={() => void handleRemove()}>
             Remove
           </Button>
         </div>

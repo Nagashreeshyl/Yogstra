@@ -1,5 +1,5 @@
-import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { Input } from '../components/ui/Input'
 import { PasswordInput } from '../components/ui/PasswordInput'
@@ -24,6 +24,10 @@ export function TeacherLoginPage() {
       const profile = await signIn(email, password)
       if (profile.role !== 'teacher' && profile.role !== 'admin') {
         setError('This account is not registered as a teacher.')
+        return
+      }
+      if (profile.role === 'teacher' && profile.teacherStatus === 'removed') {
+        navigate('/auth/teacher/pending')
         return
       }
       navigate(getPostLoginPath(profile))

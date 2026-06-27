@@ -9,7 +9,7 @@ export interface AuthUser {
   email: string
   role: 'student' | 'teacher' | 'admin'
   avatar?: string
-  teacherStatus?: 'pending' | 'verified' | 'rejected' | null
+  teacherStatus?: 'pending' | 'verified' | 'rejected' | 'removed' | null
 }
 
 export type SignUpResult =

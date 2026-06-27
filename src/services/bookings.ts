@@ -28,6 +28,17 @@ export async function fetchActiveBookingCount(): Promise<number> {
   return count ?? 0
 }
 
+export async function fetchBookingsByStudent(studentId: string): Promise<Booking[]> {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select(bookingSelect)
+    .eq('student_id', studentId)
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  return (data ?? []).map((row) => mapBooking(row))
+}
+
 export async function fetchStudentActiveBooking(studentId: string) {
   const { data, error } = await supabase
     .from('bookings')

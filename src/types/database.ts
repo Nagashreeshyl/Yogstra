@@ -17,7 +17,7 @@ export interface DbTeacherProfile {
   certifications: string | null
   rating: number | null
   total_students: number | null
-  status: 'pending' | 'verified' | 'rejected' | null
+  status: 'pending' | 'verified' | 'rejected' | 'removed' | null
   specializations: string[] | null
   cover_url: string | null
 }

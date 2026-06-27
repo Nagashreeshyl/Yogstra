@@ -3,7 +3,7 @@ import {
   Compass, Users, MessageSquare, Trophy, ShoppingBag, LogIn, UserPlus, LogOut, MessageCircle, LayoutDashboard,
 } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
-import { getDashboardPath } from '../../utils/authRouting'
+import { getDashboardPath, formatRoleLabel } from '../../utils/authRouting'
 import { Avatar } from '../ui/Avatar'
 
 const navItems = [
@@ -78,7 +78,7 @@ export function AppSidebar() {
               <Avatar src={user.avatar} name={user.name} size={36} />
               <div className="min-w-0">
                 <p className="text-sm font-medium truncate text-cream">{user.name}</p>
-                <p className="text-xs text-cream/50 capitalize">{user.role}</p>
+                <p className="text-xs text-cream/50">{formatRoleLabel(user)}</p>
               </div>
             </div>
             {user.role !== 'student' && (

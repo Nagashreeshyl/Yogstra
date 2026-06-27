@@ -66,7 +66,7 @@ export async function fetchChatConversations(): Promise<ChatConversation[]> {
 
   const { data: messages, error: messagesError } = await supabase
     .from('direct_messages')
-    .select('*, sender:profiles!sender_id(full_name)')
+    .select('*, sender:profiles!sender_id(full_name, role)')
     .in('thread_id', threadIds)
     .order('created_at', { ascending: true })
 
@@ -90,6 +90,7 @@ export async function fetchChatConversations(): Promise<ChatConversation[]> {
       const sender = Array.isArray(msg.sender) ? msg.sender[0] : msg.sender
       return {
         sender: sender?.full_name ?? 'Unknown',
+        senderRole: sender?.role ?? 'user',
         text: msg.content ?? '',
         time: formatTime(msg.created_at),
       }

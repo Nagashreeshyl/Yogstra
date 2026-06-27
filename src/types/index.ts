@@ -2,7 +2,7 @@ export type UserRole = 'student' | 'teacher' | 'admin' | null
 
 export type TeachingMode = 'Online' | 'Offline' | 'Both'
 
-export type TeacherStatus = 'Pending' | 'Verified' | 'Rejected'
+export type TeacherStatus = 'Pending' | 'Verified' | 'Rejected' | 'Removed'
 
 export interface Category {
   id: string
@@ -105,7 +105,7 @@ export interface ChatConversation {
   participantOneRole: string
   participantTwoRole: string
   lastMessage: string
-  messages: { sender: string; text: string; time: string }[]
+  messages: { sender: string; senderRole: string; text: string; time: string }[]
 }
 
 export interface ChatMessage {

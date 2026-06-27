@@ -31,7 +31,7 @@ create table if not exists teacher_profiles (
   rating numeric default 0,
   total_students integer default 0,
   status text default 'pending'
-    check (status in ('pending', 'verified', 'rejected')),
+    check (status in ('pending', 'verified', 'rejected', 'removed')),
   specializations text[],
   cover_url text
 );

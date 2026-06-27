@@ -16,3 +16,11 @@ export function getDashboardPath(user: AuthUser): string {
 export function isVerifiedTeacher(user: AuthUser | null): boolean {
   return user?.role === 'teacher' && user.teacherStatus === 'verified'
 }
+
+export function formatRoleLabel(user: AuthUser): string {
+  const role = user.role.charAt(0).toUpperCase() + user.role.slice(1)
+  if (user.role === 'teacher' && user.teacherStatus === 'pending') {
+    return `${role} (unverified)`
+  }
+  return role
+}

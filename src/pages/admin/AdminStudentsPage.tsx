@@ -1,17 +1,27 @@
 import { useState, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { fetchStudents } from '../../services/students'
 import { fetchAllTeachersAdmin } from '../../services/teachers'
+import { fetchBookingsByStudent } from '../../services/bookings'
 import { AdminTable, AdminPagination } from '../../components/admin/AdminTable'
 import { Button } from '../../components/ui/Button'
+import { Badge } from '../../components/ui/Badge'
+import { Modal } from '../../components/ui/Modal'
 
 const PAGE_SIZE = 5
 
 export function AdminStudentsPage() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
+  const [bookingsStudent, setBookingsStudent] = useState<{ id: string; name: string } | null>(null)
   const { data: students, loading } = useAsyncData(() => fetchStudents())
   const { data: teachers } = useAsyncData(() => fetchAllTeachersAdmin())
+  const bookingsStudentId = bookingsStudent?.id ?? null
+  const { data: studentBookings, loading: bookingsLoading } = useAsyncData(
+    () => (bookingsStudentId ? fetchBookingsByStudent(bookingsStudentId) : Promise.resolve([])),
+    [bookingsStudentId],
+  )
 
   const filtered = useMemo(() => {
     if (!search) return students ?? []
@@ -46,9 +56,17 @@ export function AdminStudentsPage() {
                 <td className="px-4 py-3">{getTeacherName(s.activeTeacherId)}</td>
                 <td className="px-4 py-3">{s.totalSessions}</td>
                 <td className="px-4 py-3">
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="ghost">View Profile</Button>
-                    <Button size="sm" variant="ghost">Bookings</Button>
+                  <div className="flex flex-wrap gap-1">
+                    <Link to={`/students/${s.id}`} target="_blank" rel="noreferrer">
+                      <Button size="sm" variant="ghost">View Profile</Button>
+                    </Link>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setBookingsStudent({ id: s.id, name: s.name })}
+                    >
+                      Bookings
+                    </Button>
                   </div>
                 </td>
               </tr>
@@ -58,6 +76,36 @@ export function AdminStudentsPage() {
           <AdminPagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </>
       )}
+
+      <Modal
+        isOpen={!!bookingsStudent}
+        onClose={() => setBookingsStudent(null)}
+        className="max-w-lg"
+      >
+        <h2 className="font-heading text-lg font-medium mb-1">Bookings</h2>
+        <p className="text-sm text-charcoal/50 mb-4">{bookingsStudent?.name}</p>
+
+        {bookingsLoading ? (
+          <p className="text-sm text-charcoal/50">Loading bookings...</p>
+        ) : (studentBookings ?? []).length === 0 ? (
+          <p className="text-sm text-charcoal/50">No bookings for this student.</p>
+        ) : (
+          <div className="space-y-3 max-h-80 overflow-y-auto">
+            {(studentBookings ?? []).map((b) => (
+              <div key={b.id} className="border border-border rounded-sm p-3 bg-cream">
+                <p className="text-sm font-medium">{b.teacherName}</p>
+                <p className="text-xs text-charcoal/50 mt-1">
+                  Started {b.startDate} · ₹{b.monthlyFee.toLocaleString('en-IN')}/mo
+                </p>
+                <div className="flex gap-2 mt-2">
+                  <Badge>{b.status}</Badge>
+                  <Badge variant={b.paymentStatus === 'Paid' ? 'verified' : 'teal'}>{b.paymentStatus}</Badge>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }

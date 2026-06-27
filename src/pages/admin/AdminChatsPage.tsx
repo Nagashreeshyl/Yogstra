@@ -75,21 +75,25 @@ export function AdminChatsPage() {
                   <p className="text-sm text-charcoal/50 text-center py-8">No messages in this thread.</p>
                 ) : (
                   selected.messages.map((msg, i) => {
-                    const isFirst = msg.sender === selected.participantOneName
+                    const isTeacher = msg.senderRole === 'teacher'
                     return (
                       <div
                         key={i}
-                        className={`flex ${isFirst ? 'justify-start' : 'justify-end'}`}
+                        className={`flex ${isTeacher ? 'justify-start' : 'justify-end'}`}
                       >
                         <div className="max-w-[75%]">
                           <p className="text-[11px] text-charcoal/45 mb-1 px-1">
-                            {msg.sender} · {msg.time}
+                            {msg.sender}
+                            <span className="mx-1">·</span>
+                            <span className="capitalize">{msg.senderRole}</span>
+                            <span className="mx-1">·</span>
+                            {msg.time}
                           </p>
                           <div
                             className={`px-3 py-2 rounded-2xl text-sm ${
-                              isFirst
-                                ? 'bg-cream border border-border text-charcoal rounded-tl-sm'
-                                : 'bg-teal text-cream rounded-tr-sm'
+                              isTeacher
+                                ? 'bg-teal text-cream rounded-tl-sm'
+                                : 'bg-cream border border-border text-charcoal rounded-tr-sm'
                             }`}
                           >
                             {msg.text}
