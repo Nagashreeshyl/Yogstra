@@ -1,4 +1,10 @@
-import { convertToPixelCrop, type Crop, type PixelCrop } from 'react-image-crop'
+import {
+  centerCrop,
+  convertToPixelCrop,
+  makeAspectCrop,
+  type Crop,
+  type PixelCrop,
+} from 'react-image-crop'
 
 export interface PreparedCropImage {
   src: string
@@ -97,4 +103,17 @@ export function percentToPixelCrop(
   return convertToPixelCrop(crop, width, height)
 }
 
-export { POST_MAX_CROP_DIMENSION }
+/** Build a centered aspect crop from the image's laid-out display size. */
+export function buildCenteredAspectCrop(
+  displayWidth: number,
+  displayHeight: number,
+  aspect: number,
+): Crop {
+  return centerCrop(
+    makeAspectCrop({ unit: '%', width: 90 }, aspect, displayWidth, displayHeight),
+    displayWidth,
+    displayHeight,
+  )
+}
+
+export { centerCrop, makeAspectCrop, POST_MAX_CROP_DIMENSION }

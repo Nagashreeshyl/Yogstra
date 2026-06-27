@@ -23,8 +23,8 @@ export function ChatMessageMenu({
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
-  /** Received → popup opens to the right; sent → popup opens to the left */
-  const popupToRight = !isSent
+  /** Dropdown below the chevron — avoids clipping off the screen edge */
+  const popupAlign = isSent ? 'left-0' : 'right-0'
 
   useEffect(() => {
     if (!open) return
@@ -43,7 +43,7 @@ export function ChatMessageMenu({
     <>
       <div
         ref={ref}
-        className={`relative shrink-0 self-center opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-150 ${
+        className={`relative shrink-0 self-center opacity-70 sm:opacity-0 sm:group-hover:opacity-100 pointer-events-auto sm:pointer-events-none sm:group-hover:pointer-events-auto transition-opacity duration-150 ${
           open ? 'opacity-100 pointer-events-auto' : ''
         }`}
       >
@@ -61,9 +61,7 @@ export function ChatMessageMenu({
 
         {open && (
           <div
-            className={`absolute top-1/2 -translate-y-1/2 z-30 min-w-[168px] py-1.5 rounded-xl shadow-xl border border-charcoal/10 ${
-              popupToRight ? 'left-full ml-1.5' : 'right-full mr-1.5'
-            }`}
+            className={`absolute top-full mt-1 z-30 min-w-[168px] py-1.5 rounded-xl shadow-xl border border-charcoal/10 ${popupAlign}`}
             style={{ backgroundColor: '#233138' }}
           >
             <MenuItem icon={CornerUpLeft} label="Reply" onClick={() => { closeMenu(); onReply() }} />

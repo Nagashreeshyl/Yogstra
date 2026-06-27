@@ -1,7 +1,15 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
-import ReactCrop, { centerCrop, makeAspectCrop, type Crop, type PixelCrop } from 'react-image-crop'
+import ReactCrop, { type Crop, type PixelCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
-import { cropImageToBlob, percentToPixelCrop, POST_IMAGE_ASPECT, POST_IMAGE_EXPORT, POST_MAX_CROP_DIMENSION, prepareImageForCrop } from '../../utils/imageCrop'
+import {
+  buildCenteredAspectCrop,
+  cropImageToBlob,
+  percentToPixelCrop,
+  POST_IMAGE_ASPECT,
+  POST_IMAGE_EXPORT,
+  POST_MAX_CROP_DIMENSION,
+  prepareImageForCrop,
+} from '../../utils/imageCrop'
 import { X, ImagePlus, Film } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { Button } from '../ui/Button'
@@ -34,15 +42,20 @@ export function CreatePostModal({ isOpen, onClose, onPost }: CreatePostModalProp
 
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget
-    const width = img.clientWidth
-    const height = img.clientHeight
-    const nextCrop = centerCrop(
-      makeAspectCrop({ unit: '%', width: 90 }, POST_IMAGE_ASPECT, width, height),
-      width,
-      height,
-    )
-    setCrop(nextCrop)
-    pixelCropRef.current = percentToPixelCrop(nextCrop, width, height)
+
+    const applyCrop = () => {
+      const width = img.clientWidth
+      const height = img.clientHeight
+      if (width < 16 || height < 16) {
+        requestAnimationFrame(applyCrop)
+        return
+      }
+      const nextCrop = buildCenteredAspectCrop(width, height, POST_IMAGE_ASPECT)
+      setCrop(nextCrop)
+      pixelCropRef.current = percentToPixelCrop(nextCrop, width, height)
+    }
+
+    requestAnimationFrame(applyCrop)
   }
 
   const reset = useCallback(() => {
@@ -295,7 +308,7 @@ export function CreatePostModal({ isOpen, onClose, onPost }: CreatePostModalProp
             <p className="text-xs text-charcoal/50 text-center mb-4">
               Portrait format — drag to adjust
             </p>
-            <div className="flex justify-center mb-5 max-h-[70vh] overflow-hidden rounded-sm bg-charcoal/5">
+            <div className="flex justify-center mb-5 max-h-[70vh] overflow-hidden rounded-sm bg-charcoal/5 px-2">
               <ReactCrop
                 crop={crop}
                 onChange={(pixelCrop, percentCrop) => {
@@ -313,7 +326,7 @@ export function CreatePostModal({ isOpen, onClose, onPost }: CreatePostModalProp
                   src={cropImage}
                   alt="Crop preview"
                   onLoad={onImageLoad}
-                  className="block max-h-[68vh] w-auto mx-auto"
+                  className="block max-h-[68vh] max-w-full w-auto h-auto mx-auto"
                 />
               </ReactCrop>
             </div>

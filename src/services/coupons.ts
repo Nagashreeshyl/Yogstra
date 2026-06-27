@@ -347,7 +347,7 @@ export async function validateStudentCoupon(params: {
     coupon,
     deliveryId: delivery.id as string,
     discountedAmount: (base: number) =>
-      Math.max(0, Math.round(base * (1 - coupon.discountPercent / 100))),
+      Math.max(1, Math.round(base * (1 - coupon.discountPercent / 100))),
   }
 }
 
