@@ -18,6 +18,7 @@ import { Textarea } from '../../components/ui/Textarea'
 import { Toast } from '../../components/ui/Toast'
 import { ProfilePageSkeleton } from '../../components/ui/Skeleton'
 import { SettingsPageLayout } from '../../components/layout/FeedPageLayout'
+import { TeacherPayoutSettings } from '../../components/profile/TeacherPayoutSettings'
 import { formatIndianNumber, parseIndianNumber } from '../../utils/format'
 import {
   getTeacherProfileCompletion,
@@ -27,7 +28,7 @@ import {
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024
 
-type SettingsTab = 'profile' | 'pricing'
+type SettingsTab = 'profile' | 'pricing' | 'payouts'
 type CropMode = 'avatar' | 'cover' | null
 
 export function TeacherSettingsPage() {
@@ -325,7 +326,7 @@ export function TeacherSettingsPage() {
           />
         </div>
         <div className="flex gap-1 border-b border-border mb-6 overflow-x-auto">
-          {(['profile', 'pricing'] as const).map((tab) => (
+          {(['profile', 'pricing', 'payouts'] as const).map((tab) => (
             <button
               key={tab}
               type="button"
@@ -591,6 +592,16 @@ export function TeacherSettingsPage() {
                 {saving ? 'Saving...' : 'Save pricing'}
               </Button>
             </form>
+          </>
+        )}
+
+        {settingsTab === 'payouts' && (
+          <>
+            <h1 className="text-xl font-semibold mb-2">Payouts</h1>
+            <p className="text-sm text-charcoal/55 mb-6">
+              Connect your bank account to receive your share when students book classes.
+            </p>
+            <TeacherPayoutSettings />
           </>
         )}
       </SettingsPageLayout>

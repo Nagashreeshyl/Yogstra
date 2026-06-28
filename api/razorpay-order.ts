@@ -1,6 +1,19 @@
+import {
+  createRazorpayOrder,
+  getRazorpayAuthHeader,
+} from '../server/razorpayClient.js'
+import {
+  createPendingClassOrder,
+  getTeacherLinkedAccountId,
+  prepareOrderSplit,
+  type PendingClassOrderInput,
+} from '../server/fulfillPayment.js'
+
 type OrderRequest = {
   amountInr?: number
   receipt?: string
+  teacherId?: string
+  orderInput?: PendingClassOrderInput
 }
 
 type VercelRequest = {
@@ -13,75 +26,60 @@ type VercelResponse = {
   json: (body: unknown) => void
 }
 
-function trimEnv(value: string | undefined) {
-  return value?.trim() ?? ''
-}
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const keyId = trimEnv(process.env.RAZORPAY_KEY_ID ?? process.env.VITE_RAZORPAY_KEY_ID)
-  const keySecret = trimEnv(process.env.RAZORPAY_KEY_SECRET)
-
-  if (!keyId || !keySecret) {
-    return res.status(500).json({
-      error: 'Razorpay is not configured on the server. Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in Vercel env vars.',
-    })
-  }
-
-  const amountInr = Number(req.body?.amountInr)
-  if (!Number.isFinite(amountInr) || amountInr <= 0) {
-    return res.status(400).json({ error: 'Invalid payment amount.' })
-  }
-
-  const amountPaise = Math.round(amountInr * 100)
-  if (amountPaise < 100) {
-    return res.status(400).json({ error: 'Minimum payment is ₹1.' })
-  }
-
-  const rawReceipt = req.body?.receipt ?? `yogstra_${Date.now()}`
-  const receipt = String(rawReceipt).slice(0, 40)
-  const auth = globalThis.btoa(`${keyId}:${keySecret}`)
-
   try {
-    const response = await fetch('https://api.razorpay.com/v1/orders', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Basic ${auth}`,
+    const { keyId } = getRazorpayAuthHeader()
+    const amountInr = Number(req.body?.amountInr)
+    const teacherId = req.body?.teacherId
+    const orderInput = req.body?.orderInput
+
+    if (!Number.isFinite(amountInr) || amountInr <= 0) {
+      return res.status(400).json({ error: 'Invalid payment amount.' })
+    }
+
+    if (!teacherId || !orderInput) {
+      return res.status(400).json({ error: 'Missing booking details for payment.' })
+    }
+
+    const split = await prepareOrderSplit(amountInr)
+    if (split.grossPaise < 100) {
+      return res.status(400).json({ error: 'Minimum payment is ₹1.' })
+    }
+
+    const linkedAccountId = await getTeacherLinkedAccountId(teacherId)
+    const rawReceipt = req.body?.receipt ?? `yogstra_${Date.now()}`
+    const receipt = String(rawReceipt).slice(0, 40)
+
+    const razorpayOrder = await createRazorpayOrder({
+      amountPaise: split.grossPaise,
+      receipt,
+      teacherLinkedAccountId: linkedAccountId,
+      teacherAmountPaise: linkedAccountId ? split.teacherAmountPaise : undefined,
+      notes: {
+        teacher_id: teacherId,
+        student_id: orderInput.studentId,
       },
-      body: JSON.stringify({
-        amount: amountPaise,
-        currency: 'INR',
-        receipt,
-      }),
     })
 
-    const data = (await response.json()) as {
-      id?: string
-      amount?: number
-      currency?: string
-      error?: { description?: string; reason?: string }
-    }
-
-    if (!response.ok || !data.id) {
-      return res.status(response.status || 502).json({
-        error:
-          data.error?.description ??
-          data.error?.reason ??
-          'Razorpay could not create a payment order.',
-      })
-    }
+    await createPendingClassOrder(orderInput, razorpayOrder.id, split)
 
     return res.status(200).json({
-      orderId: data.id,
-      amount: data.amount ?? amountPaise,
-      currency: data.currency ?? 'INR',
+      orderId: razorpayOrder.id,
+      amount: razorpayOrder.amount ?? split.grossPaise,
+      currency: razorpayOrder.currency ?? 'INR',
       keyId,
+      commissionPercent: split.commissionPercent,
+      platformFeeInr: split.platformFeeInr,
+      teacherAmountInr: split.teacherAmountInr,
+      routeEnabled: Boolean(linkedAccountId),
     })
-  } catch {
-    return res.status(502).json({ error: 'Could not reach Razorpay. Try again in a moment.' })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Could not create payment order.'
+    const status = message.includes('not configured') ? 500 : 502
+    return res.status(status).json({ error: message })
   }
 }

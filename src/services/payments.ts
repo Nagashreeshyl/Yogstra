@@ -1,3 +1,5 @@
+import type { ClassOrderInput } from './classOrders'
+
 declare global {
   interface Window {
     Razorpay?: new (options: Record<string, unknown>) => {
@@ -13,6 +15,12 @@ type RazorpayFailureResponse = {
     reason?: string
     code?: string
   }
+}
+
+type RazorpaySuccessResponse = {
+  razorpay_payment_id: string
+  razorpay_order_id: string
+  razorpay_signature: string
 }
 
 const RAZORPAY_SCRIPT = 'https://checkout.razorpay.com/v1/checkout.js'
@@ -50,11 +58,21 @@ function trimEnv(value: string | undefined) {
   return value?.trim() ?? ''
 }
 
-async function createRazorpayOrder(amountInr: number, receipt?: string) {
+async function createRazorpayOrder(params: {
+  amountInr: number
+  receipt?: string
+  teacherId: string
+  orderInput: ClassOrderInput
+}) {
   const response = await fetch('/api/razorpay-order', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ amountInr, receipt }),
+    body: JSON.stringify({
+      amountInr: params.amountInr,
+      receipt: params.receipt,
+      teacherId: params.teacherId,
+      orderInput: params.orderInput,
+    }),
   })
 
   const contentType = response.headers.get('content-type') ?? ''
@@ -68,6 +86,10 @@ async function createRazorpayOrder(amountInr: number, receipt?: string) {
   const body = (await response.json().catch(() => ({}))) as {
     orderId?: string
     keyId?: string
+    commissionPercent?: number
+    platformFeeInr?: number
+    teacherAmountInr?: number
+    routeEnabled?: boolean
     error?: string
   }
 
@@ -78,6 +100,27 @@ async function createRazorpayOrder(amountInr: number, receipt?: string) {
   return {
     orderId: body.orderId,
     keyId: body.keyId ? trimEnv(body.keyId) : undefined,
+    commissionPercent: body.commissionPercent,
+    platformFeeInr: body.platformFeeInr,
+    teacherAmountInr: body.teacherAmountInr,
+    routeEnabled: body.routeEnabled,
+  }
+}
+
+async function fulfillVerifiedPayment(response: RazorpaySuccessResponse) {
+  const res = await fetch('/api/razorpay-fulfill', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      razorpay_order_id: response.razorpay_order_id,
+      razorpay_payment_id: response.razorpay_payment_id,
+      razorpay_signature: response.razorpay_signature,
+    }),
+  })
+
+  const body = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string }
+  if (!res.ok || !body.ok) {
+    throw new Error(body.error ?? 'Payment succeeded but booking could not be completed.')
   }
 }
 
@@ -85,10 +128,12 @@ export async function openRazorpayCheckout(params: {
   amountInr: number
   studentName: string
   studentEmail?: string
+  teacherId: string
   teacherName: string
   classType: string
+  orderInput: ClassOrderInput
   receipt?: string
-  onSuccess: (paymentId: string) => void | Promise<void>
+  onSuccess: () => void | Promise<void>
   onDismiss?: () => void
 }) {
   const key = trimEnv(import.meta.env.VITE_RAZORPAY_KEY_ID as string | undefined)
@@ -101,7 +146,13 @@ export async function openRazorpayCheckout(params: {
   const { inr, paise } = normalizeInrAmount(params.amountInr)
   await loadRazorpayScript()
 
-  const serverOrder = await createRazorpayOrder(inr, params.receipt)
+  const serverOrder = await createRazorpayOrder({
+    amountInr: inr,
+    receipt: params.receipt,
+    teacherId: params.teacherId,
+    orderInput: params.orderInput,
+  })
+
   if (!serverOrder && !import.meta.env.DEV) {
     throw new Error(
       'Payment service is unavailable. Refresh the page and try again in a moment.',
@@ -119,16 +170,26 @@ export async function openRazorpayCheckout(params: {
     const prefill: Record<string, string> = { name: params.studentName }
     if (params.studentEmail) prefill.email = params.studentEmail
 
+    const descriptionParts = [
+      `${params.classType} class with ${params.teacherName}`,
+      serverOrder?.commissionPercent != null
+        ? `Platform fee ${serverOrder.commissionPercent}%`
+        : null,
+    ].filter(Boolean)
+
     const options: Record<string, unknown> = {
       key: serverOrder?.keyId ?? key,
       name: 'Yogstra',
-      description: `${params.classType} class with ${params.teacherName}`,
+      description: descriptionParts.join(' · '),
       prefill,
       theme: { color: '#5BB8C4' },
-      handler(response: { razorpay_payment_id: string }) {
+      handler(response: RazorpaySuccessResponse) {
         void (async () => {
           try {
-            await params.onSuccess(response.razorpay_payment_id)
+            if (serverOrder?.orderId) {
+              await fulfillVerifiedPayment(response)
+            }
+            await params.onSuccess()
             finish(() => resolve())
           } catch (err) {
             params.onDismiss?.()

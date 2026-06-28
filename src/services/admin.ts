@@ -5,7 +5,8 @@ import { mapPayout } from '../utils/mappers'
 
 const payoutSelect = `
   *,
-  teacher:profiles!teacher_id (*)
+  teacher:profiles!teacher_id (*),
+  student:profiles!student_id (*)
 `
 
 export async function fetchPayouts(): Promise<Payout[]> {

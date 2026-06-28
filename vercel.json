@@ -13,6 +13,18 @@
   "functions": {
     "api/livekit-token.ts": {
       "includeFiles": "server/livekitToken.ts"
+    },
+    "api/razorpay-order.ts": {
+      "includeFiles": "server/**"
+    },
+    "api/razorpay-fulfill.ts": {
+      "includeFiles": "server/**"
+    },
+    "api/razorpay-webhook.ts": {
+      "includeFiles": "server/**"
+    },
+    "api/teacher-payout-setup.ts": {
+      "includeFiles": "server/**"
     }
   },
   "rewrites": [

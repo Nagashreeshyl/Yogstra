@@ -85,9 +85,16 @@ export interface DbMessage {
 export interface DbPayout {
   id: string
   teacher_id: string | null
+  student_id?: string | null
   amount: number | null
+  gross_amount?: number | null
+  commission_amount?: number | null
+  teacher_amount?: number | null
   period: string | null
   status: string | null
+  class_order_id?: string | null
+  razorpay_payment_id?: string | null
+  razorpay_transfer_id?: string | null
   created_at: string
 }
 
@@ -119,4 +126,5 @@ export type MessageWithRelations = DbMessage & {
 
 export type PayoutWithRelations = DbPayout & {
   teacher: DbProfile | null
+  student?: DbProfile | null
 }

@@ -140,12 +140,18 @@ export function mapSchedule(row: ScheduleWithRelations, studentName?: string): S
 
 export function mapPayout(row: PayoutWithRelations): Payout {
   const status = (row.status ?? 'pending').toLowerCase()
+  const student = row.student
   return {
     id: row.id,
     teacherId: row.teacher_id ?? '',
     teacherName: row.teacher?.full_name ?? '',
-    amount: Number(row.amount ?? 0),
+    studentName: student?.full_name ?? undefined,
+    amount: Number(row.teacher_amount ?? row.amount ?? 0),
+    grossAmount: row.gross_amount != null ? Number(row.gross_amount) : undefined,
+    commissionAmount: row.commission_amount != null ? Number(row.commission_amount) : undefined,
+    teacherAmount: row.teacher_amount != null ? Number(row.teacher_amount) : undefined,
     period: row.period ?? '',
     status: status === 'paid' ? 'Paid' : 'Pending',
+    createdAt: row.created_at,
   }
 }

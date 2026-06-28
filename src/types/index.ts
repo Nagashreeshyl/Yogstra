@@ -193,9 +193,14 @@ export interface Payout {
   id: string
   teacherId: string
   teacherName: string
+  studentName?: string
   amount: number
+  grossAmount?: number
+  commissionAmount?: number
+  teacherAmount?: number
   period: string
   status: 'Pending' | 'Paid'
+  createdAt?: string
 }
 
 export interface FilterState {
