@@ -33,9 +33,9 @@ import {
 import type { TrackReferenceOrPlaceholder } from '@livekit/components-core'
 import { ClassRoomAudioSetup } from '../classes/ClassRoomAudioSetup'
 import {
+  canOfferScreenShare,
   disableScreenShare,
   enableScreenShare,
-  getScreenShareUnsupportedMessage,
   screenShareErrorMessage,
 } from '../../utils/screenShareSupport'
 import {
@@ -391,11 +391,14 @@ function DirectCallControlBar({
   const room = useRoomContext()
   const mic = useTrackToggle({ source: Track.Source.Microphone })
   const camera = useTrackToggle({ source: Track.Source.Camera })
+  const showScreenShare = canOfferScreenShare()
   const [screenSharing, setScreenSharing] = useState(false)
   const [busy, setBusy] = useState<'flip' | 'screen' | null>(null)
   const [actionNotice, setActionNotice] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!showScreenShare) return
+
     const syncScreenShare = () => {
       setScreenSharing(room.localParticipant.isScreenShareEnabled)
     }
@@ -412,7 +415,7 @@ function DirectCallControlBar({
       room.off(RoomEvent.TrackMuted, syncScreenShare)
       room.off(RoomEvent.TrackUnmuted, syncScreenShare)
     }
-  }, [room])
+  }, [room, showScreenShare])
 
   useEffect(() => {
     if (!actionNotice) return
@@ -464,16 +467,9 @@ function DirectCallControlBar({
   }
 
   const toggleScreenShare = async () => {
-    if (busy) return
+    if (busy || !showScreenShare) return
     setBusy('screen')
     setActionNotice(null)
-
-    const unsupported = getScreenShareUnsupportedMessage()
-    if (unsupported) {
-      setActionNotice(unsupported)
-      setBusy(null)
-      return
-    }
 
     try {
       if (room.localParticipant.isScreenShareEnabled) {
@@ -526,14 +522,16 @@ function DirectCallControlBar({
         <SwitchCamera size={20} />
       </DirectCallLabeledButton>
 
-      <DirectCallLabeledButton
-        label="Share screen"
-        disabled={busy === 'screen'}
-        active={screenSharing}
-        onClick={() => void toggleScreenShare()}
-      >
-        <MonitorUp size={20} />
-      </DirectCallLabeledButton>
+      {showScreenShare && (
+        <DirectCallLabeledButton
+          label="Share screen"
+          disabled={busy === 'screen'}
+          active={screenSharing}
+          onClick={() => void toggleScreenShare()}
+        >
+          <MonitorUp size={20} />
+        </DirectCallLabeledButton>
+      )}
 
       <DirectCallLabeledButton
         label={ringing ? 'Cancel' : 'Leave'}
