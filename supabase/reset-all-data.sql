@@ -13,13 +13,36 @@
 --
 -- STORAGE (optional, separate step — SQL cannot delete storage files):
 --   Dashboard → Storage → open each bucket → select all → Delete
---   Buckets: post-media, avatars (keep admin folder if you want)
+--   Buckets: post-media, avatars
 -- ============================================================
 
 do $$
 declare
   admin_email text := 'nagashreeshyl@gmail.com'; -- ← change if your admin email differs
   admin_user_id uuid;
+  tables text[] := array[
+    'coupon_deliveries',
+    'teacher_notifications',
+    'class_orders',
+    'chat_thread_settings',
+    'chat_thread_reads',
+    'direct_messages',
+    'chat_reports',
+    'chat_threads',
+    'teacher_coupons',
+    'comments',
+    'messages',
+    'schedules',
+    'bookings',
+    'payouts',
+    'posts',
+    'teacher_payout_private',
+    'schedule_change_requests',
+    'class_sessions',
+    'direct_video_calls',
+    'teacher_profiles'
+  ];
+  existing_tables text;
 begin
   select id into admin_user_id
   from auth.users
@@ -31,39 +54,27 @@ begin
       admin_email;
   end if;
 
-  -- ── 1. Application data (order-safe; CASCADE handles FK chains) ──
-  truncate table
-    coupon_deliveries,
-    teacher_notifications,
-    class_orders,
-    chat_thread_settings,
-    chat_thread_reads,
-    direct_messages,
-    chat_reports,
-    chat_threads,
-    teacher_coupons,
-    comments,
-    messages,
-    schedules,
-    bookings,
-    payouts,
-    posts,
-    teacher_payout_private,
-    schedule_change_requests,
-    class_sessions,
-    direct_video_calls,
-    teacher_profiles
-  restart identity cascade;
+  -- Truncate only tables that exist (skips migrations you have not run yet)
+  select string_agg(format('public.%I', t.table_name), ', ' order by t.table_name)
+  into existing_tables
+  from unnest(tables) as wanted(table_name)
+  join information_schema.tables t
+    on t.table_schema = 'public'
+   and t.table_name = wanted.table_name;
 
-  -- ── 2. Non-admin profiles ──
+  if existing_tables is not null then
+    execute 'truncate table ' || existing_tables || ' restart identity cascade';
+    raise notice 'Truncated: %', existing_tables;
+  else
+    raise notice 'No application tables found to truncate.';
+  end if;
+
   delete from public.profiles
   where id <> admin_user_id;
 
-  -- ── 3. Non-admin auth users (sessions, identities cascade) ──
   delete from auth.users
   where id <> admin_user_id;
 
-  -- ── 4. Ensure admin profile + role ──
   insert into public.profiles (id, role, full_name)
   values (
     admin_user_id,
@@ -80,28 +91,15 @@ begin
   raise notice 'Optional: clear Storage buckets (post-media, avatars) in Dashboard → Storage.';
 end $$;
 
--- ── Verify ──
-select 'auth.users' as table_name, count(*) as rows from auth.users
+-- ── Verify (safe even if some tables were never created) ──
+select 'auth.users' as table_name, count(*)::bigint as rows from auth.users
 union all
 select 'profiles', count(*) from public.profiles
 union all
-select 'profiles (admin)', count(*) from public.profiles where role = 'admin'
-union all
-select 'chat_threads', count(*) from public.chat_threads
-union all
-select 'direct_messages', count(*) from public.direct_messages
-union all
-select 'bookings', count(*) from public.bookings
-union all
-select 'class_orders', count(*) from public.class_orders
-union all
-select 'teacher_coupons', count(*) from public.teacher_coupons
-union all
-select 'teacher_payout_private', count(*) from public.teacher_payout_private
-union all
-select 'posts', count(*) from public.posts;
+select 'profiles (admin)', count(*) from public.profiles where role = 'admin';
 
--- Expected: auth.users = 1, profiles = 1, everything else = 0
 select u.email, p.role, p.full_name
 from auth.users u
 join public.profiles p on p.id = u.id;
+
+-- Expected: auth.users = 1, profiles = 1, admin row shown above

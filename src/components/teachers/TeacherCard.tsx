@@ -114,6 +114,33 @@ interface FeaturedTeachersProps {
   teachers: Teacher[]
 }
 
+export function MobileFeaturedTeachers({ teachers }: FeaturedTeachersProps) {
+  const navigate = useNavigate()
+
+  if (teachers.length === 0) return null
+
+  return (
+    <section className="lg:hidden -mx-1">
+      <h2 className="font-heading text-base font-medium mb-3 px-1">Featured Teachers</h2>
+      <div className="flex gap-3 overflow-x-auto pb-1 px-1 snap-x snap-mandatory">
+        {teachers.map((teacher) => (
+          <button
+            key={teacher.id}
+            type="button"
+            onClick={() => navigate(`/teachers/${teacher.id}`)}
+            className="shrink-0 w-[5.5rem] flex flex-col items-center gap-2 snap-start cursor-pointer"
+          >
+            <Avatar src={teacher.photo} name={teacher.name} size={56} />
+            <span className="text-xs font-medium text-charcoal truncate w-full text-center">
+              {teacher.name.split(' ')[0]}
+            </span>
+          </button>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 export function FeaturedTeachers({ teachers }: FeaturedTeachersProps) {
   return (
     <div>

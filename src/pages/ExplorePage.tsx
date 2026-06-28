@@ -7,8 +7,9 @@ import { filterTeachers } from '../utils/filterTeachers'
 import { SearchBar } from '../components/filters/SearchBar'
 import { CategoryFlashCards } from '../components/categories/CategoryFlashCards'
 import { CommunityFeed } from '../components/community/CommunityFeed'
-import { FeaturedTeachers } from '../components/teachers/TeacherCard'
+import { FeaturedTeachers, MobileFeaturedTeachers } from '../components/teachers/TeacherCard'
 import { CompetitionsTeaser } from '../components/competitions/CompetitionsTeaser'
+import { FeedPageLayout } from '../components/layout/FeedPageLayout'
 import { PostFeedSkeleton, TeacherGridSkeleton } from '../components/ui/Skeleton'
 import { competitions } from '../lib/constants'
 
@@ -23,55 +24,54 @@ export function ExplorePage() {
   const allTeachers = teachers ?? []
   const featured = filterTeachers(allTeachers, searchQuery, filters, selectedCategory).slice(0, 3)
   const fallbackFeatured = allTeachers.filter((t) => t.verified).slice(0, 3)
+  const featuredList = featured.length > 0 ? featured : fallbackFeatured
+
+  const sidebar = teachersLoading ? (
+    <div className="space-y-4">
+      <div className="h-4 w-32 animate-pulse rounded-sm bg-surface-inset/80" />
+      <TeacherGridSkeleton count={3} />
+    </div>
+  ) : teachersError ? (
+    <p className="text-sm text-red-600">Could not load teachers: {teachersError}</p>
+  ) : featuredList.length === 0 ? (
+    <div className="border border-border rounded-sm p-6 text-center">
+      <p className="text-charcoal/60 text-sm">No verified teachers yet.</p>
+      <p className="text-charcoal/40 text-xs mt-1">Teachers appear after registration and admin approval.</p>
+    </div>
+  ) : (
+    <>
+      <FeaturedTeachers teachers={featuredList} />
+      <CompetitionsTeaser competitions={competitions} />
+    </>
+  )
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-8">
-      <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
-        <div className="flex-1 min-w-0 space-y-8">
-          <SearchBar />
-          <CategoryFlashCards />
+    <FeedPageLayout sidebar={sidebar}>
+      <div className="space-y-5 pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0">
+        {!teachersLoading && featuredList.length > 0 && (
+          <MobileFeaturedTeachers teachers={featuredList} />
+        )}
 
-          <section>
-            {postsLoading ? (
-              <PostFeedSkeleton count={2} />
-            ) : postsError ? (
-              <p className="text-sm text-red-600 border border-red-200 bg-red-50 px-4 py-3 rounded-sm">
-                Could not load posts: {postsError}
-              </p>
-            ) : (posts ?? []).length === 0 ? (
-              <div className="border border-border rounded-sm p-8 text-center max-w-[520px]">
-                <p className="text-charcoal/60 text-sm">No community posts yet.</p>
-                <p className="text-charcoal/40 text-xs mt-1">Posts from Supabase will appear here.</p>
-              </div>
-            ) : (
-              <div className="max-w-[470px]">
-                <CommunityFeed posts={posts ?? []} variant="instagram" />
-              </div>
-            )}
-          </section>
-        </div>
+        <SearchBar placeholder="Search teachers, styles..." />
+        <CategoryFlashCards />
 
-        <aside className="w-full lg:w-[280px] shrink-0 space-y-8">
-          {teachersLoading ? (
-            <div className="space-y-4">
-              <div className="h-4 w-32 animate-pulse rounded-sm bg-surface-inset/80" />
-              <TeacherGridSkeleton count={3} />
-            </div>
-          ) : teachersError ? (
-            <p className="text-sm text-red-600">Could not load teachers: {teachersError}</p>
-          ) : (featured.length > 0 ? featured : fallbackFeatured).length === 0 ? (
-            <div className="border border-border rounded-sm p-6 text-center">
-              <p className="text-charcoal/60 text-sm">No verified teachers yet.</p>
-              <p className="text-charcoal/40 text-xs mt-1">Teachers appear after registration and admin approval.</p>
+        <section>
+          {postsLoading ? (
+            <PostFeedSkeleton count={2} />
+          ) : postsError ? (
+            <p className="text-sm text-red-600 border border-red-200 bg-red-50 px-4 py-3 rounded-sm">
+              Could not load posts: {postsError}
+            </p>
+          ) : (posts ?? []).length === 0 ? (
+            <div className="border border-border rounded-sm p-8 text-center">
+              <p className="text-charcoal/60 text-sm">No community posts yet.</p>
+              <p className="text-charcoal/40 text-xs mt-1">Posts from the community will appear here.</p>
             </div>
           ) : (
-            <>
-              <FeaturedTeachers teachers={featured.length > 0 ? featured : fallbackFeatured} />
-              <CompetitionsTeaser competitions={competitions} />
-            </>
+            <CommunityFeed posts={posts ?? []} variant="instagram" showTitle={false} />
           )}
-        </aside>
+        </section>
       </div>
-    </div>
+    </FeedPageLayout>
   )
 }

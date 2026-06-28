@@ -41,7 +41,7 @@ export function FilterPanel({ onClose }: FilterPanelProps) {
   }
 
   return (
-    <div className="absolute top-full left-0 right-0 mt-2 z-40 bg-surface-elevated border border-surface-inset rounded-sm p-6 shadow-lg">
+    <div className="absolute top-full left-0 right-0 mt-2 z-40 bg-surface-elevated border border-surface-inset rounded-sm p-4 sm:p-6 shadow-lg max-h-[min(70vh,32rem)] overflow-y-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div>
           <p className="text-sm font-medium mb-3">Category</p>

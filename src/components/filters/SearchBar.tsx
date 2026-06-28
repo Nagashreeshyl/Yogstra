@@ -26,10 +26,11 @@ export function SearchBar({ placeholder = 'Search teachers, styles, locations...
         </div>
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="flex items-center gap-2 px-4 py-3 border border-surface-inset rounded-sm text-sm text-charcoal bg-surface-elevated hover:bg-surface-muted transition-colors cursor-pointer shadow-sm"
+          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-3 border border-surface-inset rounded-sm text-sm text-charcoal bg-surface-elevated hover:bg-surface-muted transition-colors cursor-pointer shadow-sm shrink-0"
+          aria-label="Filters"
         >
           <SlidersHorizontal size={18} />
-          Filters
+          <span className="hidden sm:inline">Filters</span>
         </button>
       </div>
       {showFilters && (
