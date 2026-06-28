@@ -52,7 +52,7 @@ export function TeacherPayoutSettings() {
 
     setSaving(true)
     try {
-      await setupTeacherRazorpayPayout({
+      const result = await setupTeacherRazorpayPayout({
         teacherId,
         accountHolderName,
         accountNumber: bankAccountNumber,
@@ -61,8 +61,12 @@ export function TeacherPayoutSettings() {
       })
       await refetch()
       setToast({
-        message: 'Bank details saved. Razorpay Route will send your share when students pay.',
-        type: 'success',
+        message: result.warning
+          ? result.warning
+          : result.bankSavedOnly
+            ? 'Bank details saved. Razorpay Route connection is pending.'
+            : 'Bank details saved. Razorpay Route will send your share when students pay.',
+        type: result.warning ? 'success' : 'success',
       })
     } catch (err) {
       setToast({

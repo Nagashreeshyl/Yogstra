@@ -10,68 +10,122 @@ export type TeacherPayoutDetails = {
   onboardingStatus: 'not_started' | 'pending' | 'active' | 'failed'
 }
 
-const payoutSelect =
-  'account_holder_name, bank_account_number, bank_ifsc, pan_number, razorpay_linked_account_id, payout_onboarding_status'
+const emptyPayoutDetails = (): TeacherPayoutDetails => ({
+  accountHolderName: '',
+  bankAccountNumber: '',
+  bankIfsc: '',
+  panNumber: '',
+  linkedAccountId: null,
+  onboardingStatus: 'not_started',
+})
+
+function isMissingTableError(error: { code?: string }) {
+  return error.code === 'PGRST205' || error.code === '42P01'
+}
+
+function mapPrivateRow(data: Record<string, unknown>): TeacherPayoutDetails {
+  return {
+    accountHolderName: (data.account_holder_name as string) ?? '',
+    bankAccountNumber: (data.bank_account_number as string) ?? '',
+    bankIfsc: (data.bank_ifsc as string) ?? '',
+    panNumber: (data.pan_number as string) ?? '',
+    linkedAccountId: (data.razorpay_linked_account_id as string) ?? null,
+    onboardingStatus:
+      (data.payout_onboarding_status as TeacherPayoutDetails['onboardingStatus']) ?? 'not_started',
+  }
+}
 
 export async function fetchTeacherPayoutDetails(teacherId: string): Promise<TeacherPayoutDetails | null> {
-  const { data, error } = await supabase
+  const privateResult = await supabase
     .from('teacher_payout_private')
-    .select(payoutSelect)
+    .select(
+      'account_holder_name, bank_account_number, bank_ifsc, pan_number, razorpay_linked_account_id, payout_onboarding_status',
+    )
     .eq('teacher_id', teacherId)
     .maybeSingle()
 
-  if (error) {
-    if (error.code === 'PGRST205' || error.code === '42P01') {
-      return {
-        accountHolderName: '',
-        bankAccountNumber: '',
-        bankIfsc: '',
-        panNumber: '',
-        linkedAccountId: null,
-        onboardingStatus: 'not_started',
-      }
-    }
-    throw error
-  }
-  if (!data) {
-    return {
-      accountHolderName: '',
-      bankAccountNumber: '',
-      bankIfsc: '',
-      panNumber: '',
-      linkedAccountId: null,
-      onboardingStatus: 'not_started',
-    }
+  if (!privateResult.error && privateResult.data) {
+    return mapPrivateRow(privateResult.data as Record<string, unknown>)
   }
 
-  return {
-    accountHolderName: data.account_holder_name ?? '',
-    bankAccountNumber: data.bank_account_number ?? '',
-    bankIfsc: data.bank_ifsc ?? '',
-    panNumber: data.pan_number ?? '',
-    linkedAccountId: data.razorpay_linked_account_id ?? null,
-    onboardingStatus: (data.payout_onboarding_status as TeacherPayoutDetails['onboardingStatus']) ?? 'not_started',
+  if (privateResult.error && !isMissingTableError(privateResult.error)) {
+    throw privateResult.error
   }
+
+  const legacyResult = await supabase
+    .from('teacher_profiles')
+    .select(
+      'account_holder_name, bank_account_number, bank_ifsc, pan_number, razorpay_linked_account_id, payout_onboarding_status',
+    )
+    .eq('id', teacherId)
+    .maybeSingle()
+
+  if (legacyResult.error) {
+    if (isMissingTableError(legacyResult.error)) return emptyPayoutDetails()
+    throw legacyResult.error
+  }
+
+  if (!legacyResult.data) return emptyPayoutDetails()
+  return mapPrivateRow(legacyResult.data as Record<string, unknown>)
+}
+
+function buildPayoutPayload(
+  details: Pick<TeacherPayoutDetails, 'accountHolderName' | 'bankAccountNumber' | 'bankIfsc' | 'panNumber'>,
+  extra?: Partial<{
+    razorpay_linked_account_id: string
+    payout_onboarding_status: TeacherPayoutDetails['onboardingStatus']
+  }>,
+) {
+  return {
+    account_holder_name: sanitizeText(details.accountHolderName, 120),
+    bank_account_number: details.bankAccountNumber.trim().replace(/\D/g, '').slice(0, 18),
+    bank_ifsc: sanitizeText(details.bankIfsc, 11).toUpperCase(),
+    pan_number: sanitizeText(details.panNumber, 10).toUpperCase() || null,
+    payout_onboarding_status: extra?.payout_onboarding_status ?? ('pending' as const),
+    ...(extra?.razorpay_linked_account_id
+      ? { razorpay_linked_account_id: extra.razorpay_linked_account_id }
+      : {}),
+  }
+}
+
+async function writePayoutDetails(
+  teacherId: string,
+  details: Pick<TeacherPayoutDetails, 'accountHolderName' | 'bankAccountNumber' | 'bankIfsc' | 'panNumber'>,
+  extra?: Partial<{
+    razorpay_linked_account_id: string
+    payout_onboarding_status: TeacherPayoutDetails['onboardingStatus']
+  }>,
+) {
+  const payload = buildPayoutPayload(details, extra)
+
+  const privateWrite = await supabase.from('teacher_payout_private').upsert(
+    {
+      teacher_id: teacherId,
+      ...payload,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'teacher_id' },
+  )
+
+  if (!privateWrite.error) return
+
+  if (!isMissingTableError(privateWrite.error)) {
+    throw privateWrite.error
+  }
+
+  const legacyWrite = await supabase
+    .from('teacher_profiles')
+    .update(payload)
+    .eq('id', teacherId)
+
+  if (legacyWrite.error) throw legacyWrite.error
 }
 
 export async function saveTeacherPayoutDetailsLocally(
   teacherId: string,
   details: Pick<TeacherPayoutDetails, 'accountHolderName' | 'bankAccountNumber' | 'bankIfsc' | 'panNumber'>,
 ) {
-  const { error } = await supabase.from('teacher_payout_private').upsert(
-    {
-      teacher_id: teacherId,
-      account_holder_name: sanitizeText(details.accountHolderName, 120),
-      bank_account_number: details.bankAccountNumber.trim().replace(/\D/g, '').slice(0, 18),
-      bank_ifsc: sanitizeText(details.bankIfsc, 11).toUpperCase(),
-      pan_number: sanitizeText(details.panNumber, 10).toUpperCase() || null,
-      payout_onboarding_status: 'pending',
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: 'teacher_id' },
-  )
-
-  if (error) throw error
+  await writePayoutDetails(teacherId, details, { payout_onboarding_status: 'pending' })
 }
 
 export async function saveTeacherLinkedAccountLocally(
@@ -79,7 +133,7 @@ export async function saveTeacherLinkedAccountLocally(
   linkedAccountId: string,
   onboardingStatus: 'pending' | 'active' | 'failed',
 ) {
-  const { error } = await supabase.from('teacher_payout_private').upsert(
+  const privateWrite = await supabase.from('teacher_payout_private').upsert(
     {
       teacher_id: teacherId,
       razorpay_linked_account_id: linkedAccountId,
@@ -89,7 +143,29 @@ export async function saveTeacherLinkedAccountLocally(
     { onConflict: 'teacher_id' },
   )
 
-  if (error) throw error
+  if (!privateWrite.error) return
+
+  if (!isMissingTableError(privateWrite.error)) {
+    throw privateWrite.error
+  }
+
+  const legacyWrite = await supabase
+    .from('teacher_profiles')
+    .update({
+      razorpay_linked_account_id: linkedAccountId,
+      payout_onboarding_status: onboardingStatus,
+    })
+    .eq('id', teacherId)
+
+  if (legacyWrite.error) throw legacyWrite.error
+}
+
+export type SetupPayoutResult = {
+  ok: boolean
+  linkedAccountId?: string
+  status?: string
+  bankSavedOnly?: boolean
+  warning?: string
 }
 
 export async function setupTeacherRazorpayPayout(params: {
@@ -98,7 +174,7 @@ export async function setupTeacherRazorpayPayout(params: {
   accountNumber: string
   ifsc: string
   pan?: string
-}) {
+}): Promise<SetupPayoutResult> {
   const { data: session } = await supabase.auth.getSession()
   const token = session.session?.access_token
   if (!token) throw new Error('Please sign in again.')
@@ -113,19 +189,29 @@ export async function setupTeacherRazorpayPayout(params: {
     panNumber: params.pan ?? '',
   })
 
-  const response = await fetch('/api/teacher-payout-setup', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      accountHolderName: params.accountHolderName,
-      accountNumber: params.accountNumber,
-      ifsc: params.ifsc,
-      pan: params.pan,
-    }),
-  })
+  let response: Response
+  try {
+    response = await fetch('/api/teacher-payout-setup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        accountHolderName: params.accountHolderName,
+        accountNumber: params.accountNumber,
+        ifsc: params.ifsc,
+        pan: params.pan,
+      }),
+    })
+  } catch {
+    return {
+      ok: true,
+      bankSavedOnly: true,
+      warning:
+        'Bank details saved. Razorpay connection is temporarily unavailable — payouts will be processed manually until Route is connected.',
+    }
+  }
 
   const body = (await response.json().catch(() => ({}))) as {
     ok?: boolean
@@ -135,7 +221,20 @@ export async function setupTeacherRazorpayPayout(params: {
   }
 
   if (!response.ok || !body.ok) {
-    throw new Error(body.error ?? 'Could not connect bank account for payouts.')
+    const apiError = body.error ?? 'Could not connect bank account for payouts.'
+    if (
+      apiError.includes('service role') ||
+      apiError.includes('Route') ||
+      apiError.includes('Razorpay')
+    ) {
+      return {
+        ok: true,
+        bankSavedOnly: true,
+        warning:
+          'Bank details saved. Automatic Razorpay payout linking failed — your earnings will be tracked and paid manually until Route is enabled.',
+      }
+    }
+    throw new Error(apiError)
   }
 
   if (body.linkedAccountId) {
@@ -144,5 +243,9 @@ export async function setupTeacherRazorpayPayout(params: {
     await saveTeacherLinkedAccountLocally(params.teacherId, body.linkedAccountId, onboardingStatus)
   }
 
-  return body
+  return {
+    ok: true,
+    linkedAccountId: body.linkedAccountId,
+    status: body.status,
+  }
 }

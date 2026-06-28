@@ -255,18 +255,24 @@ export async function fulfillPaidClassOrder(params: {
 
 export async function getTeacherLinkedAccountId(teacherId: string) {
   const supabase = getSupabaseAdmin()
-  const { data, error } = await supabase
-    .from('teacher_payout_private')
-    .select('razorpay_linked_account_id, payout_onboarding_status')
-    .eq('teacher_id', teacherId)
-    .maybeSingle()
 
-  if (error) {
-    if (error.code === 'PGRST205' || error.code === '42P01') {
-      return null
-    }
-    throw error
+  const readLinkedAccount = async (table: 'teacher_payout_private' | 'teacher_profiles') => {
+    const idCol = table === 'teacher_payout_private' ? 'teacher_id' : 'id'
+    const { data, error } = await supabase
+      .from(table)
+      .select('razorpay_linked_account_id, payout_onboarding_status')
+      .eq(idCol, teacherId)
+      .maybeSingle()
+    return { data, error }
   }
+
+  let { data, error } = await readLinkedAccount('teacher_payout_private')
+
+  if (error && (error.code === 'PGRST205' || error.code === '42P01')) {
+    ;({ data, error } = await readLinkedAccount('teacher_profiles'))
+  }
+
+  if (error) throw error
   if (data?.payout_onboarding_status === 'active' && data.razorpay_linked_account_id) {
     return data.razorpay_linked_account_id as string
   }
