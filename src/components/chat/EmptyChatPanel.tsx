@@ -1,4 +1,4 @@
-import { BadgeCheck, Send } from 'lucide-react'
+import { BadgeCheck, Send, ArrowLeft } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Avatar } from '../ui/Avatar'
@@ -16,6 +16,7 @@ interface EmptyChatPanelProps {
   participantRole?: 'student' | 'teacher'
   currentUserRole?: 'student' | 'teacher'
   onConversationStarted: (threadId: string) => void
+  onBack?: () => void
 }
 
 /** Chat shell with no messages — used after delete or before first message. */
@@ -28,6 +29,7 @@ export function EmptyChatPanel({
   participantRole = 'student',
   currentUserRole = 'student',
   onConversationStarted,
+  onBack,
 }: EmptyChatPanelProps) {
   const navigate = useNavigate()
   const [draft, setDraft] = useState('')
@@ -60,8 +62,22 @@ export function EmptyChatPanel({
   }
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-cream-dark border border-border rounded-sm overflow-hidden">
-      <div className="px-4 py-3 border-b border-cream/10 bg-charcoal shrink-0 flex items-center gap-3">
+    <div className="flex flex-col h-full min-h-0 flex-1 bg-cream-dark md:border md:border-border md:rounded-sm overflow-hidden">
+      <div
+        className={`px-4 py-3 border-b border-cream/10 bg-charcoal shrink-0 flex items-center gap-2 min-w-0 ${
+          onBack ? 'pt-[max(0.75rem,env(safe-area-inset-top))]' : ''
+        }`}
+      >
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="md:hidden p-1.5 -ml-1 text-cream/70 hover:text-cream rounded-sm cursor-pointer shrink-0"
+            aria-label="Back to messages"
+          >
+            <ArrowLeft size={20} />
+          </button>
+        )}
         <button
           type="button"
           onClick={() => navigate(profilePath)}
@@ -93,7 +109,7 @@ export function EmptyChatPanel({
 
       <form
         onSubmit={handleSubmit}
-        className="px-3 py-2.5 border-t border-border bg-cream-dark shrink-0 flex items-center gap-2"
+        className="px-3 pt-2.5 border-t border-border bg-cream-dark shrink-0 flex items-center gap-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:pb-2.5"
       >
         <input
           type="text"

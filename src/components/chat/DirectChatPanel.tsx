@@ -6,6 +6,7 @@ import { Button } from '../ui/Button'
 import { ChatWindowSkeleton } from '../ui/Skeleton'
 import { WhatsAppChatWindow } from './WhatsAppChatWindow'
 import { EmptyChatPanel } from './EmptyChatPanel'
+import { ChatMobileBackBar } from './ChatMobileBackBar'
 import {
   ensureDirectChat,
   fetchDirectChatThread,
@@ -174,7 +175,8 @@ export function DirectChatPanel({
 
   if (!needsRequest && opening) {
     return (
-      <div className="flex flex-col h-full min-h-[420px]">
+      <div className="flex flex-col h-full min-h-0 flex-1">
+        <ChatMobileBackBar onBack={onBack} />
         <ChatWindowSkeleton />
       </div>
     )
@@ -191,6 +193,7 @@ export function DirectChatPanel({
         participantRole={localUser.role}
         currentUserRole={currentUserRole}
         onConversationStarted={handleConversationStarted}
+        onBack={onBack}
       />
     )
   }
@@ -227,13 +230,15 @@ export function DirectChatPanel({
         participantRole={localUser.role}
         currentUserRole={currentUserRole}
         onConversationStarted={handleConversationStarted}
+        onBack={onBack}
       />
     )
   }
 
   return (
-    <div className="flex flex-col h-full min-h-[420px] bg-cream border border-border rounded-sm overflow-hidden">
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 text-center">
+    <div className="flex flex-col h-full min-h-0 flex-1 bg-cream md:border md:border-border md:rounded-sm overflow-hidden">
+      <ChatMobileBackBar onBack={onBack} />
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 text-center min-h-0 overflow-y-auto">
         <Avatar src={localUser.avatar} name={localUser.name} size={80} />
         <h2 className="text-base font-semibold mt-4">{localUser.name}</h2>
         <p className="text-sm text-charcoal/50 capitalize mt-0.5">{localUser.role}</p>
