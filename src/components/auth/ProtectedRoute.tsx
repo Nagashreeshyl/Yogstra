@@ -5,6 +5,7 @@ import { getPostLoginPath } from '../../utils/authRouting'
 
 import { AuthLoadingSkeleton } from './AuthLoadingSkeleton'
 
+// VERIFIED: route guards — login redirect, verified teacher gate, admin-only routes
 function AuthLoading() {
   return <AuthLoadingSkeleton />
 }

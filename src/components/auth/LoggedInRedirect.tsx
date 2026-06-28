@@ -37,6 +37,10 @@ export function LoggedInRedirect({ children }: { children: React.ReactNode }) {
     if (path.startsWith('/teachers/') && !path.startsWith('/dashboard/')) {
       return <Navigate to={`/dashboard/student${path}`} replace />
     }
+    const studentProfileMatch = path.match(/^\/students\/([^/]+)$/)
+    if (studentProfileMatch) {
+      return <Navigate to={`/dashboard/student/students/${studentProfileMatch[1]}`} replace />
+    }
   }
 
   if (user.role === 'teacher') {

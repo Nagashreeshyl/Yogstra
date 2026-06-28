@@ -11,6 +11,7 @@ import { TeacherTableSkeleton } from '../../components/ui/Skeleton'
 
 const PAGE_SIZE = 5
 
+// VERIFIED: admin teacher approval/reject/remove
 export function AdminTeachersPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')

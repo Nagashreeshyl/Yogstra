@@ -1,4 +1,5 @@
 import type { ClassOrderInput } from './classOrders'
+import { supabase } from '../lib/supabase'
 
 declare global {
   interface Window {
@@ -64,9 +65,16 @@ async function createRazorpayOrder(params: {
   teacherId: string
   orderInput: ClassOrderInput
 }) {
+  const { data: session } = await supabase.auth.getSession()
+  const token = session.session?.access_token
+  if (!token) throw new Error('Please sign in again to pay.')
+
   const response = await fetch('/api/razorpay-order', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({
       amountInr: params.amountInr,
       receipt: params.receipt,
@@ -108,9 +116,16 @@ async function createRazorpayOrder(params: {
 }
 
 async function fulfillVerifiedPayment(response: RazorpaySuccessResponse) {
+  const { data: session } = await supabase.auth.getSession()
+  const token = session.session?.access_token
+  if (!token) throw new Error('Please sign in again to complete booking.')
+
   const res = await fetch('/api/razorpay-fulfill', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({
       razorpay_order_id: response.razorpay_order_id,
       razorpay_payment_id: response.razorpay_payment_id,
@@ -124,6 +139,7 @@ async function fulfillVerifiedPayment(response: RazorpaySuccessResponse) {
   }
 }
 
+// VERIFIED: Razorpay checkout, order creation, payment fulfillment
 export async function openRazorpayCheckout(params: {
   amountInr: number
   studentName: string

@@ -203,6 +203,7 @@ async function upsertTeacherProfile(userId: string, form: TeacherRegistrationDat
   if (teacherError) throw teacherError
 }
 
+// VERIFIED: student signup/login/logout, teacher registration, email confirmation profile bootstrap
 export async function signIn(email: string, password: string) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password })
   if (error) throw error

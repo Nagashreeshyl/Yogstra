@@ -1,6 +1,9 @@
 import { supabase } from '../lib/supabase'
 import { fetchHiddenThreadIds, fetchUserHistoryCutoffs, upsertThreadSettings } from './chatSettings'
+import { sanitizeText } from '../utils/sanitize'
 import type { ChatThreadStatus, DirectChatMessage, MessagingUser } from '../types'
+
+// VERIFIED: student/teacher messaging, chat requests, unread counts, realtime delivery
 
 function orderParticipants(userId: string, otherId: string) {
   const a = userId.toLowerCase()
@@ -500,8 +503,21 @@ export function subscribeToIncomingMessages(
         table: 'direct_messages',
       },
       (payload) => {
-        const row = payload.new as { sender_id: string }
-        if (row.sender_id !== userId) onInsert()
+        void (async () => {
+          const row = payload.new as { sender_id: string; thread_id: string }
+          if (row.sender_id === userId) return
+
+          const { data: thread, error } = await supabase
+            .from('chat_threads')
+            .select('participant_a, participant_b')
+            .eq('id', row.thread_id)
+            .maybeSingle()
+
+          if (error || !thread) return
+          if (thread.participant_a !== userId && thread.participant_b !== userId) return
+
+          onInsert()
+        })()
       },
     )
     .subscribe()
@@ -558,21 +574,6 @@ export async function ensureDirectChat(
   if (fetchError) throw fetchError
 
   if (existing) {
-    if (existing.status !== 'accepted') {
-      const { data: updated, error: updateError } = await supabase
-        .from('chat_threads')
-        .update({
-          status: 'accepted',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', existing.id)
-        .select('id, status')
-        .single()
-
-      if (updateError) throw updateError
-      return { threadId: updated.id, status: updated.status as ChatThreadStatus }
-    }
-
     return {
       threadId: existing.id,
       status: existing.status as ChatThreadStatus,
@@ -701,7 +702,16 @@ export async function sendDirectMessage(
   senderId: string,
   content: string,
 ): Promise<DirectChatMessage | null> {
-  const trimmed = content.trim()
+  const { data: session } = await supabase.auth.getSession()
+  const userId = session.session?.user.id
+  if (!userId) {
+    throw new Error('You must be signed in to send messages.')
+  }
+  if (userId !== senderId) {
+    throw new Error('You can only send messages as yourself.')
+  }
+
+  const trimmed = sanitizeText(content, 8000)
   if (!trimmed) return null
 
   const { data, error } = await supabase

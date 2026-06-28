@@ -70,6 +70,20 @@ export function AppSidebar() {
         ))}
       </nav>
 
+      <div className="p-4 border-t border-cream/10 pb-[max(1rem,env(safe-area-inset-bottom))] space-y-2">
+        <nav className="px-2 space-y-1">
+          <Link to="/privacy-policy" className="block text-[11px] text-cream/40 hover:text-cream/70">
+            Privacy Policy
+          </Link>
+          <Link to="/terms-of-service" className="block text-[11px] text-cream/40 hover:text-cream/70">
+            Terms of Service
+          </Link>
+          <Link to="/refund-policy" className="block text-[11px] text-cream/40 hover:text-cream/70">
+            Refund Policy
+          </Link>
+        </nav>
+      </div>
+
       <div className="p-4 border-t border-cream/10 pb-[max(1rem,env(safe-area-inset-bottom))]">
         {authLoading ? (
           <p className="text-xs text-cream/40 px-2">Loading...</p>

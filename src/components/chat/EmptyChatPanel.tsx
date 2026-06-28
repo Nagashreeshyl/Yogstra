@@ -4,7 +4,13 @@ import { useNavigate } from 'react-router-dom'
 import { Avatar } from '../ui/Avatar'
 import { Badge } from '../ui/Badge'
 import { upsertThreadSettings } from '../../services/chatSettings'
-import { ensureDirectChat, formatChatError, sendDirectMessage } from '../../services/directChat'
+import {
+  ensureDirectChat,
+  formatChatError,
+  requestChat,
+  requiresChatRequest,
+  sendDirectMessage,
+} from '../../services/directChat'
 import { getChatParticipantProfilePath } from '../../utils/chatRoutes'
 
 interface EmptyChatPanelProps {
@@ -50,7 +56,25 @@ export function EmptyChatPanel({
     setSending(true)
     setError(null)
     try {
-      const { threadId } = await ensureDirectChat(currentUserId, participantId)
+      const needsRequest = requiresChatRequest(currentUserRole, participantRole)
+      let threadId: string
+
+      if (needsRequest) {
+        const result = await requestChat(currentUserId, participantId)
+        if (result.status !== 'accepted') {
+          setError('Your chat request must be accepted before you can send messages.')
+          return
+        }
+        threadId = result.threadId
+      } else {
+        const result = await ensureDirectChat(currentUserId, participantId)
+        if (result.status !== 'accepted') {
+          setError('This conversation is not active yet.')
+          return
+        }
+        threadId = result.threadId
+      }
+
       await sendDirectMessage(threadId, currentUserId, text)
       await upsertThreadSettings(threadId, currentUserId, { hidden: false })
       onConversationStarted(threadId)

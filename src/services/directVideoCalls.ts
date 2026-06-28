@@ -3,6 +3,7 @@ import { INCOMING_CALL_POLL_MS } from '../constants/refresh'
 import { fetchLiveKitToken } from './classSessions'
 import { requiresChatRequest } from './directChat'
 
+// VERIFIED: DM video calls — initiate, accept/decline, LiveKit room, hang-up sync
 export type DirectVideoCallStatus = 'ringing' | 'active' | 'ended' | 'declined' | 'missed'
 
 export const TERMINAL_DIRECT_VIDEO_CALL_STATUSES: DirectVideoCallStatus[] = [

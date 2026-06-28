@@ -32,6 +32,21 @@ export function getSupabaseAnon() {
   })
 }
 
+/** Supabase client scoped to the signed-in user (RLS applies). */
+export function getSupabaseUserClient(accessToken: string) {
+  const url = trimEnv(process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL)
+  const key = trimEnv(process.env.VITE_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY)
+
+  if (!url || !key) {
+    throw new Error('Supabase anon key is not configured.')
+  }
+
+  return createClient(url, key, {
+    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
+}
+
 export async function assertAdminAccessToken(accessToken: string | undefined) {
   if (!accessToken) {
     throw new Error('Authentication required.')
@@ -56,7 +71,7 @@ export async function assertAdminAccessToken(accessToken: string | undefined) {
   return data.user.id
 }
 
-export async function assertTeacherAccessToken(accessToken: string | undefined, teacherId: string) {
+export async function assertAuthenticatedUser(accessToken: string | undefined) {
   if (!accessToken) {
     throw new Error('Authentication required.')
   }
@@ -67,9 +82,34 @@ export async function assertTeacherAccessToken(accessToken: string | undefined, 
     throw new Error('Invalid session.')
   }
 
-  if (data.user.id !== teacherId) {
-    throw new Error('You can only update your own payout details.')
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', data.user.id)
+    .maybeSingle()
+
+  if (profileError || !profile?.role) {
+    throw new Error('Profile not found.')
   }
 
-  return data.user.id
+  return {
+    userId: data.user.id,
+    role: profile.role as 'student' | 'teacher' | 'admin',
+  }
+}
+
+export async function assertStudentAccessToken(accessToken: string | undefined) {
+  const user = await assertAuthenticatedUser(accessToken)
+  if (user.role !== 'student') {
+    throw new Error('Student access required.')
+  }
+  return user.userId
+}
+
+export async function assertTeacherAccessToken(accessToken: string | undefined) {
+  const user = await assertAuthenticatedUser(accessToken)
+  if (user.role !== 'teacher' && user.role !== 'admin') {
+    throw new Error('Teacher access required.')
+  }
+  return user.userId
 }

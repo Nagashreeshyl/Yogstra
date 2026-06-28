@@ -1,5 +1,6 @@
 import { verifyWebhookSignature } from '../server/razorpayClient.js'
 import { fulfillPaidClassOrder } from '../server/fulfillPayment.js'
+import { applySecurityHeaders } from '../server/apiSecurity.js'
 
 type VercelRequest = {
   method?: string
@@ -11,6 +12,7 @@ type VercelResponse = {
   status: (code: number) => VercelResponse
   json: (body: unknown) => void
   send: (body: string) => void
+  setHeader: (name: string, value: string) => void
 }
 
 export const config = {
@@ -34,6 +36,8 @@ async function readRawBody(req: VercelRequest): Promise<string> {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  applySecurityHeaders(res)
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }

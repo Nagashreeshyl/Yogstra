@@ -3,7 +3,7 @@ import { Plus } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useLiveDataRefresh } from '../../hooks/useLiveDataRefresh'
-import { fetchPosts, createPost } from '../../services/posts'
+import { fetchPosts, createPost, createComment } from '../../services/posts'
 import { CommunityFeed } from './CommunityFeed'
 import { CommunitySidebar } from './CommunitySidebar'
 import { CreatePostModal } from './CreatePostModal'
@@ -18,6 +18,7 @@ export function CommunityFeedView() {
   useLiveDataRefresh(refetch, ['posts'])
 
   const isStudent = isLoggedIn && user?.role === 'student'
+  const isTeacher = isLoggedIn && user?.role === 'teacher'
 
   const handleCreatePost = async (data: { text: string; file?: File }) => {
     if (!user) return
@@ -67,7 +68,16 @@ export function CommunityFeedView() {
           )}
         </div>
       ) : (
-        <CommunityFeed posts={posts ?? []} showTitle={false} variant="instagram" />
+        <CommunityFeed
+          posts={posts ?? []}
+          showTitle={false}
+          variant="instagram"
+          canComment={isTeacher}
+          onComment={async (postId, text) => {
+            await createComment(postId, text)
+            await refetch()
+          }}
+        />
       )}
 
       <CreatePostModal

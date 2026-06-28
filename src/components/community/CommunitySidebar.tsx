@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
+import { studentProfilePath } from '../../utils/chatRoutes'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useLiveSync } from '../../hooks/useLiveSync'
 import { fetchStudentList } from '../../services/students'
@@ -72,7 +73,7 @@ export function CommunitySidebar() {
               {(students ?? []).map((student) => (
                 <li key={student.id}>
                   <Link
-                    to={`/students/${student.id}`}
+                    to={studentProfilePath(student.id, 'teacher')}
                     className="flex items-center gap-3 group"
                   >
                     <Avatar src={student.avatar} name={student.name} size={36} />

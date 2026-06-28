@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { validateImageUpload } from '../utils/sanitize'
 
 function avatarPath(userId: string) {
   return `${userId}/avatar.jpg`
@@ -16,6 +17,8 @@ export async function uploadTeacherCover(userId: string, file: File): Promise<st
   if (session.user.id !== userId) {
     throw new Error('Session user does not match profile')
   }
+
+  validateImageUpload(file)
 
   const path = coverPath(userId)
 
@@ -52,6 +55,8 @@ export async function uploadTeacherAvatar(userId: string, file: File): Promise<s
   if (session.user.id !== userId) {
     throw new Error('Session user does not match profile')
   }
+
+  validateImageUpload(file)
 
   const path = avatarPath(userId)
 

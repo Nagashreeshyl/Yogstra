@@ -5,7 +5,9 @@ import { getPostLoginPath } from '../utils/authRouting'
 import { reapplyAsTeacher } from '../services/teachers'
 import { Button } from '../components/ui/Button'
 import { SimplePageSkeleton } from '../components/ui/Skeleton'
+import { PublicFooter } from '../components/layout/PublicFooter'
 
+// VERIFIED: teacher pending page polls status; auto-redirect when admin approves
 export function TeacherPendingPage() {
   const { user, authLoading, logout, refreshUser } = useApp()
   const [reapplying, setReapplying] = useState(false)
@@ -67,7 +69,8 @@ export function TeacherPendingPage() {
   }
 
   return (
-    <div className="min-h-full flex flex-col items-center justify-center p-8 bg-cream">
+    <div className="min-h-full flex flex-col bg-cream">
+      <div className="flex-1 flex flex-col items-center justify-center p-8">
       <div className="max-w-md text-center border border-border rounded-sm p-8 bg-cream">
         <h1 className="font-heading text-2xl font-medium mb-4">
           {isRemoved
@@ -98,6 +101,8 @@ export function TeacherPendingPage() {
           <Button onClick={() => logout()}>Logout</Button>
         </div>
       </div>
+      </div>
+      <PublicFooter />
     </div>
   )
 }

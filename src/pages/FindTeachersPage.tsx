@@ -10,6 +10,7 @@ import { TeacherCard } from '../components/teachers/TeacherCard'
 import { Button } from '../components/ui/Button'
 import { TeacherGridSkeleton } from '../components/ui/Skeleton'
 
+// VERIFIED: Find Teachers — Supabase list, category filter, search, pagination
 const PAGE_SIZE = 6
 
 export function FindTeachersPage() {

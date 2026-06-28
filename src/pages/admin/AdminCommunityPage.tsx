@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useLiveDataRefresh } from '../../hooks/useLiveDataRefresh'
 import { fetchPosts, deletePost } from '../../services/posts'
@@ -5,20 +6,25 @@ import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
 import { Avatar } from '../../components/ui/Avatar'
 import { PostFeedSkeleton } from '../../components/ui/Skeleton'
-import { useState } from 'react'
 
+// VERIFIED: admin community moderation — list posts, remove with error handling
 export function AdminCommunityPage() {
   const { data: posts, loading, refetch } = useAsyncData(() => fetchPosts())
 
   useLiveDataRefresh(() => void refetch(true), ['posts'])
 
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null)
+  const [removeError, setRemoveError] = useState<string | null>(null)
 
   const handleRemove = async () => {
-    if (confirmRemove) {
+    if (!confirmRemove) return
+    setRemoveError(null)
+    try {
       await deletePost(confirmRemove)
       setConfirmRemove(null)
       await refetch()
+    } catch (err) {
+      setRemoveError(err instanceof Error ? err.message : 'Could not remove post.')
     }
   }
 
@@ -82,6 +88,7 @@ export function AdminCommunityPage() {
         <p className="text-sm text-charcoal/70 mb-6">
           Are you sure you want to remove this post?
         </p>
+        {removeError && <p className="text-sm text-red-600 mb-4">{removeError}</p>}
         <div className="flex gap-3">
           <Button variant="secondary" className="flex-1" onClick={() => setConfirmRemove(null)}>
             Cancel

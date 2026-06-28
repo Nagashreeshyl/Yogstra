@@ -195,6 +195,7 @@ export function BuyClassModal({
         orderInput,
         receipt: receiptId,
         onSuccess: async () => {
+          setSubmitting(false)
           onClose()
         },
         onDismiss: () => {

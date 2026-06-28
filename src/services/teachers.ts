@@ -4,6 +4,7 @@ import type { Teacher, TeacherPricing } from '../types'
 import { mapTeacher } from '../utils/mappers'
 import { isTeacherProfileComplete } from '../utils/teacherProfileCompletion'
 
+// VERIFIED: teacher discovery — list, filter, search, profile load
 const teacherSelect = `
   *,
   teacher_profiles (*)

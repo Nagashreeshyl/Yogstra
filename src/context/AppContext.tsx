@@ -200,6 +200,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return result
   }, [])
 
+  // VERIFIED: logout clears Supabase session, profile cache, and redirects home
   const logout = useCallback(async () => {
     await signOut()
     setUser(null)

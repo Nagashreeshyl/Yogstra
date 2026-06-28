@@ -11,7 +11,7 @@ export function getChatParticipantProfilePath(
   }
   return viewerRole === 'teacher'
     ? `/dashboard/teacher/students/${participantId}`
-    : `/students/${participantId}`
+    : `/dashboard/student/students/${participantId}`
 }
 
 export function studentProfilePath(
@@ -20,5 +20,5 @@ export function studentProfilePath(
 ) {
   return viewerRole === 'teacher'
     ? `/dashboard/teacher/students/${studentId}`
-    : `/students/${studentId}`
+    : `/dashboard/student/students/${studentId}`
 }

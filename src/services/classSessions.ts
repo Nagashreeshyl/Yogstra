@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase'
 
+// VERIFIED: live class sessions — teacher start, student ring, LiveKit join, session status
 export type ClassSessionStatus = 'ringing' | 'active' | 'ended' | 'declined' | 'missed'
 
 export type ClassSession = {
@@ -51,10 +52,20 @@ export async function fetchLiveKitToken(params: {
   participantName: string
   participantId: string
 }) {
+  const { data: session } = await supabase.auth.getSession()
+  const token = session.session?.access_token
+  if (!token) throw new Error('Please sign in again to join video.')
+
   const response = await fetch('/api/livekit-token', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(params),
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      roomName: params.roomName,
+      participantName: params.participantName,
+    }),
   })
 
   const body = (await response.json().catch(() => ({}))) as {

@@ -43,6 +43,9 @@ import { AdminCategoriesPage } from './pages/admin/AdminCategoriesPage'
 import { AdminSettingsPage } from './pages/admin/AdminSettingsPage'
 import { InstallAppPrompt } from './components/pwa/InstallAppPrompt'
 import { DirectVideoCallProvider } from './components/chat/DirectVideoCallProvider'
+import { PrivacyPolicyPage } from './pages/legal/PrivacyPolicyPage'
+import { TermsOfServicePage } from './pages/legal/TermsOfServicePage'
+import { RefundPolicyPage } from './pages/legal/RefundPolicyPage'
 
 export default function App() {
   return (
@@ -65,6 +68,9 @@ export default function App() {
             <Route path="community" element={<CommunityPage />} />
             <Route path="competitions" element={<CompetitionsPage />} />
             <Route path="shop" element={<ShopPage />} />
+            <Route path="privacy-policy" element={<PrivacyPolicyPage />} />
+            <Route path="terms-of-service" element={<TermsOfServicePage />} />
+            <Route path="refund-policy" element={<RefundPolicyPage />} />
           </Route>
 
           <Route
@@ -94,6 +100,7 @@ export default function App() {
               <Route path="competitions" element={<CompetitionsPage />} />
               <Route path="shop" element={<ShopPage />} />
               <Route path="messages" element={<StudentMessagesPage />} />
+              <Route path="students/:id" element={<StudentProfilePage />} />
               <Route path="classes" element={<StudentClassesPage />} />
               <Route path="classes/room/:sessionId" element={<StudentClassesPage />} />
               <Route path="settings" element={<StudentSettingsPage />} />

@@ -1,19 +1,25 @@
+import { useState } from 'react'
 import { Heart, MessageCircle, Share2, BadgeCheck, MoreHorizontal } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { Avatar } from '../ui/Avatar'
 import { Badge } from '../ui/Badge'
+import { Button } from '../ui/Button'
 import type { CommunityPost } from '../../types'
 
 interface CommunityFeedProps {
   posts: CommunityPost[]
   showTitle?: boolean
   variant?: 'default' | 'instagram'
+  canComment?: boolean
+  onComment?: (postId: string, text: string) => Promise<void>
 }
 
 export function CommunityFeed({
   posts,
   showTitle = true,
   variant = 'default',
+  canComment = false,
+  onComment,
 }: CommunityFeedProps) {
   const { requireAuth } = useApp()
   const isInstagram = variant === 'instagram'
@@ -33,6 +39,8 @@ export function CommunityFeed({
           post={post}
           onInteract={handleInteraction}
           variant={variant}
+          canComment={canComment && !post.teacherComment}
+          onComment={onComment}
         />
       ))}
     </div>
@@ -43,12 +51,43 @@ function PostCard({
   post,
   onInteract,
   variant,
+  canComment,
+  onComment,
 }: {
   post: CommunityPost
   onInteract: () => void
   variant: 'default' | 'instagram'
+  canComment?: boolean
+  onComment?: (postId: string, text: string) => Promise<void>
 }) {
   const isInstagram = variant === 'instagram'
+  const [showCommentForm, setShowCommentForm] = useState(false)
+  const [commentDraft, setCommentDraft] = useState('')
+  const [commentSubmitting, setCommentSubmitting] = useState(false)
+  const [commentError, setCommentError] = useState<string | null>(null)
+
+  const handleCommentClick = () => {
+    if (canComment && onComment) {
+      setShowCommentForm((v) => !v)
+      return
+    }
+    onInteract()
+  }
+
+  const handleSubmitComment = async () => {
+    if (!onComment || !commentDraft.trim() || commentSubmitting) return
+    setCommentSubmitting(true)
+    setCommentError(null)
+    try {
+      await onComment(post.id, commentDraft)
+      setCommentDraft('')
+      setShowCommentForm(false)
+    } catch (err) {
+      setCommentError(err instanceof Error ? err.message : 'Could not post comment.')
+    } finally {
+      setCommentSubmitting(false)
+    }
+  }
 
   if (isInstagram) {
     return (
@@ -99,7 +138,7 @@ function PostCard({
             </button>
             <button
               type="button"
-              onClick={onInteract}
+              onClick={handleCommentClick}
               className="text-charcoal hover:text-charcoal/70 cursor-pointer"
               aria-label="Comment"
             >
@@ -128,7 +167,7 @@ function PostCard({
             </p>
           )}
 
-          {post.comments > 0 && (
+          {post.comments > 0 && !post.teacherComment && (
             <button
               type="button"
               onClick={onInteract}
@@ -136,6 +175,22 @@ function PostCard({
             >
               View all {post.comments} comments
             </button>
+          )}
+
+          {showCommentForm && canComment && (
+            <div className="mt-3 space-y-2">
+              <textarea
+                value={commentDraft}
+                onChange={(e) => setCommentDraft(e.target.value)}
+                placeholder="Write teacher feedback…"
+                rows={2}
+                className="w-full px-3 py-2 text-sm border border-border rounded-sm bg-cream focus:outline-none focus:border-teal resize-none"
+              />
+              {commentError && <p className="text-xs text-red-600">{commentError}</p>}
+              <Button size="sm" onClick={() => void handleSubmitComment()} disabled={commentSubmitting}>
+                {commentSubmitting ? 'Posting…' : 'Post comment'}
+              </Button>
+            </div>
           )}
 
           <p className="text-[10px] text-charcoal/40 uppercase tracking-wide mt-2">
@@ -202,11 +257,27 @@ function PostCard({
         </div>
       )}
 
+      {showCommentForm && canComment && (
+        <div className="mb-3 space-y-2">
+          <textarea
+            value={commentDraft}
+            onChange={(e) => setCommentDraft(e.target.value)}
+            placeholder="Write teacher feedback…"
+            rows={2}
+            className="w-full px-3 py-2 text-sm border border-border rounded-sm bg-cream focus:outline-none focus:border-teal resize-none"
+          />
+          {commentError && <p className="text-xs text-red-600">{commentError}</p>}
+          <Button size="sm" onClick={() => void handleSubmitComment()} disabled={commentSubmitting}>
+            {commentSubmitting ? 'Posting…' : 'Post comment'}
+          </Button>
+        </div>
+      )}
+
       <div className="flex items-center gap-6 pt-2 border-t border-border">
         <button type="button" onClick={onInteract} className="flex items-center gap-1.5 text-sm text-charcoal/50 hover:text-charcoal cursor-pointer">
           <Heart size={16} /> {post.likes}
         </button>
-        <button type="button" onClick={onInteract} className="flex items-center gap-1.5 text-sm text-charcoal/50 hover:text-charcoal cursor-pointer">
+        <button type="button" onClick={handleCommentClick} className="flex items-center gap-1.5 text-sm text-charcoal/50 hover:text-charcoal cursor-pointer">
           <MessageCircle size={16} /> {post.comments}
         </button>
         <button type="button" onClick={onInteract} className="flex items-center gap-1.5 text-sm text-charcoal/50 hover:text-charcoal cursor-pointer">
