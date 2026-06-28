@@ -23,6 +23,7 @@ import {
   VideoOff,
 } from 'lucide-react'
 import {
+  LocalVideoTrack,
   RemoteTrackPublication,
   Room,
   RoomEvent,
@@ -276,6 +277,21 @@ function pickRemoteMainTrack(
   )
 }
 
+function pickMainStageTrack(
+  tracks: TrackReferenceOrPlaceholder[],
+  localIdentity: string,
+): TrackReferenceOrPlaceholder | undefined {
+  const localTracks = tracks.filter((track) => track.participant.identity === localIdentity)
+  const remoteTracks = tracks.filter((track) => track.participant.identity !== localIdentity)
+
+  const localScreenShare = localTracks.find(
+    (track) => track.source === Track.Source.ScreenShare && isLiveVideoTrack(track),
+  )
+  if (localScreenShare) return localScreenShare
+
+  return pickRemoteMainTrack(remoteTracks)
+}
+
 function DirectCallStage({
   otherName,
   ringing,
@@ -295,18 +311,22 @@ function DirectCallStage({
   )
 
   const localIdentity = localParticipant.identity
-  const remoteTracks = tracks.filter((track) => track.participant.identity !== localIdentity)
   const localCamera = tracks.find(
     (track) =>
       track.participant.identity === localIdentity && track.source === Track.Source.Camera,
   )
 
-  const remoteMain = pickRemoteMainTrack(remoteTracks)
+  const mainTrack = pickMainStageTrack(tracks, localIdentity)
+  const showLocalPip =
+    localCamera &&
+    mainTrack &&
+    (mainTrack.source !== Track.Source.Camera ||
+      mainTrack.participant.identity !== localIdentity)
 
   return (
     <div className="dm-call-stage">
-      {remoteMain ? (
-        <ParticipantTile trackRef={remoteMain} className="dm-call-remote-tile" />
+      {mainTrack ? (
+        <ParticipantTile trackRef={mainTrack} className="dm-call-remote-tile" />
       ) : (
         localCamera &&
         isTrackReference(localCamera) && (
@@ -318,7 +338,7 @@ function DirectCallStage({
         <DirectCallConnectingOverlay otherName={otherName} ringing={ringing} />
       )}
 
-      {localCamera && remoteMain && (
+      {showLocalPip && localCamera && (
         <div className="dm-call-pip">
           <ParticipantTile trackRef={localCamera} className="dm-call-pip-tile" />
         </div>
@@ -365,33 +385,100 @@ function DirectCallControlBar({
   const room = useRoomContext()
   const mic = useTrackToggle({ source: Track.Source.Microphone })
   const camera = useTrackToggle({ source: Track.Source.Camera })
-  const screenShare = useTrackToggle({ source: Track.Source.ScreenShare })
-  const [busy, setBusy] = useState<'flip' | null>(null)
+  const [screenSharing, setScreenSharing] = useState(false)
+  const [busy, setBusy] = useState<'flip' | 'screen' | null>(null)
+  const [actionNotice, setActionNotice] = useState<string | null>(null)
+
+  useEffect(() => {
+    const syncScreenShare = () => {
+      setScreenSharing(room.localParticipant.isScreenShareEnabled)
+    }
+
+    syncScreenShare()
+    room.on(RoomEvent.LocalTrackPublished, syncScreenShare)
+    room.on(RoomEvent.LocalTrackUnpublished, syncScreenShare)
+    room.on(RoomEvent.TrackMuted, syncScreenShare)
+    room.on(RoomEvent.TrackUnmuted, syncScreenShare)
+
+    return () => {
+      room.off(RoomEvent.LocalTrackPublished, syncScreenShare)
+      room.off(RoomEvent.LocalTrackUnpublished, syncScreenShare)
+      room.off(RoomEvent.TrackMuted, syncScreenShare)
+      room.off(RoomEvent.TrackUnmuted, syncScreenShare)
+    }
+  }, [room])
+
+  useEffect(() => {
+    if (!actionNotice) return
+    const timer = window.setTimeout(() => setActionNotice(null), 3500)
+    return () => window.clearTimeout(timer)
+  }, [actionNotice])
 
   const flipCamera = async () => {
     if (busy) return
     setBusy('flip')
+    setActionNotice(null)
     try {
       const publication = room.localParticipant.getTrackPublication(Track.Source.Camera)
-      const videoTrack = publication?.videoTrack
-      const facing = videoTrack?.mediaStreamTrack.getSettings().facingMode
+      const videoTrack = publication?.videoTrack as LocalVideoTrack | undefined
+
+      if (!videoTrack) {
+        await room.localParticipant.setCameraEnabled(true, { facingMode: 'user' })
+        return
+      }
+
+      const settings = videoTrack.mediaStreamTrack.getSettings()
+      const facing = settings.facingMode
 
       if (facing === 'user' || facing === 'environment') {
-        await room.localParticipant.setCameraEnabled(true, {
+        await videoTrack.restartTrack({
           facingMode: facing === 'user' ? 'environment' : 'user',
         })
         return
       }
 
-      const devices = await Room.getLocalDevices('videoinput')
-      if (devices.length < 2) return
+      const devices = await Room.getLocalDevices('videoinput', true)
+      if (devices.length < 2) {
+        setActionNotice('No other camera found on this device.')
+        return
+      }
 
-      const activeId = room.getActiveDevice('videoinput')
-      const currentIndex = devices.findIndex((device) => device.deviceId === activeId)
+      const activeId = room.getActiveDevice('videoinput') ?? settings.deviceId
+      const currentIndex = Math.max(0, devices.findIndex((device) => device.deviceId === activeId))
       const nextDevice = devices[(currentIndex + 1) % devices.length]
-      await room.switchActiveDevice('videoinput', nextDevice.deviceId)
+
+      await videoTrack.restartTrack({
+        deviceId: { exact: nextDevice.deviceId },
+      })
     } catch {
-      /* device switch unsupported */
+      setActionNotice('Could not switch camera. Try turning the camera off and on.')
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const toggleScreenShare = async () => {
+    if (busy) return
+    setBusy('screen')
+    setActionNotice(null)
+    try {
+      if (room.localParticipant.isScreenShareEnabled) {
+        await room.localParticipant.setScreenShareEnabled(false)
+        return
+      }
+
+      await room.localParticipant.setScreenShareEnabled(true, {
+        audio: false,
+        selfBrowserSurface: 'include',
+        surfaceSwitching: 'include',
+      })
+    } catch (err) {
+      const message = err instanceof Error ? err.message.toLowerCase() : ''
+      if (message.includes('notallowed') || message.includes('permission') || message.includes('cancel')) {
+        setActionNotice('Screen share was cancelled or blocked.')
+      } else {
+        setActionNotice('Screen share failed. Use Chrome/Safari on desktop or Android Chrome.')
+      }
     } finally {
       setBusy(null)
     }
@@ -403,7 +490,11 @@ function DirectCallControlBar({
   }
 
   return createPortal(
-    <div className="dm-call-controls-portal" role="toolbar" aria-label="Call controls">
+    <>
+      {actionNotice && (
+        <div className="dm-call-action-notice">{actionNotice}</div>
+      )}
+      <div className="dm-call-controls-portal" role="toolbar" aria-label="Call controls">
       <DirectCallLabeledButton
         label="Microphone"
         disabled={mic.pending}
@@ -432,9 +523,9 @@ function DirectCallControlBar({
 
       <DirectCallLabeledButton
         label="Share screen"
-        disabled={screenShare.pending}
-        active={screenShare.enabled}
-        onClick={() => void screenShare.toggle()}
+        disabled={busy === 'screen'}
+        active={screenSharing}
+        onClick={() => void toggleScreenShare()}
       >
         <MonitorUp size={20} />
       </DirectCallLabeledButton>
@@ -446,7 +537,8 @@ function DirectCallControlBar({
       >
         <PhoneOff size={20} />
       </DirectCallLabeledButton>
-    </div>,
+    </div>
+    </>,
     document.body,
   )
 }
