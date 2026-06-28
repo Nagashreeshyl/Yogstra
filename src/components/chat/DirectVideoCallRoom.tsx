@@ -33,6 +33,12 @@ import {
 import type { TrackReferenceOrPlaceholder } from '@livekit/components-core'
 import { ClassRoomAudioSetup } from '../classes/ClassRoomAudioSetup'
 import {
+  disableScreenShare,
+  enableScreenShare,
+  getScreenShareUnsupportedMessage,
+  screenShareErrorMessage,
+} from '../../utils/screenShareSupport'
+import {
   fetchDirectVideoCall,
   fetchLiveKitToken,
   TERMINAL_DIRECT_VIDEO_CALL_STATUSES,
@@ -461,24 +467,23 @@ function DirectCallControlBar({
     if (busy) return
     setBusy('screen')
     setActionNotice(null)
+
+    const unsupported = getScreenShareUnsupportedMessage()
+    if (unsupported) {
+      setActionNotice(unsupported)
+      setBusy(null)
+      return
+    }
+
     try {
       if (room.localParticipant.isScreenShareEnabled) {
-        await room.localParticipant.setScreenShareEnabled(false)
+        await disableScreenShare(room)
         return
       }
 
-      await room.localParticipant.setScreenShareEnabled(true, {
-        audio: false,
-        selfBrowserSurface: 'include',
-        surfaceSwitching: 'include',
-      })
+      await enableScreenShare(room)
     } catch (err) {
-      const message = err instanceof Error ? err.message.toLowerCase() : ''
-      if (message.includes('notallowed') || message.includes('permission') || message.includes('cancel')) {
-        setActionNotice('Screen share was cancelled or blocked.')
-      } else {
-        setActionNotice('Screen share failed. Use Chrome/Safari on desktop or Android Chrome.')
-      }
+      setActionNotice(screenShareErrorMessage(err))
     } finally {
       setBusy(null)
     }
