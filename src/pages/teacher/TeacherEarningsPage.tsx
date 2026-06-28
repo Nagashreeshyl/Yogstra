@@ -81,7 +81,7 @@ export function TeacherEarningsPage() {
         <TeacherTableSkeleton rows={4} />
       ) : history.length === 0 ? (
         <p className="text-charcoal/50">
-          No payments yet. Add bank details in Settings → Payouts so Route transfers can reach you.
+          No payments yet. Add your UPI ID in Settings → Payouts so admin can pay you when earnings are ready.
         </p>
       ) : (
         <div className="border border-border rounded-sm overflow-x-auto">

@@ -48,6 +48,10 @@ begin
     bookings,
     payouts,
     posts,
+    teacher_payout_private,
+    schedule_change_requests,
+    class_sessions,
+    direct_video_calls,
     teacher_profiles
   restart identity cascade;
 
@@ -92,6 +96,8 @@ union all
 select 'class_orders', count(*) from public.class_orders
 union all
 select 'teacher_coupons', count(*) from public.teacher_coupons
+union all
+select 'teacher_payout_private', count(*) from public.teacher_payout_private
 union all
 select 'posts', count(*) from public.posts;
 

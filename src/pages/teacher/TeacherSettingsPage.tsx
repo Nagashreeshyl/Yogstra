@@ -599,7 +599,7 @@ export function TeacherSettingsPage() {
           <>
             <h1 className="text-xl font-semibold mb-2">Payouts</h1>
             <p className="text-sm text-charcoal/55 mb-6">
-              Connect your bank account to receive your share when students book classes.
+              Add your UPI ID so admin can pay you when students book your classes.
             </p>
             <TeacherPayoutSettings />
           </>
