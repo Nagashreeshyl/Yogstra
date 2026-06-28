@@ -1,24 +1,27 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import {
   LiveKitRoom,
+  ParticipantTile,
   RoomAudioRenderer,
-  VideoTrack,
   useLocalParticipant,
   useRemoteParticipants,
   useRoomContext,
   useTracks,
 } from '@livekit/components-react'
 import '@livekit/components-styles'
+import { isTrackReference } from '@livekit/components-core'
 import {
   DisconnectReason,
+  RemoteTrackPublication,
   RoomEvent,
   Track,
   type RemoteParticipant,
-  type RemoteTrackPublication,
+  type Room,
 } from 'livekit-client'
 import { Loader2, Mic, MicOff, PhoneOff, Video, VideoOff } from 'lucide-react'
 import { ClassRoomAudioSetup } from '../classes/ClassRoomAudioSetup'
 import {
+  fetchDirectVideoCall,
   fetchLiveKitToken,
   subscribeToDirectVideoCallById,
   updateDirectVideoCallStatus,
@@ -34,11 +37,18 @@ interface DirectVideoCallRoomProps {
   participantName: string
   participantId: string
   otherName: string
+  /** Caller joins LiveKit while still ringing so video is ready when the other person answers. */
+  preconnect?: boolean
   onLeave: () => void
   onRemoteEnd?: (status: DirectVideoCallStatus) => void
 }
 
-/** Force-subscribe to remote camera/mic — some mobile browsers miss autoSubscribe. */
+async function republishLocalMedia(room: Room) {
+  await room.localParticipant.setMicrophoneEnabled(true)
+  await room.localParticipant.setCameraEnabled(true)
+}
+
+/** Force-subscribe to every remote camera/mic track. */
 function RemoteMediaSubscription() {
   const room = useRoomContext()
 
@@ -76,7 +86,6 @@ function RemoteMediaSubscription() {
   return null
 }
 
-/** Stay in the call through network blips — only hang up when the user taps End. */
 function CallConnectionGuard({
   roomName,
   participantName,
@@ -117,6 +126,7 @@ function CallConnectionGuard({
           return
         }
         await room.connect(info.serverUrl, info.token)
+        await republishLocalMedia(room)
         attemptsRef.current = 0
         setReconnecting(false)
         setConnectionLost(false)
@@ -138,10 +148,11 @@ function CallConnectionGuard({
       if (!userEndRef.current) setReconnecting(true)
     }
 
-    const onReconnected = () => {
+    const onReconnected = async () => {
       attemptsRef.current = 0
       setReconnecting(false)
       setConnectionLost(false)
+      await republishLocalMedia(room).catch(() => undefined)
     }
 
     const onDisconnected = (reason?: DisconnectReason) => {
@@ -188,6 +199,7 @@ function CallConnectionGuard({
                     const info = await fetchLiveKitToken({ roomName, participantName, participantId })
                     if (userEndRef.current) return
                     await room.connect(info.serverUrl, info.token)
+                    await republishLocalMedia(room)
                     setReconnecting(false)
                   } catch {
                     setReconnecting(false)
@@ -219,9 +231,8 @@ function CallControls({
   const [camOn, setCamOn] = useState(true)
 
   useEffect(() => {
-    void localParticipant.setMicrophoneEnabled(true)
-    void localParticipant.setCameraEnabled(true)
-  }, [localParticipant])
+    void republishLocalMedia(room)
+  }, [room, localParticipant])
 
   const toggleMic = async () => {
     const next = !micOn
@@ -278,6 +289,7 @@ function CallVideoLayout({
   roomName,
   participantName,
   participantId,
+  preconnect,
 }: {
   otherName: string
   onEnd: () => void
@@ -285,46 +297,80 @@ function CallVideoLayout({
   roomName: string
   participantName: string
   participantId: string
+  preconnect?: boolean
 }) {
   const remoteParticipants = useRemoteParticipants()
-  const remoteParticipant = remoteParticipants[0]
+  const { localParticipant } = useLocalParticipant()
 
-  const cameraTracks = useTracks([Track.Source.Camera], { onlySubscribed: true })
+  const tracks = useTracks([{ source: Track.Source.Camera, withPlaceholder: true }], {
+    onlySubscribed: false,
+  })
+
+  const remoteParticipant = remoteParticipants[0]
   const remoteTrack =
-    cameraTracks.find((track) => !track.participant.isLocal) ??
-    cameraTracks.find((track) => track.participant.sid === remoteParticipant?.sid)
-  const localTrack = cameraTracks.find((track) => track.participant.isLocal)
+    tracks.find(
+      (track) =>
+        track.source === Track.Source.Camera &&
+        track.participant.identity === remoteParticipant?.identity,
+    ) ??
+    tracks.find((track) => track.source === Track.Source.Camera && !track.participant.isLocal)
+
+  const localTrack = tracks.find(
+    (track) =>
+      track.source === Track.Source.Camera &&
+      track.participant.identity === localParticipant.identity,
+  )
+
+  useEffect(() => {
+    for (const track of tracks) {
+      if (!isTrackReference(track) || track.participant.isLocal) continue
+      const publication = track.publication
+      if (publication instanceof RemoteTrackPublication && !publication.isSubscribed) {
+        void publication.setSubscribed(true)
+      }
+    }
+  }, [tracks])
+
+  const remoteReady = remoteTrack && isTrackReference(remoteTrack) && remoteTrack.publication.isSubscribed
 
   return (
     <div className="relative h-full w-full bg-charcoal overflow-hidden">
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div className="absolute inset-0 dm-call-remote">
         {remoteTrack ? (
-          <VideoTrack
+          <ParticipantTile
             trackRef={remoteTrack}
-            className="w-full h-full [&>video]:w-full [&>video]:h-full [&>video]:object-cover"
+            className="h-full w-full !max-h-none !max-w-none"
           />
         ) : (
-          <div className="text-center px-6">
-            <p className="text-cream/50 text-sm">Waiting for {otherName}…</p>
-            {remoteParticipants.length === 0 && (
-              <p className="text-cream/35 text-xs mt-2">Connecting video…</p>
-            )}
+          <div className="flex h-full items-center justify-center text-center px-6">
+            <div>
+              <p className="text-cream/50 text-sm">
+                {preconnect ? `Calling ${otherName}…` : `Waiting for ${otherName}…`}
+              </p>
+              <p className="text-cream/35 text-xs mt-2">
+                {remoteParticipants.length === 0
+                  ? 'Your camera is on — waiting for them to join'
+                  : 'Connecting their video…'}
+              </p>
+            </div>
           </div>
         )}
       </div>
 
       {localTrack && (
-        <div className="absolute top-[max(1rem,env(safe-area-inset-top))] right-4 w-28 h-40 sm:w-32 sm:h-44 rounded-xl overflow-hidden border-2 border-cream/20 shadow-xl z-10 [transform:scaleX(-1)]">
-          <VideoTrack
+        <div className="absolute top-[max(1rem,env(safe-area-inset-top))] right-4 z-10 w-28 h-40 sm:w-32 sm:h-44 rounded-xl overflow-hidden border-2 border-cream/20 shadow-xl dm-call-local [transform:scaleX(-1)]">
+          <ParticipantTile
             trackRef={localTrack}
-            className="w-full h-full [&>video]:w-full [&>video]:h-full [&>video]:object-cover"
+            className="h-full w-full !max-h-none !max-w-none"
           />
         </div>
       )}
 
       <div className="absolute top-[max(1rem,env(safe-area-inset-top))] left-4 z-10">
         <p className="text-cream text-sm font-medium drop-shadow-md">{otherName}</p>
-        <p className="text-cream/50 text-xs">{remoteTrack ? 'Connected' : 'Video call'}</p>
+        <p className="text-cream/50 text-xs">
+          {remoteReady ? 'Connected' : preconnect ? 'Ringing…' : 'Video call'}
+        </p>
       </div>
 
       <CallConnectionGuard
@@ -375,6 +421,10 @@ function RemoteEndWatcher({
       handleStatus(call.status)
     })
 
+    void fetchDirectVideoCall(callId).then((call) => {
+      if (call) handleStatus(call.status)
+    })
+
     return unsub
   }, [callId, room, userEndRef])
 
@@ -386,6 +436,7 @@ export function DirectVideoCallRoom({
   participantName,
   participantId,
   otherName,
+  preconnect = false,
   onLeave,
   onRemoteEnd,
 }: DirectVideoCallRoomProps) {
@@ -419,6 +470,7 @@ export function DirectVideoCallRoom({
 
     return () => {
       cancelled = true
+      userEndRef.current = true
     }
   }, [call.id, call.roomName, participantName, participantId])
 
@@ -476,7 +528,7 @@ export function DirectVideoCallRoom({
   }
 
   return (
-    <div className="fixed inset-0 z-[100] bg-charcoal">
+    <div className={`fixed inset-0 z-[100] bg-charcoal ${preconnect ? 'pointer-events-none opacity-0' : ''}`}>
       <LiveKitRoom
         key={call.id}
         token={connectInfo.token}
@@ -492,8 +544,9 @@ export function DirectVideoCallRoom({
         }}
         options={{
           adaptiveStream: false,
-          dynacast: true,
+          dynacast: false,
           disconnectOnPageLeave: false,
+          stopLocalTrackOnUnpublish: false,
           audioCaptureDefaults: {
             echoCancellation: true,
             noiseSuppression: true,
@@ -517,6 +570,7 @@ export function DirectVideoCallRoom({
           roomName={call.roomName}
           participantName={participantName}
           participantId={participantId}
+          preconnect={preconnect}
         />
       </LiveKitRoom>
     </div>

@@ -280,6 +280,11 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
     user && (user.role === 'student' || user.role === 'teacher'),
   )
 
+  const callerPreconnect = Boolean(
+    outgoingCall && !activeCall && user && outgoingCall.callerId === user.id,
+  )
+  const liveKitCall = activeCall ?? (callerPreconnect ? outgoingCall : null)
+
   return (
     <DirectVideoCallContext.Provider value={{ startCall, callBusy }}>
       {children}
@@ -305,12 +310,13 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
         />
       )}
 
-      {canReceiveCalls && activeCall && user && (
+      {canReceiveCalls && liveKitCall && user && (
         <DirectVideoCallRoom
-          call={activeCall}
+          call={liveKitCall}
           participantName={user.name}
           participantId={user.id}
-          otherName={otherParty(activeCall).name}
+          otherName={otherParty(liveKitCall).name}
+          preconnect={callerPreconnect}
           onLeave={handleLeaveCall}
           onRemoteEnd={handleRemoteEnd}
         />
