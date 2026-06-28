@@ -86,8 +86,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       pan,
     }).catch((err: unknown) => {
       const message = err instanceof Error ? err.message : 'Razorpay linked account could not be created.'
+      const routeUnavailable =
+        message.includes('Route') ||
+        message.includes('route') ||
+        message.includes('not enabled') ||
+        message.includes('not found on the server')
       throw new Error(
-        message.includes('Route') || message.includes('route') || message.includes('not enabled')
+        routeUnavailable
           ? 'Razorpay Route is not enabled on this account yet. Bank details can still be saved on Yogstra.'
           : message,
       )

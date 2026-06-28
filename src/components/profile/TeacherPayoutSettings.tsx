@@ -3,8 +3,9 @@ import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import {
   fetchTeacherPayoutDetails,
+  formatPayoutSaveError,
+  saveTeacherPayoutDetailsLocally,
   saveTeacherUpiLocally,
-  setupTeacherRazorpayPayout,
 } from '../../services/teacherPayoutDetails'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -56,7 +57,7 @@ export function TeacherPayoutSettings() {
       setToast({ message: 'UPI ID saved. Admin can pay you via UPI when your earnings are ready.', type: 'success' })
     } catch (err) {
       setToast({
-        message: err instanceof Error ? err.message : 'Could not save UPI ID.',
+        message: formatPayoutSaveError(err),
         type: 'error',
       })
     } finally {
@@ -80,26 +81,23 @@ export function TeacherPayoutSettings() {
 
     setSaving(true)
     try {
-      const result = await setupTeacherRazorpayPayout({
-        teacherId,
+      await saveTeacherPayoutDetailsLocally(teacherId, {
         accountHolderName,
-        accountNumber: bankAccountNumber,
-        ifsc: bankIfsc,
-        pan: panNumber || undefined,
-        upiId: upiId || undefined,
+        bankAccountNumber,
+        bankIfsc,
+        panNumber,
       })
+      if (upiId.trim()) {
+        await saveTeacherUpiLocally(teacherId, upiId)
+      }
       await refetch()
       setToast({
-        message: result.warning
-          ? result.warning
-          : result.bankSavedOnly
-            ? 'Bank details saved. Razorpay Route connection is pending.'
-            : 'Payout details saved.',
+        message: 'Bank details saved. Admin can pay you via UPI or bank transfer when earnings are ready.',
         type: 'success',
       })
     } catch (err) {
       setToast({
-        message: err instanceof Error ? err.message : 'Could not save payout details.',
+        message: formatPayoutSaveError(err),
         type: 'error',
       })
     } finally {

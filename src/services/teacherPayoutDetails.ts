@@ -25,8 +25,26 @@ const emptyPayoutDetails = (): TeacherPayoutDetails => ({
 const payoutSelectFields =
   'account_holder_name, bank_account_number, bank_ifsc, pan_number, upi_id, razorpay_linked_account_id, payout_onboarding_status'
 
+const payoutSelectFieldsWithoutUpi =
+  'account_holder_name, bank_account_number, bank_ifsc, pan_number, razorpay_linked_account_id, payout_onboarding_status'
+
 function isMissingTableError(error: { code?: string }) {
   return error.code === 'PGRST205' || error.code === '42P01'
+}
+
+function isMissingUpiColumnError(error: { code?: string; message?: string }) {
+  return error.code === 'PGRST204' || Boolean(error.message?.includes('upi_id'))
+}
+
+export function formatPayoutSaveError(err: unknown): string {
+  if (typeof err === 'object' && err !== null) {
+    const e = err as { message?: string; code?: string }
+    if (isMissingUpiColumnError(e)) {
+      return 'UPI payouts are not enabled in the database yet. Ask the admin to run supabase/teacher-upi-payouts.sql.'
+    }
+    if (e.message) return e.message
+  }
+  return 'Could not save payout details.'
 }
 
 function mapPrivateRow(data: Record<string, unknown>): TeacherPayoutDetails {
@@ -42,26 +60,56 @@ function mapPrivateRow(data: Record<string, unknown>): TeacherPayoutDetails {
   }
 }
 
-export async function fetchTeacherPayoutDetails(teacherId: string): Promise<TeacherPayoutDetails | null> {
-  const privateResult = await supabase
+async function fetchPrivatePayout(teacherId: string, includeUpi: boolean) {
+  if (includeUpi) {
+    return supabase
+      .from('teacher_payout_private')
+      .select(payoutSelectFields)
+      .eq('teacher_id', teacherId)
+      .maybeSingle()
+  }
+  return supabase
     .from('teacher_payout_private')
-    .select(payoutSelectFields)
+    .select(payoutSelectFieldsWithoutUpi)
     .eq('teacher_id', teacherId)
     .maybeSingle()
+}
+
+async function fetchLegacyPayout(teacherId: string, includeUpi: boolean) {
+  if (includeUpi) {
+    return supabase
+      .from('teacher_profiles')
+      .select(payoutSelectFields)
+      .eq('id', teacherId)
+      .maybeSingle()
+  }
+  return supabase
+    .from('teacher_profiles')
+    .select(payoutSelectFieldsWithoutUpi)
+    .eq('id', teacherId)
+    .maybeSingle()
+}
+
+export async function fetchTeacherPayoutDetails(teacherId: string): Promise<TeacherPayoutDetails | null> {
+  let privateResult = await fetchPrivatePayout(teacherId, true)
+
+  if (privateResult.error && isMissingUpiColumnError(privateResult.error)) {
+    privateResult = await fetchPrivatePayout(teacherId, false)
+  }
 
   if (!privateResult.error && privateResult.data) {
-    return mapPrivateRow(privateResult.data as Record<string, unknown>)
+    return mapPrivateRow(privateResult.data as unknown as Record<string, unknown>)
   }
 
   if (privateResult.error && !isMissingTableError(privateResult.error)) {
     throw privateResult.error
   }
 
-  const legacyResult = await supabase
-    .from('teacher_profiles')
-    .select(payoutSelectFields)
-    .eq('id', teacherId)
-    .maybeSingle()
+  let legacyResult = await fetchLegacyPayout(teacherId, true)
+
+  if (legacyResult.error && isMissingUpiColumnError(legacyResult.error)) {
+    legacyResult = await fetchLegacyPayout(teacherId, false)
+  }
 
   if (legacyResult.error) {
     if (isMissingTableError(legacyResult.error)) return emptyPayoutDetails()
@@ -69,7 +117,7 @@ export async function fetchTeacherPayoutDetails(teacherId: string): Promise<Teac
   }
 
   if (!legacyResult.data) return emptyPayoutDetails()
-  return mapPrivateRow(legacyResult.data as Record<string, unknown>)
+  return mapPrivateRow(legacyResult.data as unknown as Record<string, unknown>)
 }
 
 function buildPayoutPayload(
@@ -140,12 +188,17 @@ async function writeTeacherUpi(teacherId: string, upiId: string) {
 
   if (!privateWrite.error) return
 
-  if (!isMissingTableError(privateWrite.error)) {
+  if (!isMissingTableError(privateWrite.error) && !isMissingUpiColumnError(privateWrite.error)) {
     throw privateWrite.error
   }
 
   const legacyWrite = await supabase.from('teacher_profiles').update(payload).eq('id', teacherId)
-  if (legacyWrite.error) throw legacyWrite.error
+  if (legacyWrite.error) {
+    if (isMissingUpiColumnError(legacyWrite.error)) {
+      throw new Error(formatPayoutSaveError(legacyWrite.error))
+    }
+    throw legacyWrite.error
+  }
 }
 
 export async function saveTeacherUpiLocally(teacherId: string, upiId: string) {
@@ -266,7 +319,8 @@ export async function setupTeacherRazorpayPayout(params: {
     if (
       apiError.includes('service role') ||
       apiError.includes('Route') ||
-      apiError.includes('Razorpay')
+      apiError.includes('Razorpay') ||
+      apiError.includes('not found on the server')
     ) {
       return {
         ok: true,
