@@ -59,18 +59,18 @@ function DirectCallMediaBootstrap() {
   useEffect(() => {
     const publishLocal = async () => {
       try {
+        await room.localParticipant.setCameraEnabled(true, { facingMode: 'user' })
         await room.localParticipant.setMicrophoneEnabled(true)
-        await room.localParticipant.setCameraEnabled(true)
       } catch {
-        /* permissions may be denied */
+        /* permissions may be denied — DirectCallCameraGate offers a retry tap */
       }
     }
 
     const subscribeParticipant = (participant: RemoteParticipant) => {
       participant.trackPublications.forEach((publication) => {
         if (
-          publication instanceof RemoteTrackPublication &&
-          (publication.kind === Track.Kind.Audio || publication.kind === Track.Kind.Video)
+          publication.kind === Track.Kind.Audio ||
+          publication.kind === Track.Kind.Video
         ) {
           void publication.setSubscribed(true)
         }
@@ -81,6 +81,22 @@ function DirectCallMediaBootstrap() {
       room.remoteParticipants.forEach(subscribeParticipant)
     }
 
+    const onParticipantConnected = (participant: RemoteParticipant) => {
+      subscribeParticipant(participant)
+      // Re-publish so the person who just joined receives our camera feed.
+      void publishLocal()
+    }
+
+    const onTrackPublished = (
+      publication: RemoteTrackPublication,
+      participant: RemoteParticipant,
+    ) => {
+      if (publication.kind === Track.Kind.Audio || publication.kind === Track.Kind.Video) {
+        void publication.setSubscribed(true)
+      }
+      subscribeParticipant(participant)
+    }
+
     void publishLocal()
     subscribeAll()
 
@@ -89,25 +105,77 @@ function DirectCallMediaBootstrap() {
       subscribeAll()
     }
 
-    const onTrackPublished = (publication: RemoteTrackPublication, participant: RemoteParticipant) => {
-      if (publication.kind === Track.Kind.Audio || publication.kind === Track.Kind.Video) {
-        void publication.setSubscribed(true)
-      }
-      subscribeParticipant(participant)
-    }
-
     room.on(RoomEvent.Connected, onConnected)
-    room.on(RoomEvent.ParticipantConnected, subscribeParticipant)
+    room.on(RoomEvent.ParticipantConnected, onParticipantConnected)
     room.on(RoomEvent.TrackPublished, onTrackPublished)
+    room.on(RoomEvent.Reconnected, onConnected)
+
+    const retryTimer = window.setInterval(() => {
+      void publishLocal()
+      subscribeAll()
+    }, 2_000)
+
+    const stopRetry = window.setTimeout(() => {
+      window.clearInterval(retryTimer)
+    }, 20_000)
 
     return () => {
+      window.clearInterval(retryTimer)
+      window.clearTimeout(stopRetry)
       room.off(RoomEvent.Connected, onConnected)
-      room.off(RoomEvent.ParticipantConnected, subscribeParticipant)
+      room.off(RoomEvent.Reconnected, onConnected)
+      room.off(RoomEvent.ParticipantConnected, onParticipantConnected)
       room.off(RoomEvent.TrackPublished, onTrackPublished)
     }
   }, [room])
 
   return null
+}
+
+function DirectCallCameraGate() {
+  const room = useRoomContext()
+  const [cameraOff, setCameraOff] = useState(false)
+
+  useEffect(() => {
+    const sync = () => {
+      const publication = room.localParticipant.getTrackPublication(Track.Source.Camera)
+      setCameraOff(!publication?.track || publication.isMuted)
+    }
+
+    sync()
+    const timer = window.setTimeout(sync, 1_500)
+
+    room.on(RoomEvent.LocalTrackPublished, sync)
+    room.on(RoomEvent.TrackMuted, sync)
+    room.on(RoomEvent.TrackUnmuted, sync)
+    room.on(RoomEvent.Connected, sync)
+
+    return () => {
+      window.clearTimeout(timer)
+      room.off(RoomEvent.LocalTrackPublished, sync)
+      room.off(RoomEvent.TrackMuted, sync)
+      room.off(RoomEvent.TrackUnmuted, sync)
+      room.off(RoomEvent.Connected, sync)
+    }
+  }, [room])
+
+  if (!cameraOff) return null
+
+  return createPortal(
+    <div className="dm-call-camera-gate">
+      <button
+        type="button"
+        className="dm-call-camera-gate-btn"
+        onClick={() => {
+          void room.localParticipant.setCameraEnabled(true, { facingMode: 'user' })
+        }}
+      >
+        <Video size={18} />
+        Tap to turn on your camera
+      </button>
+    </div>,
+    document.body,
+  )
 }
 
 function DirectCallRemoteWatcher({
@@ -192,7 +260,7 @@ function isLiveVideoTrack(track: TrackReferenceOrPlaceholder) {
   if (!isTrackReference(track)) return false
   const publication = track.publication
   if (!publication || publication.isMuted) return false
-  return Boolean(publication.track)
+  return publication.isSubscribed || Boolean(publication.track)
 }
 
 function pickRemoteMainTrack(
@@ -223,7 +291,7 @@ function DirectCallStage({
       { source: Track.Source.Camera, withPlaceholder: true },
       { source: Track.Source.ScreenShare, withPlaceholder: false },
     ],
-    { onlySubscribed: true },
+    { onlySubscribed: false },
   )
 
   const localIdentity = localParticipant.identity
@@ -403,6 +471,7 @@ function DirectCallExperience({
     <>
       <DirectCallRemoteWatcher callId={call.id} onRemoteEnd={onRemoteEnd} />
       <DirectCallMediaBootstrap />
+      <DirectCallCameraGate />
       <RoomAudioRenderer />
       <ClassRoomAudioSetup />
       <DirectCallHeader otherName={otherName} ringing={ringing} />
@@ -537,6 +606,9 @@ export function DirectVideoCallRoom({
             echoCancellation: true,
             noiseSuppression: true,
             autoGainControl: true,
+          },
+          videoCaptureDefaults: {
+            facingMode: 'user',
           },
         }}
         data-lk-theme="default"

@@ -296,3 +296,34 @@ h6 {
     height: 12rem;
   }
 }
+
+.dm-call-camera-gate {
+  position: fixed;
+  inset-inline: 0;
+  top: calc(max(0.75rem, env(safe-area-inset-top)) + 3.5rem);
+  z-index: 10002;
+  display: flex;
+  justify-content: center;
+  padding: 0 1rem;
+  pointer-events: none;
+}
+
+.dm-call-camera-gate-btn {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(45, 156, 156, 0.55);
+  background: rgba(26, 26, 26, 0.95);
+  color: #f5f0e8;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.dm-call-camera-gate-btn:hover {
+  background: rgba(45, 156, 156, 0.25);
+}

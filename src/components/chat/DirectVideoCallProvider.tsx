@@ -25,6 +25,7 @@ import {
 } from '../../services/directVideoCalls'
 import { ChatVideoCallRingOverlay } from './ChatVideoCallRingOverlay'
 import { DirectVideoCallRoom } from './DirectVideoCallRoom'
+import { preflightCameraAndMic } from '../../utils/preflightMedia'
 
 const OUTGOING_RING_MS = 45_000
 const TERMINAL_STATUSES: DirectVideoCallStatus[] = ['ended', 'declined', 'missed']
@@ -257,6 +258,12 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
 
       setCallNotice(null)
       try {
+        const mediaReady = await preflightCameraAndMic()
+        if (!mediaReady) {
+          setCallNotice('Camera or microphone access is required for video calls.')
+          return
+        }
+
         const call = await createDirectVideoCall({
           threadId: params.threadId,
           callerId: user.id,
@@ -273,6 +280,12 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
   const handleAcceptIncoming = async () => {
     if (!incomingCall) return
     try {
+      const mediaReady = await preflightCameraAndMic()
+      if (!mediaReady) {
+        setCallNotice('Allow camera and microphone to join the call.')
+        return
+      }
+
       await updateDirectVideoCallStatus(incomingCall.id, 'active', {
         startedAt: new Date().toISOString(),
       })
