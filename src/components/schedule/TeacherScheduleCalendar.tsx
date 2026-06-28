@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Badge } from '../ui/Badge'
 import { ScheduleCalendarSkeleton } from '../ui/Skeleton'
@@ -29,10 +29,12 @@ export function TeacherScheduleCalendar({ schedules, loading, onMonthChange }: T
 
   const year = viewDate.getFullYear()
   const month = viewDate.getMonth()
+  const onMonthChangeRef = useRef(onMonthChange)
+  onMonthChangeRef.current = onMonthChange
 
   useEffect(() => {
-    onMonthChange?.(year, month)
-  }, [year, month, onMonthChange])
+    onMonthChangeRef.current?.(year, month)
+  }, [year, month])
 
   const byDate = useMemo(() => {
     const map = new Map<string, ScheduleItem[]>()

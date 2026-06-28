@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useLiveDataRefresh } from '../../hooks/useLiveDataRefresh'
@@ -23,6 +23,12 @@ export function TeacherSchedulePage() {
 
   useLiveDataRefresh(refetch, ['schedules'], Boolean(user?.id))
 
+  const handleMonthChange = useCallback((year: number, month: number) => {
+    setMonthKey((prev) =>
+      prev.year === year && prev.month === month ? prev : { year, month },
+    )
+  }, [])
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
       <h1 className="font-heading text-3xl font-medium mb-2">Schedule</h1>
@@ -33,7 +39,7 @@ export function TeacherSchedulePage() {
       <TeacherScheduleCalendar
         schedules={schedules ?? []}
         loading={loading}
-        onMonthChange={(year, month) => setMonthKey({ year, month })}
+        onMonthChange={handleMonthChange}
       />
     </div>
   )

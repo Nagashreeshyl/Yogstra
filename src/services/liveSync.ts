@@ -59,6 +59,9 @@ function createLiveChannel(channelName: string, tables: TableSpec[]) {
   }
 }
 
+/** One shared channel factory per user — avoids re-subscribing the same Supabase channel. */
+const ownProfileChannelByUserId = new Map<string, ReturnType<typeof createLiveChannel>>()
+
 /** Teacher listings, profile pages, and cards (profiles + teacher_profiles). */
 export const subscribeToTeacherListing = createLiveChannel('live:teachers', [
   { table: 'teacher_profiles' },
@@ -117,8 +120,13 @@ export function subscribeToLiveScopes(
 
 /** Current user's profile row (avatar, name, teacher status fields). */
 export function subscribeToOwnProfile(userId: string, onChange: Listener) {
-  return createLiveChannel(`live:profile:${userId}`, [
-    { table: 'profiles', filter: `id=eq.${userId}` },
-    { table: 'teacher_profiles', filter: `id=eq.${userId}` },
-  ])(onChange)
+  let subscribe = ownProfileChannelByUserId.get(userId)
+  if (!subscribe) {
+    subscribe = createLiveChannel(`live:profile:${userId}`, [
+      { table: 'profiles', filter: `id=eq.${userId}` },
+      { table: 'teacher_profiles', filter: `id=eq.${userId}` },
+    ])
+    ownProfileChannelByUserId.set(userId, subscribe)
+  }
+  return subscribe(onChange)
 }
