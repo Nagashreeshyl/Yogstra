@@ -13,7 +13,7 @@ export function Modal({ isOpen, onClose, children, className = '', showClose = t
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-charcoal/20" onClick={onClose} />
       <div
         className={`relative bg-cream border border-border rounded-sm p-4 sm:p-6 lg:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto ${className}`}

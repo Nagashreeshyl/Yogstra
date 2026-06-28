@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Menu, X } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
+import { useApp } from '../../context/AppContext'
 
 interface ResponsiveShellProps {
   sidebar: ReactNode
@@ -20,10 +21,15 @@ export function ResponsiveShell({
 }: ResponsiveShellProps) {
   const [open, setOpen] = useState(false)
   const location = useLocation()
+  const { showRoleModal } = useApp()
 
   useEffect(() => {
     setOpen(false)
   }, [location.pathname])
+
+  useEffect(() => {
+    if (showRoleModal) setOpen(false)
+  }, [showRoleModal])
 
   useEffect(() => {
     if (!open) return
