@@ -1,15 +1,27 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { PhoneOff } from 'lucide-react'
 import {
   LiveKitRoom,
+  ParticipantTile,
   RoomAudioRenderer,
+  useLocalParticipant,
   useRoomContext,
-  VideoConference,
+  useTrackToggle,
+  useTracks,
 } from '@livekit/components-react'
 import '@livekit/components-styles'
-import { Loader2 } from 'lucide-react'
+import {
+  Loader2,
+  Mic,
+  MicOff,
+  MonitorUp,
+  PhoneOff,
+  SwitchCamera,
+  Video,
+  VideoOff,
+} from 'lucide-react'
 import {
   RemoteTrackPublication,
+  Room,
   RoomEvent,
   Track,
   type RemoteParticipant,
@@ -25,19 +37,18 @@ import {
 } from '../../services/directVideoCalls'
 
 const TERMINAL_STATUSES: DirectVideoCallStatus[] = ['ended', 'declined', 'missed']
+const CONTROL_BAR_HEIGHT = '6.5rem'
 
 interface DirectVideoCallRoomProps {
   call: DirectVideoCall
   participantName: string
   participantId: string
   otherName: string
-  /** Caller is in the LiveKit room while the callee's phone is still ringing. */
   ringing?: boolean
   onLeave: () => void
   onRemoteEnd?: (status: DirectVideoCallStatus) => void
 }
 
-/** Publish local A/V and subscribe to the other person as soon as they appear. */
 function DirectCallMediaBootstrap() {
   const room = useRoomContext()
 
@@ -47,7 +58,7 @@ function DirectCallMediaBootstrap() {
         await room.localParticipant.setMicrophoneEnabled(true)
         await room.localParticipant.setCameraEnabled(true)
       } catch {
-        /* permissions may be denied — LiveKitRoom still connected */
+        /* permissions may be denied */
       }
     }
 
@@ -131,16 +142,96 @@ function DirectCallRemoteWatcher({
   return null
 }
 
-function CallEndBar({
-  otherName,
+function DirectCallHeader({ otherName, ringing }: { otherName: string; ringing?: boolean }) {
+  return (
+    <div className="dm-call-header">
+      <p className="text-cream text-sm font-semibold truncate">{otherName}</p>
+      <p className="text-cream/50 text-xs">{ringing ? 'Calling…' : 'Video call'}</p>
+    </div>
+  )
+}
+
+function DirectCallStage({ otherName }: { otherName: string }) {
+  const { localParticipant } = useLocalParticipant()
+  const tracks = useTracks(
+    [
+      { source: Track.Source.Camera, withPlaceholder: true },
+      { source: Track.Source.ScreenShare, withPlaceholder: true },
+    ],
+    { onlySubscribed: false },
+  )
+
+  const localIdentity = localParticipant.identity
+  const remoteTracks = tracks.filter((track) => track.participant.identity !== localIdentity)
+  const localCamera = tracks.find(
+    (track) =>
+      track.participant.identity === localIdentity && track.source === Track.Source.Camera,
+  )
+
+  const remoteMain =
+    remoteTracks.find((track) => track.source === Track.Source.ScreenShare) ??
+    remoteTracks.find((track) => track.source === Track.Source.Camera)
+
+  return (
+    <div className="dm-call-stage">
+      {remoteMain ? (
+        <ParticipantTile trackRef={remoteMain} className="dm-call-remote-tile" />
+      ) : (
+        <div className="dm-call-waiting">
+          <p className="text-cream/70 text-base">Waiting for {otherName}…</p>
+        </div>
+      )}
+
+      {localCamera && (
+        <div className="dm-call-pip">
+          <ParticipantTile trackRef={localCamera} className="dm-call-pip-tile" />
+        </div>
+      )}
+    </div>
+  )
+}
+
+function DirectCallControlBar({
   ringing,
   onEnd,
 }: {
-  otherName: string
   ringing?: boolean
   onEnd: () => void
 }) {
   const room = useRoomContext()
+  const mic = useTrackToggle({ source: Track.Source.Microphone })
+  const camera = useTrackToggle({ source: Track.Source.Camera })
+  const screenShare = useTrackToggle({ source: Track.Source.ScreenShare })
+  const [busy, setBusy] = useState<'flip' | null>(null)
+
+  const flipCamera = async () => {
+    if (busy) return
+    setBusy('flip')
+    try {
+      const publication = room.localParticipant.getTrackPublication(Track.Source.Camera)
+      const videoTrack = publication?.videoTrack
+      const facing = videoTrack?.mediaStreamTrack.getSettings().facingMode
+
+      if (facing === 'user' || facing === 'environment') {
+        await room.localParticipant.setCameraEnabled(true, {
+          facingMode: facing === 'user' ? 'environment' : 'user',
+        })
+        return
+      }
+
+      const devices = await Room.getLocalDevices('videoinput')
+      if (devices.length < 2) return
+
+      const activeId = room.getActiveDevice('videoinput')
+      const currentIndex = devices.findIndex((device) => device.deviceId === activeId)
+      const nextDevice = devices[(currentIndex + 1) % devices.length]
+      await room.switchActiveDevice('videoinput', nextDevice.deviceId)
+    } catch {
+      /* device switch unsupported */
+    } finally {
+      setBusy(null)
+    }
+  }
 
   const handleEnd = () => {
     room.disconnect()
@@ -148,20 +239,85 @@ function CallEndBar({
   }
 
   return (
-    <div className="absolute inset-x-0 top-0 z-[300] flex items-center justify-between gap-3 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] bg-gradient-to-b from-charcoal/95 to-transparent pointer-events-none">
-      <div className="min-w-0 pointer-events-auto">
-        <p className="text-cream text-sm font-semibold truncate">{otherName}</p>
-        <p className="text-cream/50 text-xs">{ringing ? 'Calling…' : 'Video call'}</p>
-      </div>
+    <div className="dm-call-controls" style={{ ['--dm-control-bar-height' as string]: CONTROL_BAR_HEIGHT }}>
       <button
         type="button"
-        onClick={handleEnd}
-        className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-red-600 text-cream text-sm font-semibold shadow-lg cursor-pointer hover:bg-red-700 pointer-events-auto"
+        aria-label={mic.enabled ? 'Mute microphone' : 'Unmute microphone'}
+        aria-pressed={!mic.enabled}
+        disabled={mic.pending}
+        onClick={() => void mic.toggle()}
+        className="dm-call-control-btn"
       >
-        <PhoneOff size={18} />
-        {ringing ? 'Cancel' : 'End call'}
+        {mic.enabled ? <Mic size={22} /> : <MicOff size={22} />}
+      </button>
+
+      <button
+        type="button"
+        aria-label={camera.enabled ? 'Turn camera off' : 'Turn camera on'}
+        aria-pressed={!camera.enabled}
+        disabled={camera.pending}
+        onClick={() => void camera.toggle()}
+        className="dm-call-control-btn"
+      >
+        {camera.enabled ? <Video size={22} /> : <VideoOff size={22} />}
+      </button>
+
+      <button
+        type="button"
+        aria-label={ringing ? 'Cancel call' : 'End call'}
+        onClick={handleEnd}
+        className="dm-call-control-btn dm-call-end-btn"
+      >
+        <PhoneOff size={26} />
+      </button>
+
+      <button
+        type="button"
+        aria-label="Switch camera"
+        disabled={busy === 'flip'}
+        onClick={() => void flipCamera()}
+        className="dm-call-control-btn"
+      >
+        <SwitchCamera size={22} />
+      </button>
+
+      <button
+        type="button"
+        aria-label={screenShare.enabled ? 'Stop sharing screen' : 'Share screen'}
+        aria-pressed={screenShare.enabled}
+        disabled={screenShare.pending}
+        onClick={() => void screenShare.toggle()}
+        className={`dm-call-control-btn${screenShare.enabled ? ' dm-call-control-btn-active' : ''}`}
+      >
+        <MonitorUp size={22} />
       </button>
     </div>
+  )
+}
+
+function DirectCallExperience({
+  call,
+  otherName,
+  ringing,
+  onEnd,
+  onRemoteEnd,
+}: {
+  call: DirectVideoCall
+  otherName: string
+  ringing?: boolean
+  onEnd: () => void
+  onRemoteEnd: (status: DirectVideoCallStatus) => void
+}) {
+  return (
+    <>
+      <DirectCallRemoteWatcher callId={call.id} onRemoteEnd={onRemoteEnd} />
+      <DirectCallMediaBootstrap />
+      <RoomAudioRenderer />
+      <ClassRoomAudioSetup />
+      <DirectCallHeader otherName={otherName} ringing={ringing} />
+      <DirectCallStage otherName={otherName} />
+      <DirectCallControlBar ringing={ringing} onEnd={onEnd} />
+    </>
   )
 }
 
@@ -259,7 +415,7 @@ export function DirectVideoCallRoom({
   }
 
   return (
-    <div className="fixed inset-0 z-[200] bg-charcoal">
+    <div className="fixed inset-0 z-[200] bg-charcoal dm-call-root">
       <LiveKitRoom
         key={call.id}
         token={connectInfo.token}
@@ -277,16 +433,15 @@ export function DirectVideoCallRoom({
           },
         }}
         data-lk-theme="default"
-        style={{ height: '100%' }}
+        className="h-full w-full"
       >
-        <DirectCallRemoteWatcher callId={call.id} onRemoteEnd={handleRemoteEnd} />
-        <DirectCallMediaBootstrap />
-        <RoomAudioRenderer />
-        <ClassRoomAudioSetup />
-        <div className="relative h-full w-full dm-video-call">
-          <VideoConference />
-        </div>
-        <CallEndBar otherName={otherName} ringing={ringing} onEnd={() => finishLeave(true)} />
+        <DirectCallExperience
+          call={call}
+          otherName={otherName}
+          ringing={ringing}
+          onEnd={() => finishLeave(true)}
+          onRemoteEnd={handleRemoteEnd}
+        />
       </LiveKitRoom>
     </div>
   )

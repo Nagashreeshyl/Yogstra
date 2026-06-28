@@ -65,27 +65,138 @@ h6 {
   background: #d4c9b5;
 }
 
-/* DM video call — same LiveKit VideoConference as classes, simplified chrome */
-.dm-video-call.lk-video-conference,
-.dm-video-call .lk-video-conference {
+/* DM video call — WhatsApp-style layout with persistent controls */
+.dm-call-root {
+  --dm-control-bar-height: 6.5rem;
+}
+
+.dm-call-header {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: max(0.75rem, env(safe-area-inset-top)) 1rem 1.5rem;
+  background: linear-gradient(to bottom, rgba(26, 26, 26, 0.92), transparent);
+  pointer-events: none;
+}
+
+.dm-call-stage {
+  position: absolute;
+  inset: 0;
+  padding-bottom: var(--dm-control-bar-height);
+  background: #1a1a1a;
+}
+
+.dm-call-remote-tile {
+  width: 100%;
   height: 100%;
 }
 
-.dm-video-call .lk-chat,
-.dm-video-call .lk-chat-toggle,
-.dm-video-call .lk-button-group-menu {
-  display: none !important;
-}
-
-.dm-video-call .lk-control-bar {
-  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
-}
-
-.dm-video-call .lk-grid-layout-wrapper,
-.dm-video-call .lk-focus-layout-wrapper {
+.dm-call-remote-tile .lk-participant-tile,
+.dm-call-pip-tile .lk-participant-tile {
+  width: 100%;
   height: 100%;
 }
 
-.dm-video-call .lk-participant-tile video {
+.dm-call-remote-tile video,
+.dm-call-pip-tile video {
   object-fit: cover;
+}
+
+.dm-call-waiting {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.dm-call-pip {
+  position: absolute;
+  top: calc(max(0.75rem, env(safe-area-inset-top)) + 3.5rem);
+  right: 1rem;
+  width: 6.75rem;
+  height: 9.5rem;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  z-index: 50;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  background: #111;
+}
+
+.dm-call-controls {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  min-height: var(--dm-control-bar-height);
+  padding: 0.75rem 1rem max(0.85rem, env(safe-area-inset-bottom));
+  background: linear-gradient(to top, rgba(26, 26, 26, 0.98) 55%, rgba(26, 26, 26, 0.75));
+  pointer-events: auto;
+}
+
+.dm-call-control-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 9999px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.16);
+  color: #f5f0e8;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.dm-call-control-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.dm-call-control-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.dm-call-control-btn-active {
+  background: rgba(45, 156, 156, 0.85);
+}
+
+.dm-call-end-btn {
+  width: 4rem;
+  height: 4rem;
+  background: #dc2626;
+}
+
+.dm-call-end-btn:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+@media (min-width: 768px) {
+  .dm-call-controls {
+    gap: 1.25rem;
+  }
+
+  .dm-call-control-btn {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  .dm-call-end-btn {
+    width: 4.25rem;
+    height: 4.25rem;
+  }
+
+  .dm-call-pip {
+    width: 8.5rem;
+    height: 12rem;
+  }
 }
