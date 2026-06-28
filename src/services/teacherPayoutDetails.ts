@@ -1,11 +1,13 @@
 import { supabase } from '../lib/supabase'
 import { sanitizeText } from '../utils/sanitize'
+import { isValidUpiId, sanitizeUpiId } from '../utils/upi'
 
 export type TeacherPayoutDetails = {
   accountHolderName: string
   bankAccountNumber: string
   bankIfsc: string
   panNumber: string
+  upiId: string
   linkedAccountId: string | null
   onboardingStatus: 'not_started' | 'pending' | 'active' | 'failed'
 }
@@ -15,9 +17,13 @@ const emptyPayoutDetails = (): TeacherPayoutDetails => ({
   bankAccountNumber: '',
   bankIfsc: '',
   panNumber: '',
+  upiId: '',
   linkedAccountId: null,
   onboardingStatus: 'not_started',
 })
+
+const payoutSelectFields =
+  'account_holder_name, bank_account_number, bank_ifsc, pan_number, upi_id, razorpay_linked_account_id, payout_onboarding_status'
 
 function isMissingTableError(error: { code?: string }) {
   return error.code === 'PGRST205' || error.code === '42P01'
@@ -29,6 +35,7 @@ function mapPrivateRow(data: Record<string, unknown>): TeacherPayoutDetails {
     bankAccountNumber: (data.bank_account_number as string) ?? '',
     bankIfsc: (data.bank_ifsc as string) ?? '',
     panNumber: (data.pan_number as string) ?? '',
+    upiId: (data.upi_id as string) ?? '',
     linkedAccountId: (data.razorpay_linked_account_id as string) ?? null,
     onboardingStatus:
       (data.payout_onboarding_status as TeacherPayoutDetails['onboardingStatus']) ?? 'not_started',
@@ -38,9 +45,7 @@ function mapPrivateRow(data: Record<string, unknown>): TeacherPayoutDetails {
 export async function fetchTeacherPayoutDetails(teacherId: string): Promise<TeacherPayoutDetails | null> {
   const privateResult = await supabase
     .from('teacher_payout_private')
-    .select(
-      'account_holder_name, bank_account_number, bank_ifsc, pan_number, razorpay_linked_account_id, payout_onboarding_status',
-    )
+    .select(payoutSelectFields)
     .eq('teacher_id', teacherId)
     .maybeSingle()
 
@@ -54,9 +59,7 @@ export async function fetchTeacherPayoutDetails(teacherId: string): Promise<Teac
 
   const legacyResult = await supabase
     .from('teacher_profiles')
-    .select(
-      'account_holder_name, bank_account_number, bank_ifsc, pan_number, razorpay_linked_account_id, payout_onboarding_status',
-    )
+    .select(payoutSelectFields)
     .eq('id', teacherId)
     .maybeSingle()
 
@@ -121,6 +124,39 @@ async function writePayoutDetails(
   if (legacyWrite.error) throw legacyWrite.error
 }
 
+async function writeTeacherUpi(teacherId: string, upiId: string) {
+  const payload = {
+    upi_id: upiId || null,
+    updated_at: new Date().toISOString(),
+  }
+
+  const privateWrite = await supabase.from('teacher_payout_private').upsert(
+    {
+      teacher_id: teacherId,
+      ...payload,
+    },
+    { onConflict: 'teacher_id' },
+  )
+
+  if (!privateWrite.error) return
+
+  if (!isMissingTableError(privateWrite.error)) {
+    throw privateWrite.error
+  }
+
+  const legacyWrite = await supabase.from('teacher_profiles').update(payload).eq('id', teacherId)
+  if (legacyWrite.error) throw legacyWrite.error
+}
+
+export async function saveTeacherUpiLocally(teacherId: string, upiId: string) {
+  const normalized = sanitizeUpiId(upiId)
+  if (!normalized) throw new Error('Enter your UPI ID.')
+  if (!isValidUpiId(normalized)) {
+    throw new Error('Enter a valid UPI ID (e.g. name@upi or phone@paytm).')
+  }
+  await writeTeacherUpi(teacherId, normalized)
+}
+
 export async function saveTeacherPayoutDetailsLocally(
   teacherId: string,
   details: Pick<TeacherPayoutDetails, 'accountHolderName' | 'bankAccountNumber' | 'bankIfsc' | 'panNumber'>,
@@ -174,6 +210,7 @@ export async function setupTeacherRazorpayPayout(params: {
   accountNumber: string
   ifsc: string
   pan?: string
+  upiId?: string
 }): Promise<SetupPayoutResult> {
   const { data: session } = await supabase.auth.getSession()
   const token = session.session?.access_token
@@ -188,6 +225,10 @@ export async function setupTeacherRazorpayPayout(params: {
     bankIfsc: params.ifsc,
     panNumber: params.pan ?? '',
   })
+
+  if (params.upiId?.trim()) {
+    await saveTeacherUpiLocally(params.teacherId, params.upiId)
+  }
 
   let response: Response
   try {

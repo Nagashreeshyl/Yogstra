@@ -9,6 +9,38 @@ const payoutSelect = `
   student:profiles!student_id (*)
 `
 
+async function fetchTeacherUpiByIds(teacherIds: string[]): Promise<Map<string, string>> {
+  const map = new Map<string, string>()
+  if (!teacherIds.length) return map
+
+  const { data: privateRows, error: privateError } = await supabase
+    .from('teacher_payout_private')
+    .select('teacher_id, upi_id')
+    .in('teacher_id', teacherIds)
+
+  if (!privateError) {
+    for (const row of privateRows ?? []) {
+      if (row.upi_id) map.set(row.teacher_id as string, row.upi_id as string)
+    }
+  }
+
+  const missing = teacherIds.filter((id) => !map.has(id))
+  if (missing.length === 0) return map
+
+  const { data: legacyRows, error: legacyError } = await supabase
+    .from('teacher_profiles')
+    .select('id, upi_id')
+    .in('id', missing)
+
+  if (!legacyError) {
+    for (const row of legacyRows ?? []) {
+      if (row.upi_id) map.set(row.id as string, row.upi_id as string)
+    }
+  }
+
+  return map
+}
+
 export async function fetchPayouts(): Promise<Payout[]> {
   const { data, error } = await supabase
     .from('payouts')
@@ -16,7 +48,14 @@ export async function fetchPayouts(): Promise<Payout[]> {
     .order('created_at', { ascending: false })
 
   if (error) throw error
-  return (data ?? []).map((row) => mapPayout(row))
+  const payouts = (data ?? []).map((row) => mapPayout(row))
+  const teacherIds = [...new Set(payouts.map((p) => p.teacherId).filter(Boolean))]
+  const upiMap = await fetchTeacherUpiByIds(teacherIds)
+
+  return payouts.map((p) => ({
+    ...p,
+    teacherUpiId: upiMap.get(p.teacherId),
+  }))
 }
 
 export async function markPayoutPaid(id: string) {

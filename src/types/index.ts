@@ -201,6 +201,7 @@ export interface Payout {
   period: string
   status: 'Pending' | 'Paid'
   createdAt?: string
+  teacherUpiId?: string
 }
 
 export interface FilterState {
