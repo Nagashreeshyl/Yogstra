@@ -1,4 +1,4 @@
-const CACHE = 'yogstra-shell-v3'
+const CACHE = 'yogstra-shell-v4'
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -19,7 +19,17 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
 
+  const url = new URL(event.request.url)
+
+  // Always fetch fresh JS/CSS bundles — never serve stale call UI from cache.
+  if (url.pathname.startsWith('/assets/')) {
+    event.respondWith(fetch(event.request))
+    return
+  }
+
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request).then((r) => r ?? caches.match('/index.html'))),
+    fetch(event.request).catch(() =>
+      caches.match(event.request).then((r) => r ?? caches.match('/index.html')),
+    ),
   )
 })

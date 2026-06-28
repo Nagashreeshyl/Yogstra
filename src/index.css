@@ -65,20 +65,25 @@ h6 {
   background: #d4c9b5;
 }
 
-/* DM video call — WhatsApp-style layout with persistent controls */
+/* DM video call — WhatsApp-style layout with persistent portaled controls */
 .dm-call-root {
-  --dm-control-bar-height: 6.5rem;
+  --dm-control-bar-height: 5.75rem;
 }
 
-.dm-call-header {
-  position: absolute;
+.dm-call-room {
+  position: relative;
+  overflow: hidden;
+}
+
+.dm-call-header-portal {
+  position: fixed;
   inset-inline: 0;
   top: 0;
-  z-index: 300;
+  z-index: 10000;
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
-  padding: max(0.75rem, env(safe-area-inset-top)) 1rem 1.5rem;
+  padding: max(0.75rem, env(safe-area-inset-top)) 1rem 1.25rem;
   background: linear-gradient(to bottom, rgba(26, 26, 26, 0.92), transparent);
   pointer-events: none;
 }
@@ -95,6 +100,10 @@ h6 {
   height: 100%;
 }
 
+.dm-call-local-preview {
+  filter: brightness(0.55);
+}
+
 .dm-call-remote-tile .lk-participant-tile,
 .dm-call-pip-tile .lk-participant-tile {
   width: 100%;
@@ -106,17 +115,84 @@ h6 {
   object-fit: cover;
 }
 
-.dm-call-waiting {
+.dm-call-connecting {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  text-align: center;
+  background: rgba(10, 10, 10, 0.45);
+  pointer-events: none;
+}
+
+.dm-call-connecting-rings {
+  position: relative;
+  width: 7.5rem;
+  height: 7.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  height: 100%;
+}
+
+.dm-call-connecting-ring {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(45, 156, 156, 0.75);
+  border-radius: 9999px;
+  animation: dm-call-ring-pulse 1.8s ease-out infinite;
+}
+
+.dm-call-connecting-ring-delay {
+  animation-delay: 0.75s;
+}
+
+.dm-call-connecting-dot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 9999px;
+  background: rgba(45, 156, 156, 0.25);
+  color: #7fd4d4;
+}
+
+.dm-call-connecting-spinner {
+  animation: spin 1s linear infinite;
+}
+
+.dm-call-connecting-title {
+  color: #f5f0e8;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.dm-call-connecting-subtitle {
+  color: rgba(245, 240, 232, 0.55);
+  font-size: 0.85rem;
+}
+
+@keyframes dm-call-ring-pulse {
+  0% {
+    transform: scale(0.55);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
 }
 
 .dm-call-pip {
   position: absolute;
-  top: calc(max(0.75rem, env(safe-area-inset-top)) + 3.5rem);
+  top: calc(max(0.75rem, env(safe-area-inset-top)) + 3.25rem);
   right: 1rem;
   width: 6.75rem;
   height: 9.5rem;
@@ -128,71 +204,91 @@ h6 {
   background: #111;
 }
 
-.dm-call-controls {
-  position: absolute;
-  inset-inline: 0;
-  bottom: 0;
-  z-index: 400;
-  display: flex;
-  align-items: center;
+.dm-call-controls-portal {
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 10001 !important;
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  align-items: flex-end;
   justify-content: center;
-  gap: 0.85rem;
+  gap: 0.35rem;
   min-height: var(--dm-control-bar-height);
-  padding: 0.75rem 1rem max(0.85rem, env(safe-area-inset-bottom));
-  background: linear-gradient(to top, rgba(26, 26, 26, 0.98) 55%, rgba(26, 26, 26, 0.75));
-  pointer-events: auto;
+  padding: 0.5rem 0.75rem max(0.75rem, env(safe-area-inset-bottom));
+  background: linear-gradient(to top, rgba(18, 18, 18, 0.98) 70%, rgba(18, 18, 18, 0.85));
+  pointer-events: auto !important;
 }
 
-.dm-call-control-btn {
+.dm-call-labeled-btn {
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 3.25rem;
-  height: 3.25rem;
-  border-radius: 9999px;
+  gap: 0.35rem;
+  min-width: 4.25rem;
+  padding: 0.35rem 0.5rem;
   border: 0;
-  background: rgba(255, 255, 255, 0.16);
+  border-radius: 0.5rem;
+  background: transparent;
   color: #f5f0e8;
   cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.15s ease;
 }
 
-.dm-call-control-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.24);
+.dm-call-labeled-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
 }
 
-.dm-call-control-btn:disabled {
+.dm-call-labeled-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
-.dm-call-control-btn-active {
-  background: rgba(45, 156, 156, 0.85);
+.dm-call-labeled-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.14);
 }
 
-.dm-call-end-btn {
-  width: 4rem;
-  height: 4rem;
-  background: #dc2626;
+.dm-call-labeled-btn-active .dm-call-labeled-icon {
+  background: rgba(220, 38, 38, 0.85);
 }
 
-.dm-call-end-btn:hover:not(:disabled) {
-  background: #b91c1c;
+.dm-call-labeled-btn-danger .dm-call-labeled-icon {
+  background: rgba(220, 38, 38, 0.18);
+  border: 1px solid rgba(248, 113, 113, 0.55);
+  color: #fecaca;
+}
+
+.dm-call-labeled-text {
+  font-size: 0.68rem;
+  line-height: 1;
+  color: rgba(245, 240, 232, 0.82);
+  white-space: nowrap;
 }
 
 @media (min-width: 768px) {
-  .dm-call-controls {
-    gap: 1.25rem;
+  .dm-call-controls-portal {
+    gap: 0.75rem;
   }
 
-  .dm-call-control-btn {
-    width: 3.5rem;
-    height: 3.5rem;
+  .dm-call-labeled-btn {
+    min-width: 5rem;
   }
 
-  .dm-call-end-btn {
-    width: 4.25rem;
-    height: 4.25rem;
+  .dm-call-labeled-icon {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .dm-call-labeled-text {
+    font-size: 0.75rem;
   }
 
   .dm-call-pip {

@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import {
   LiveKitRoom,
   ParticipantTile,
   RoomAudioRenderer,
   useLocalParticipant,
+  useRemoteParticipants,
   useRoomContext,
   useTrackToggle,
   useTracks,
@@ -37,7 +39,6 @@ import {
 } from '../../services/directVideoCalls'
 
 const TERMINAL_STATUSES: DirectVideoCallStatus[] = ['ended', 'declined', 'missed']
-const CONTROL_BAR_HEIGHT = '6.5rem'
 
 interface DirectVideoCallRoomProps {
   call: DirectVideoCall
@@ -142,16 +143,51 @@ function DirectCallRemoteWatcher({
   return null
 }
 
-function DirectCallHeader({ otherName, ringing }: { otherName: string; ringing?: boolean }) {
+function DirectCallConnectingOverlay({
+  otherName,
+  ringing,
+}: {
+  otherName: string
+  ringing?: boolean
+}) {
   return (
-    <div className="dm-call-header">
-      <p className="text-cream text-sm font-semibold truncate">{otherName}</p>
-      <p className="text-cream/50 text-xs">{ringing ? 'Calling…' : 'Video call'}</p>
+    <div className="dm-call-connecting" aria-live="polite">
+      <div className="dm-call-connecting-rings" aria-hidden="true">
+        <span className="dm-call-connecting-ring" />
+        <span className="dm-call-connecting-ring dm-call-connecting-ring-delay" />
+        <span className="dm-call-connecting-dot">
+          <Loader2 size={28} className="dm-call-connecting-spinner" />
+        </span>
+      </div>
+      <p className="dm-call-connecting-title">
+        {ringing ? `Calling ${otherName}…` : `Connecting to ${otherName}…`}
+      </p>
+      <p className="dm-call-connecting-subtitle">
+        {ringing ? 'Waiting for them to answer' : 'Setting up video'}
+      </p>
     </div>
   )
 }
 
-function DirectCallStage({ otherName }: { otherName: string }) {
+function DirectCallHeader({ otherName, ringing }: { otherName: string; ringing?: boolean }) {
+  return createPortal(
+    <div className="dm-call-header-portal">
+      <p className="text-cream text-sm font-semibold truncate">{otherName}</p>
+      <p className="text-cream/50 text-xs">{ringing ? 'Ringing…' : 'Video call'}</p>
+    </div>,
+    document.body,
+  )
+}
+
+function DirectCallStage({
+  otherName,
+  ringing,
+  waitingForPeer,
+}: {
+  otherName: string
+  ringing?: boolean
+  waitingForPeer: boolean
+}) {
   const { localParticipant } = useLocalParticipant()
   const tracks = useTracks(
     [
@@ -177,17 +213,49 @@ function DirectCallStage({ otherName }: { otherName: string }) {
       {remoteMain ? (
         <ParticipantTile trackRef={remoteMain} className="dm-call-remote-tile" />
       ) : (
-        <div className="dm-call-waiting">
-          <p className="text-cream/70 text-base">Waiting for {otherName}…</p>
-        </div>
+        localCamera && (
+          <ParticipantTile trackRef={localCamera} className="dm-call-remote-tile dm-call-local-preview" />
+        )
       )}
 
-      {localCamera && (
+      {waitingForPeer && (
+        <DirectCallConnectingOverlay otherName={otherName} ringing={ringing} />
+      )}
+
+      {localCamera && remoteMain && (
         <div className="dm-call-pip">
           <ParticipantTile trackRef={localCamera} className="dm-call-pip-tile" />
         </div>
       )}
     </div>
+  )
+}
+
+function DirectCallLabeledButton({
+  label,
+  active,
+  danger,
+  disabled,
+  onClick,
+  children,
+}: {
+  label: string
+  active?: boolean
+  danger?: boolean
+  disabled?: boolean
+  onClick: () => void
+  children: ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className={`dm-call-labeled-btn${active ? ' dm-call-labeled-btn-active' : ''}${danger ? ' dm-call-labeled-btn-danger' : ''}`}
+    >
+      <span className="dm-call-labeled-icon">{children}</span>
+      <span className="dm-call-labeled-text">{label}</span>
+    </button>
   )
 }
 
@@ -238,60 +306,52 @@ function DirectCallControlBar({
     onEnd()
   }
 
-  return (
-    <div className="dm-call-controls" style={{ ['--dm-control-bar-height' as string]: CONTROL_BAR_HEIGHT }}>
-      <button
-        type="button"
-        aria-label={mic.enabled ? 'Mute microphone' : 'Unmute microphone'}
-        aria-pressed={!mic.enabled}
+  return createPortal(
+    <div className="dm-call-controls-portal" role="toolbar" aria-label="Call controls">
+      <DirectCallLabeledButton
+        label="Microphone"
         disabled={mic.pending}
+        active={!mic.enabled}
         onClick={() => void mic.toggle()}
-        className="dm-call-control-btn"
       >
-        {mic.enabled ? <Mic size={22} /> : <MicOff size={22} />}
-      </button>
+        {mic.enabled ? <Mic size={20} /> : <MicOff size={20} />}
+      </DirectCallLabeledButton>
 
-      <button
-        type="button"
-        aria-label={camera.enabled ? 'Turn camera off' : 'Turn camera on'}
-        aria-pressed={!camera.enabled}
+      <DirectCallLabeledButton
+        label="Camera"
         disabled={camera.pending}
+        active={!camera.enabled}
         onClick={() => void camera.toggle()}
-        className="dm-call-control-btn"
       >
-        {camera.enabled ? <Video size={22} /> : <VideoOff size={22} />}
-      </button>
+        {camera.enabled ? <Video size={20} /> : <VideoOff size={20} />}
+      </DirectCallLabeledButton>
 
-      <button
-        type="button"
-        aria-label={ringing ? 'Cancel call' : 'End call'}
-        onClick={handleEnd}
-        className="dm-call-control-btn dm-call-end-btn"
-      >
-        <PhoneOff size={26} />
-      </button>
-
-      <button
-        type="button"
-        aria-label="Switch camera"
+      <DirectCallLabeledButton
+        label="Flip"
         disabled={busy === 'flip'}
         onClick={() => void flipCamera()}
-        className="dm-call-control-btn"
       >
-        <SwitchCamera size={22} />
-      </button>
+        <SwitchCamera size={20} />
+      </DirectCallLabeledButton>
 
-      <button
-        type="button"
-        aria-label={screenShare.enabled ? 'Stop sharing screen' : 'Share screen'}
-        aria-pressed={screenShare.enabled}
+      <DirectCallLabeledButton
+        label="Share screen"
         disabled={screenShare.pending}
+        active={screenShare.enabled}
         onClick={() => void screenShare.toggle()}
-        className={`dm-call-control-btn${screenShare.enabled ? ' dm-call-control-btn-active' : ''}`}
       >
-        <MonitorUp size={22} />
-      </button>
-    </div>
+        <MonitorUp size={20} />
+      </DirectCallLabeledButton>
+
+      <DirectCallLabeledButton
+        label={ringing ? 'Cancel' : 'Leave'}
+        danger
+        onClick={handleEnd}
+      >
+        <PhoneOff size={20} />
+      </DirectCallLabeledButton>
+    </div>,
+    document.body,
   )
 }
 
@@ -308,6 +368,9 @@ function DirectCallExperience({
   onEnd: () => void
   onRemoteEnd: (status: DirectVideoCallStatus) => void
 }) {
+  const remoteParticipants = useRemoteParticipants()
+  const waitingForPeer = ringing || remoteParticipants.length === 0
+
   return (
     <>
       <DirectCallRemoteWatcher callId={call.id} onRemoteEnd={onRemoteEnd} />
@@ -315,7 +378,11 @@ function DirectCallExperience({
       <RoomAudioRenderer />
       <ClassRoomAudioSetup />
       <DirectCallHeader otherName={otherName} ringing={ringing} />
-      <DirectCallStage otherName={otherName} />
+      <DirectCallStage
+        otherName={otherName}
+        ringing={ringing}
+        waitingForPeer={waitingForPeer}
+      />
       <DirectCallControlBar ringing={ringing} onEnd={onEnd} />
     </>
   )
@@ -433,7 +500,7 @@ export function DirectVideoCallRoom({
           },
         }}
         data-lk-theme="default"
-        className="h-full w-full"
+        className="h-full w-full dm-call-room"
       >
         <DirectCallExperience
           call={call}
