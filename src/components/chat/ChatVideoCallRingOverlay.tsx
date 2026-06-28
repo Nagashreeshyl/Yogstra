@@ -44,7 +44,7 @@ export function ChatVideoCallRingOverlay({
   const isIncoming = mode === 'incoming'
 
   return (
-    <div className="fixed inset-0 z-[95] flex items-center justify-center p-4 bg-charcoal/90 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-charcoal/95 backdrop-blur-sm">
       <div
         className={`w-full max-w-sm rounded-sm border border-teal/40 bg-charcoal shadow-2xl p-8 text-center ${
           isIncoming ? 'animate-pulse' : ''

@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { createPortal } from 'react-dom'
 import { useApp } from '../../context/AppContext'
 import { INCOMING_CALL_POLL_MS } from '../../constants/refresh'
 import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
@@ -25,6 +26,7 @@ import { ChatVideoCallRingOverlay } from './ChatVideoCallRingOverlay'
 import { DirectVideoCallRoom } from './DirectVideoCallRoom'
 
 const OUTGOING_RING_MS = 45_000
+const TERMINAL_STATUSES: DirectVideoCallStatus[] = ['ended', 'declined', 'missed']
 
 type DirectVideoCallContextValue = {
   startCall: (params: {
@@ -68,6 +70,12 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const clearAllCallState = useCallback(() => {
+    setActiveCall(null)
+    setIncomingCall(null)
+    setOutgoingCall(null)
+  }, [])
+
   const applyIncomingCall = useCallback(async (callId: string) => {
     if (activeCallRef.current) return
     const call = await fetchDirectVideoCall(callId)
@@ -78,12 +86,11 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
 
   const refreshCalls = useCallback(async () => {
     if (!user || (user.role !== 'student' && user.role !== 'teacher')) {
-      setIncomingCall(null)
-      if (!activeCallRef.current) setOutgoingCall(null)
+      if (!activeCallRef.current) clearAllCallState()
       return
     }
 
-    if (activeCallRef.current) return
+    if (activeCallRef.current || outgoingCallRef.current) return
 
     const incoming = await fetchIncomingRingingCall(user.id)
     setIncomingCall(incoming)
@@ -91,15 +98,9 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
     const active = await fetchUserActiveDirectCall(user.id)
     if (active?.status === 'active') {
       setActiveCall(active)
-      setOutgoingCall(null)
       setIncomingCall(null)
-      return
     }
-
-    if (active?.status === 'ringing' && active.callerId === user.id) {
-      setOutgoingCall((prev) => prev ?? active)
-    }
-  }, [user])
+  }, [user, clearAllCallState])
 
   useEffect(() => {
     void refreshCalls()
@@ -129,10 +130,10 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
 
   useAppIntervalRefresh(() => {
     void refreshCalls()
-  }, Boolean(user && (user.role === 'student' || user.role === 'teacher') && !activeCall))
+  }, Boolean(user && (user.role === 'student' || user.role === 'teacher') && !activeCall && !outgoingCall))
 
   useEffect(() => {
-    if (!user || activeCall) return
+    if (!user || activeCall || outgoingCall) return
     if (user.role !== 'student' && user.role !== 'teacher') return
 
     const id = window.setInterval(() => {
@@ -140,11 +141,11 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
     }, INCOMING_CALL_POLL_MS)
 
     return () => window.clearInterval(id)
-  }, [user, activeCall, refreshCalls])
+  }, [user, activeCall, outgoingCall, refreshCalls])
 
   useEffect(() => {
     const wake = () => {
-      void refreshCalls()
+      if (!activeCallRef.current && !outgoingCallRef.current) void refreshCalls()
     }
 
     const onVisibility = () => {
@@ -161,6 +162,20 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('pageshow', wake)
     }
   }, [refreshCalls])
+
+  useEffect(() => {
+    if (!activeCall) return
+
+    const unsub = subscribeToDirectVideoCallById(activeCall.id, (call) => {
+      if (TERMINAL_STATUSES.includes(call.status)) {
+        clearAllCallState()
+        if (call.status === 'declined') setCallNotice('Call ended')
+        else if (call.status === 'missed') setCallNotice('Missed call')
+      }
+    })
+
+    return unsub
+  }, [activeCall, clearAllCallState])
 
   useEffect(() => {
     if (!outgoingCall || outgoingCall.callerId !== user?.id) {
@@ -182,7 +197,9 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
       if (call.status === 'active') {
         clearOutgoingTimer()
         setOutgoingCall(null)
-        setActiveCall(call)
+        void fetchDirectVideoCall(call.id).then((fresh) => {
+          if (fresh) setActiveCall(fresh)
+        })
       } else if (call.status === 'declined') {
         clearOutgoingTimer()
         setOutgoingCall(null)
@@ -213,24 +230,32 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
       }
 
       setCallNotice(null)
-      const call = await createDirectVideoCall({
-        threadId: params.threadId,
-        callerId: user.id,
-        calleeId: params.calleeId,
-      })
-      setOutgoingCall(call)
+      try {
+        const call = await createDirectVideoCall({
+          threadId: params.threadId,
+          callerId: user.id,
+          calleeId: params.calleeId,
+        })
+        setOutgoingCall(call)
+      } catch {
+        setCallNotice('Could not start call. Check your connection and try again.')
+      }
     },
     [user],
   )
 
   const handleAcceptIncoming = async () => {
     if (!incomingCall) return
-    await updateDirectVideoCallStatus(incomingCall.id, 'active', {
-      startedAt: new Date().toISOString(),
-    })
-    const fresh = await fetchDirectVideoCall(incomingCall.id)
-    setIncomingCall(null)
-    if (fresh) setActiveCall(fresh)
+    try {
+      await updateDirectVideoCallStatus(incomingCall.id, 'active', {
+        startedAt: new Date().toISOString(),
+      })
+      const fresh = await fetchDirectVideoCall(incomingCall.id)
+      setIncomingCall(null)
+      if (fresh) setActiveCall(fresh)
+    } catch {
+      setCallNotice('Could not join call. Try again.')
+    }
   }
 
   const handleDeclineIncoming = async () => {
@@ -249,13 +274,12 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
     setOutgoingCall(null)
   }
 
-  const handleLeaveCall = () => {
-    setActiveCall(null)
-    void refreshCalls()
-  }
+  const handleLeaveCall = useCallback(() => {
+    clearAllCallState()
+  }, [clearAllCallState])
 
   const handleRemoteEnd = (status: DirectVideoCallStatus) => {
-    if (status === 'declined') setCallNotice('Call ended')
+    if (status === 'declined' || status === 'ended') setCallNotice('Call ended')
     else if (status === 'missed') setCallNotice('Missed call')
   }
 
@@ -280,60 +304,62 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
     user && (user.role === 'student' || user.role === 'teacher'),
   )
 
-  const callerPreconnect = Boolean(
-    outgoingCall && !activeCall && user && outgoingCall.callerId === user.id,
-  )
-  const liveKitCall = activeCall ?? (callerPreconnect ? outgoingCall : null)
+  const callOverlay =
+    canReceiveCalls &&
+    createPortal(
+      <>
+        {incomingCall && !activeCall && (
+          <ChatVideoCallRingOverlay
+            callId={incomingCall.id}
+            peerName={otherParty(incomingCall).name}
+            peerPhoto={otherParty(incomingCall).avatar}
+            mode="incoming"
+            onAccept={() => void handleAcceptIncoming()}
+            onDecline={() => void handleDeclineIncoming()}
+          />
+        )}
+
+        {outgoingCall && !activeCall && (
+          <ChatVideoCallRingOverlay
+            callId={outgoingCall.id}
+            peerName={otherParty(outgoingCall).name}
+            peerPhoto={otherParty(outgoingCall).avatar}
+            mode="outgoing"
+            onDecline={() => void handleCancelOutgoing()}
+          />
+        )}
+
+        {activeCall && user && (
+          <DirectVideoCallRoom
+            call={activeCall}
+            participantName={user.name}
+            participantId={user.id}
+            otherName={otherParty(activeCall).name}
+            onLeave={handleLeaveCall}
+            onRemoteEnd={handleRemoteEnd}
+          />
+        )}
+
+        {callNotice && !activeCall && !outgoingCall && !incomingCall && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[210] px-4 py-2 rounded-full bg-charcoal/95 border border-cream/10 text-cream text-sm shadow-lg">
+            {callNotice}
+            <button
+              type="button"
+              className="ml-3 text-cream/50 hover:text-cream cursor-pointer"
+              onClick={() => setCallNotice(null)}
+            >
+              ×
+            </button>
+          </div>
+        )}
+      </>,
+      document.body,
+    )
 
   return (
     <DirectVideoCallContext.Provider value={{ startCall, callBusy }}>
       {children}
-
-      {canReceiveCalls && incomingCall && !activeCall && (
-        <ChatVideoCallRingOverlay
-          callId={incomingCall.id}
-          peerName={otherParty(incomingCall).name}
-          peerPhoto={otherParty(incomingCall).avatar}
-          mode="incoming"
-          onAccept={() => void handleAcceptIncoming()}
-          onDecline={() => void handleDeclineIncoming()}
-        />
-      )}
-
-      {canReceiveCalls && outgoingCall && !activeCall && (
-        <ChatVideoCallRingOverlay
-          callId={outgoingCall.id}
-          peerName={otherParty(outgoingCall).name}
-          peerPhoto={otherParty(outgoingCall).avatar}
-          mode="outgoing"
-          onDecline={() => void handleCancelOutgoing()}
-        />
-      )}
-
-      {canReceiveCalls && liveKitCall && user && (
-        <DirectVideoCallRoom
-          call={liveKitCall}
-          participantName={user.name}
-          participantId={user.id}
-          otherName={otherParty(liveKitCall).name}
-          preconnect={callerPreconnect}
-          onLeave={handleLeaveCall}
-          onRemoteEnd={handleRemoteEnd}
-        />
-      )}
-
-      {callNotice && !activeCall && !outgoingCall && !incomingCall && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] px-4 py-2 rounded-full bg-charcoal/95 border border-cream/10 text-cream text-sm shadow-lg">
-          {callNotice}
-          <button
-            type="button"
-            className="ml-3 text-cream/50 hover:text-cream cursor-pointer"
-            onClick={() => setCallNotice(null)}
-          >
-            ×
-          </button>
-        </div>
-      )}
+      {callOverlay}
     </DirectVideoCallContext.Provider>
   )
 }

@@ -65,24 +65,27 @@ h6 {
   background: #d4c9b5;
 }
 
-/* WhatsApp-style DM video call — full-bleed remote + PiP local */
-.dm-call-remote .lk-participant-tile,
-.dm-call-local .lk-participant-tile {
+/* DM video call — same LiveKit VideoConference as classes, simplified chrome */
+.dm-video-call.lk-video-conference,
+.dm-video-call .lk-video-conference {
   height: 100%;
-  width: 100%;
-  max-height: none;
-  max-width: none;
-  border-radius: 0;
 }
 
-.dm-call-remote .lk-participant-tile video,
-.dm-call-local .lk-participant-tile video {
-  width: 100%;
+.dm-video-call .lk-chat,
+.dm-video-call .lk-chat-toggle,
+.dm-video-call .lk-button-group-menu {
+  display: none !important;
+}
+
+.dm-video-call .lk-control-bar {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+.dm-video-call .lk-grid-layout-wrapper,
+.dm-video-call .lk-focus-layout-wrapper {
   height: 100%;
+}
+
+.dm-video-call .lk-participant-tile video {
   object-fit: cover;
-}
-
-.dm-call-remote .lk-participant-metadata,
-.dm-call-local .lk-participant-metadata {
-  display: none;
 }
