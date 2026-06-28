@@ -4,6 +4,7 @@ import {
   LiveKitRoom,
   ParticipantTile,
   RoomAudioRenderer,
+  isTrackReference,
   useLocalParticipant,
   useRemoteParticipants,
   useRoomContext,
@@ -28,6 +29,7 @@ import {
   Track,
   type RemoteParticipant,
 } from 'livekit-client'
+import type { TrackReferenceOrPlaceholder } from '@livekit/components-core'
 import { ClassRoomAudioSetup } from '../classes/ClassRoomAudioSetup'
 import {
   fetchDirectVideoCall,
@@ -186,6 +188,26 @@ function DirectCallHeader({ otherName, ringing }: { otherName: string; ringing?:
   )
 }
 
+function isLiveVideoTrack(track: TrackReferenceOrPlaceholder) {
+  if (!isTrackReference(track)) return false
+  const publication = track.publication
+  if (!publication || publication.isMuted) return false
+  return Boolean(publication.track)
+}
+
+function pickRemoteMainTrack(
+  remoteTracks: TrackReferenceOrPlaceholder[],
+): TrackReferenceOrPlaceholder | undefined {
+  const screenShare = remoteTracks.find(
+    (track) => track.source === Track.Source.ScreenShare && isLiveVideoTrack(track),
+  )
+  if (screenShare) return screenShare
+
+  return remoteTracks.find(
+    (track) => track.source === Track.Source.Camera && isLiveVideoTrack(track),
+  )
+}
+
 function DirectCallStage({
   otherName,
   ringing,
@@ -199,9 +221,9 @@ function DirectCallStage({
   const tracks = useTracks(
     [
       { source: Track.Source.Camera, withPlaceholder: true },
-      { source: Track.Source.ScreenShare, withPlaceholder: true },
+      { source: Track.Source.ScreenShare, withPlaceholder: false },
     ],
-    { onlySubscribed: false },
+    { onlySubscribed: true },
   )
 
   const localIdentity = localParticipant.identity
@@ -211,16 +233,15 @@ function DirectCallStage({
       track.participant.identity === localIdentity && track.source === Track.Source.Camera,
   )
 
-  const remoteMain =
-    remoteTracks.find((track) => track.source === Track.Source.ScreenShare) ??
-    remoteTracks.find((track) => track.source === Track.Source.Camera)
+  const remoteMain = pickRemoteMainTrack(remoteTracks)
 
   return (
     <div className="dm-call-stage">
       {remoteMain ? (
         <ParticipantTile trackRef={remoteMain} className="dm-call-remote-tile" />
       ) : (
-        localCamera && (
+        localCamera &&
+        isTrackReference(localCamera) && (
           <ParticipantTile trackRef={localCamera} className="dm-call-remote-tile dm-call-local-preview" />
         )
       )}
