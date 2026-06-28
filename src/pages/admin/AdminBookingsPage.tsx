@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
+import { useLiveDataRefresh } from '../../hooks/useLiveDataRefresh'
 import { fetchBookings } from '../../services/bookings'
 import { AdminTable, AdminPagination } from '../../components/admin/AdminTable'
 import { Button } from '../../components/ui/Button'
@@ -14,9 +14,7 @@ export function AdminBookingsPage() {
   const [page, setPage] = useState(1)
   const { data: bookings, loading, refetch } = useAsyncData(() => fetchBookings())
 
-  useAppIntervalRefresh(() => {
-    void refetch(true)
-  })
+  useLiveDataRefresh(() => void refetch(true), ['bookings'])
 
   const filtered = useMemo(() => {
     if (!search) return bookings ?? []

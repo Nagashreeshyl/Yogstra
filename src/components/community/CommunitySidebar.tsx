@@ -1,9 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import { useCallback } from 'react'
 import { useLiveSync } from '../../hooks/useLiveSync'
-import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
 import { fetchStudentList } from '../../services/students'
 import { fetchTeachers } from '../../services/teachers'
 import { Avatar } from '../ui/Avatar'
@@ -24,13 +22,6 @@ export function CommunitySidebar() {
 
   useLiveSync(refetchStudents, ['bookings'], isTeacher)
   useLiveSync(refetchTeachers, ['teachers'], !isTeacher)
-
-  const refreshAll = useCallback(() => {
-    if (isTeacher) void refetchStudents(true)
-    else void refetchTeachers(true)
-  }, [isTeacher, refetchStudents, refetchTeachers])
-
-  useAppIntervalRefresh(refreshAll, Boolean(isLoggedIn))
 
   const suggested = (teachers ?? [])
     .filter((t) => t.id !== user?.id)

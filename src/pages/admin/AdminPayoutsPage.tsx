@@ -1,5 +1,5 @@
 import { useAsyncData } from '../../hooks/useAsyncData'
-import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
+import { useLiveDataRefresh } from '../../hooks/useLiveDataRefresh'
 import { fetchPayouts, markPayoutPaid } from '../../services/admin'
 import { AdminTable } from '../../components/admin/AdminTable'
 import { Button } from '../../components/ui/Button'
@@ -9,9 +9,7 @@ import { TeacherTableSkeleton } from '../../components/ui/Skeleton'
 export function AdminPayoutsPage() {
   const { data: payouts, loading, refetch } = useAsyncData(() => fetchPayouts())
 
-  useAppIntervalRefresh(() => {
-    void refetch(true)
-  })
+  useLiveDataRefresh(() => void refetch(true), ['payouts'])
 
   const handleMarkPaid = async (id: string) => {
     await markPayoutPaid(id)

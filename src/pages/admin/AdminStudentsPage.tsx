@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
+import { useLiveDataRefresh } from '../../hooks/useLiveDataRefresh'
 import { fetchStudents } from '../../services/students'
 import { fetchAllTeachersAdmin } from '../../services/teachers'
 import { fetchBookingsByStudent } from '../../services/bookings'
@@ -31,7 +31,7 @@ export function AdminStudentsPage() {
     if (bookingsStudentId) void refetchStudentBookings(true)
   }, [refetchStudents, refetchTeachers, refetchStudentBookings, bookingsStudentId])
 
-  useAppIntervalRefresh(refreshAll)
+  useLiveDataRefresh(refreshAll, ['bookings', 'teachers'])
 
   const filtered = useMemo(() => {
     if (!search) return students ?? []

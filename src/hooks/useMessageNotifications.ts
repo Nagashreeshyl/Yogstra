@@ -1,6 +1,5 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { useAsyncData } from './useAsyncData'
-import { useAppIntervalRefresh } from './useIntervalRefresh'
 import {
   fetchMessagingUsers,
   fetchTotalUnreadCount,
@@ -48,15 +47,6 @@ export function useMessageNotifications(
       unsubUnread()
     }
   }, [userId, refetchStudents, refetchTeachers, refetchUnread])
-
-  const refreshAll = useCallback(() => {
-    setTick((t) => t + 1)
-    void refetchStudents(true)
-    void refetchTeachers(true)
-    void refetchUnread(true)
-  }, [refetchStudents, refetchTeachers, refetchUnread])
-
-  useAppIntervalRefresh(refreshAll, Boolean(userId))
 
   const allUsers = [...(students ?? []), ...(teachers ?? [])]
 

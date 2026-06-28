@@ -2,8 +2,8 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import { Camera } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
 import { fetchStudentProfile, updateStudentSettings } from '../../services/students'
+import { subscribeToOwnProfile } from '../../services/liveSync'
 import { uploadProfileAvatar } from '../../services/avatars'
 import { prepareImageForCrop } from '../../utils/imageCrop'
 import { AvatarCropModal } from '../../components/profile/AvatarCropModal'
@@ -23,9 +23,12 @@ export function StudentSettingsPage() {
     [user?.id],
   )
 
-  useAppIntervalRefresh(() => {
-    void refetch(true)
-  }, Boolean(user?.id))
+  useEffect(() => {
+    if (!user?.id) return
+    return subscribeToOwnProfile(user.id, () => {
+      void refetch(true)
+    })
+  }, [user?.id, refetch])
 
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')

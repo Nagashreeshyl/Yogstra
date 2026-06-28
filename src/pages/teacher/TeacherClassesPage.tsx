@@ -4,7 +4,6 @@ import { Video, Clock, Users } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useLiveSync } from '../../hooks/useLiveSync'
-import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
 import { useScheduleBoundaryRefresh } from '../../hooks/useScheduleBoundaryRefresh'
 import {
   fetchTeacherNextSession,
@@ -93,8 +92,6 @@ export function TeacherClassesPage() {
   ]
 
   useScheduleBoundaryRefresh(scheduleTimes, silentRefreshAll, Boolean(teacherId))
-
-  useAppIntervalRefresh(silentRefreshAll, Boolean(teacherId))
 
   const activeHourSession: TeacherNextSessionInfo | null =
     nextSession?.sessionPhase === 'active' ? nextSession : null

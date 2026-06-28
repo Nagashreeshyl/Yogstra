@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 import { useLiveSync } from '../../hooks/useLiveSync'
-import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
 import { useScheduleBoundaryRefresh } from '../../hooks/useScheduleBoundaryRefresh'
 import {
   createClassSession,
@@ -116,8 +115,6 @@ export function TeacherClassTimeProvider({ children }: { children: React.ReactNo
     () => void refresh(),
     Boolean(teacherId),
   )
-
-  useAppIntervalRefresh(() => void refresh(), Boolean(teacherId))
 
   const handleDismiss = () => {
     setVisible(false)

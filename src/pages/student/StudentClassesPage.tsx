@@ -4,7 +4,6 @@ import { CalendarClock, Clock, Video } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useLiveSync } from '../../hooks/useLiveSync'
-import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
 import { useScheduleBoundaryRefresh } from '../../hooks/useScheduleBoundaryRefresh'
 import { useStudentCoachingAccess } from '../../hooks/useStudentCoachingAccess'
 import { fetchStudentCoachingTeachers } from '../../services/liveClasses'
@@ -93,8 +92,6 @@ export function StudentClassesPage(_props: StudentClassesPageProps) {
   )
 
   useScheduleBoundaryRefresh(scheduleTimes, silentRefreshAll, Boolean(studentId))
-
-  useAppIntervalRefresh(silentRefreshAll, Boolean(studentId))
 
   const liveSession =
     (activeSessions ?? []).find(

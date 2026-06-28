@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AppProvider } from './context/AppContext'
-import { AppRefreshProvider } from './context/AppRefreshContext'
 import { AppLayout } from './components/layout/AppLayout'
 import { LoggedInRedirect } from './components/auth/LoggedInRedirect'
 import { StudentDashboardLayout } from './components/layout/StudentDashboardLayout'
@@ -48,7 +47,6 @@ import { DirectVideoCallProvider } from './components/chat/DirectVideoCallProvid
 export default function App() {
   return (
     <AppProvider>
-      <AppRefreshProvider>
       <DirectVideoCallProvider>
       <BrowserRouter>
         <InstallAppPrompt variant="banner" />
@@ -138,7 +136,6 @@ export default function App() {
         </Routes>
       </BrowserRouter>
       </DirectVideoCallProvider>
-      </AppRefreshProvider>
     </AppProvider>
   )
 }

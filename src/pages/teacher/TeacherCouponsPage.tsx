@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Copy, Send, Tag } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
 import type { ClassDuration, ClassType } from '../../services/classOrders'
 import {
   fetchTeacherCoupons,
@@ -75,10 +74,6 @@ export function TeacherCouponsPage() {
     () => (teacherId ? fetchTeacherCoupons(teacherId) : Promise.resolve([])),
     [teacherId],
   )
-
-  useAppIntervalRefresh(() => {
-    void refetch(true)
-  }, Boolean(teacherId))
 
   const handleGenerate = async () => {
     const percent = Number(discountPercent)

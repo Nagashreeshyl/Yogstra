@@ -1,9 +1,8 @@
-import { useCallback } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Calendar, MapPin, Phone, User, MessageCircle } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { useAsyncData } from '../hooks/useAsyncData'
-import { useAppIntervalRefresh } from '../hooks/useIntervalRefresh'
+import { useLiveSync } from '../hooks/useLiveSync'
 import { fetchStudentById } from '../services/students'
 import { fetchPosts } from '../services/posts'
 import { Avatar } from '../components/ui/Avatar'
@@ -33,12 +32,8 @@ export function StudentProfilePage() {
     [],
   )
 
-  const refreshAll = useCallback(() => {
-    void refetchStudent(true)
-    void refetchPosts(true)
-  }, [refetchStudent, refetchPosts])
-
-  useAppIntervalRefresh(refreshAll, Boolean(id))
+  useLiveSync(refetchStudent, ['teachers'], Boolean(id))
+  useLiveSync(refetchPosts, ['posts'], Boolean(id))
 
   const studentPosts = (posts ?? []).filter((p) => p.studentId === id).slice(0, 6)
 

@@ -1,14 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Bell, CheckCheck, Check, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
 import { useTeacherNotificationCount } from '../../hooks/useTeacherNotificationCount'
 import {
   fetchTeacherNotifications,
   markAllNotificationsRead,
   markNotificationRead,
+  subscribeToTeacherNotifications,
 } from '../../services/teacherNotifications'
 import {
   approveScheduleChangeRequest,
@@ -31,10 +31,13 @@ export function TeacherNotificationsPage() {
     [teacherId],
   )
 
-  useAppIntervalRefresh(() => {
-    void refetch(true)
-    refreshCount()
-  }, Boolean(teacherId))
+  useEffect(() => {
+    if (!teacherId) return
+    return subscribeToTeacherNotifications(teacherId, () => {
+      void refetch(true)
+      refreshCount()
+    })
+  }, [teacherId, refetch, refreshCount])
 
   const unread = (notifications ?? []).filter((n) => !n.readAt).length
 

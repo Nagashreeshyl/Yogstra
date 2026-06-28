@@ -10,7 +10,6 @@ import {
 import { createPortal } from 'react-dom'
 import { useApp } from '../../context/AppContext'
 import { INCOMING_CALL_POLL_MS } from '../../constants/refresh'
-import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
 import {
   createDirectVideoCall,
   fetchDirectVideoCall,
@@ -129,10 +128,6 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
       },
     })
   }, [user, refreshCalls, applyIncomingCall])
-
-  useAppIntervalRefresh(() => {
-    void refreshCalls()
-  }, Boolean(user && (user.role === 'student' || user.role === 'teacher') && !activeCall && !outgoingCall))
 
   useEffect(() => {
     if (!user || activeCall || outgoingCall) return

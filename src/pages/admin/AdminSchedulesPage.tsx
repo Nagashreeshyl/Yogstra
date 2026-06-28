@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
+import { useLiveDataRefresh } from '../../hooks/useLiveDataRefresh'
 import { fetchAllTeachersAdmin } from '../../services/teachers'
 import { fetchSchedulesByTeacher } from '../../services/schedules'
 import { Select } from '../../components/ui/Select'
@@ -24,7 +24,7 @@ export function AdminSchedulesPage() {
     if (teacherId) void refetchSchedules(true)
   }, [refetchTeachers, refetchSchedules, teacherId])
 
-  useAppIntervalRefresh(refreshAll)
+  useLiveDataRefresh(refreshAll, ['schedules', 'teachers'])
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">

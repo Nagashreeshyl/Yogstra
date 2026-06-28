@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useAppIntervalRefresh } from './useIntervalRefresh'
 import {
   fetchUnreadNotificationCount,
   subscribeToTeacherNotifications,
@@ -18,8 +17,6 @@ export function useTeacherNotificationCount(teacherId: string | undefined) {
     if (!teacherId) return
     return subscribeToTeacherNotifications(teacherId, refresh)
   }, [teacherId, refresh])
-
-  useAppIntervalRefresh(refresh, Boolean(teacherId))
 
   return { count, refresh }
 }

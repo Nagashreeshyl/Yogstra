@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react'
 import { Flag } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
-import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
 import {
   fetchReportHistory,
   fetchReportedChatConversations,
@@ -50,8 +49,6 @@ export function AdminChatsPage() {
       unsubReports()
     }
   }, [refetch])
-
-  useAppIntervalRefresh(refetch)
 
   const selected =
     conversations?.find((c) => c.reportId === selectedReportId) ?? conversations?.[0] ?? null
