@@ -30,7 +30,7 @@ export function CategoryFlashCards({ onSelect }: CategoryFlashCardsProps) {
   return (
     <div className="rounded-sm border border-surface-inset bg-surface-elevated/80 p-4 shadow-sm">
       <h2 className="font-heading text-lg font-medium mb-4 text-charcoal">Browse by Style</h2>
-      <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
+      <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 lg:flex-wrap lg:overflow-visible lg:mx-0 lg:px-0">
         {categories.map((cat) => {
           const Icon = iconMap[cat.icon] || Flower2
           const isActive = selectedCategory === cat.name

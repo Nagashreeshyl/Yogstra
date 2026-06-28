@@ -9,7 +9,6 @@ import { CategoryFlashCards } from '../components/categories/CategoryFlashCards'
 import { CommunityFeed } from '../components/community/CommunityFeed'
 import { FeaturedTeachers, MobileFeaturedTeachers } from '../components/teachers/TeacherCard'
 import { CompetitionsTeaser } from '../components/competitions/CompetitionsTeaser'
-import { FeedPageLayout } from '../components/layout/FeedPageLayout'
 import { PostFeedSkeleton, TeacherGridSkeleton } from '../components/ui/Skeleton'
 import { competitions } from '../lib/constants'
 
@@ -34,7 +33,7 @@ export function ExplorePage() {
   ) : teachersError ? (
     <p className="text-sm text-red-600">Could not load teachers: {teachersError}</p>
   ) : featuredList.length === 0 ? (
-    <div className="border border-border rounded-sm p-6 text-center">
+    <div className="border border-border rounded-sm p-6 text-center bg-cream">
       <p className="text-charcoal/60 text-sm">No verified teachers yet.</p>
       <p className="text-charcoal/40 text-xs mt-1">Teachers appear after registration and admin approval.</p>
     </div>
@@ -46,32 +45,42 @@ export function ExplorePage() {
   )
 
   return (
-    <FeedPageLayout sidebar={sidebar}>
-      <div className="space-y-5 pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0">
-        {!teachersLoading && featuredList.length > 0 && (
-          <MobileFeaturedTeachers teachers={featuredList} />
-        )}
+    <div className="px-4 sm:px-6 py-5 sm:py-8 pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-8">
+      <div className="mx-auto max-w-6xl">
+        <div className="flex flex-col lg:flex-row lg:items-start gap-6 lg:gap-10">
+          <div className="flex-1 min-w-0 space-y-5 lg:space-y-8">
+            {!teachersLoading && featuredList.length > 0 && (
+              <MobileFeaturedTeachers teachers={featuredList} />
+            )}
 
-        <SearchBar placeholder="Search teachers, styles..." />
-        <CategoryFlashCards />
+            <SearchBar placeholder="Search teachers, styles..." />
+            <CategoryFlashCards />
 
-        <section>
-          {postsLoading ? (
-            <PostFeedSkeleton count={2} />
-          ) : postsError ? (
-            <p className="text-sm text-red-600 border border-red-200 bg-red-50 px-4 py-3 rounded-sm">
-              Could not load posts: {postsError}
-            </p>
-          ) : (posts ?? []).length === 0 ? (
-            <div className="border border-border rounded-sm p-8 text-center">
-              <p className="text-charcoal/60 text-sm">No community posts yet.</p>
-              <p className="text-charcoal/40 text-xs mt-1">Posts from the community will appear here.</p>
-            </div>
-          ) : (
-            <CommunityFeed posts={posts ?? []} variant="instagram" showTitle={false} />
-          )}
-        </section>
+            <section className="w-full max-w-[470px] mx-auto lg:mx-0 lg:max-w-none">
+              {postsLoading ? (
+                <PostFeedSkeleton count={2} />
+              ) : postsError ? (
+                <p className="text-sm text-red-600 border border-red-200 bg-red-50 px-4 py-3 rounded-sm">
+                  Could not load posts: {postsError}
+                </p>
+              ) : (posts ?? []).length === 0 ? (
+                <div className="border border-border rounded-sm p-8 text-center bg-cream">
+                  <p className="text-charcoal/60 text-sm">No community posts yet.</p>
+                  <p className="text-charcoal/40 text-xs mt-1">Posts from the community will appear here.</p>
+                </div>
+              ) : (
+                <div className="lg:max-w-[520px]">
+                  <CommunityFeed posts={posts ?? []} variant="instagram" showTitle={false} />
+                </div>
+              )}
+            </section>
+          </div>
+
+          <aside className="hidden lg:block w-[280px] shrink-0 space-y-8 sticky top-6">
+            {sidebar}
+          </aside>
+        </div>
       </div>
-    </FeedPageLayout>
+    </div>
   )
 }

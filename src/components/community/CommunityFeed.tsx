@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Heart, MessageCircle, Share2, BadgeCheck, MoreHorizontal } from 'lucide-react'
+import { Heart, MessageCircle, Share2, BadgeCheck, MoreHorizontal, Pin } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { Avatar } from '../ui/Avatar'
 import { Badge } from '../ui/Badge'
@@ -91,11 +91,19 @@ function PostCard({
 
   if (isInstagram) {
     return (
-      <article className="border border-border/70 rounded-sm bg-cream overflow-hidden">
+      <article className={`border rounded-sm bg-cream overflow-hidden ${post.pinned ? 'border-teal/40' : 'border-border/70'}`}>
         <div className="flex items-center gap-3 px-3 py-2.5">
           <Avatar src={post.studentAvatar} name={post.studentName} size={32} />
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold leading-tight truncate">{post.studentName}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-semibold leading-tight truncate">{post.studentName}</p>
+              {post.pinned && (
+                <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-teal shrink-0">
+                  <Pin size={10} />
+                  Pinned
+                </span>
+              )}
+            </div>
             {post.level && (
               <p className="text-[11px] text-charcoal/45 leading-tight mt-0.5">{post.level}</p>
             )}
@@ -220,6 +228,12 @@ function PostCard({
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold">{post.studentName}</span>
             <Badge>{post.level}</Badge>
+            {post.pinned && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-teal">
+                <Pin size={10} />
+                Pinned
+              </span>
+            )}
           </div>
           <span className="text-xs text-charcoal/50">{post.date}</span>
         </div>

@@ -16,27 +16,44 @@ const postSelect = `
   )
 `
 
-// VERIFIED: community posts — student create with media, realtime feed, admin remove
-export async function fetchPosts(limit?: number): Promise<CommunityPost[]> {
-  let query = supabase
-    .from('posts')
-    .select(postSelect)
-    .order('created_at', { ascending: false })
+// VERIFIED: community posts — student/admin create, pin to top, admin remove
+function isMissingPinnedColumn(error: { code?: string; message?: string }) {
+  return error.code === 'PGRST204' || Boolean(error.message?.includes('pinned'))
+}
 
-  if (limit) {
-    query = query.limit(limit)
+export async function fetchPosts(limit?: number): Promise<CommunityPost[]> {
+  const runQuery = (withPinSort: boolean) => {
+    let query = supabase.from('posts').select(postSelect)
+    if (withPinSort) {
+      query = query.order('pinned', { ascending: false })
+    }
+    query = query.order('created_at', { ascending: false })
+    if (limit) query = query.limit(limit)
+    return query
   }
 
-  const { data, error } = await query
+  let result = await runQuery(true)
+  if (result.error && isMissingPinnedColumn(result.error)) {
+    result = await runQuery(false)
+  }
 
-  if (error) throw error
-  return (data ?? []).map((row) => mapPost(row))
+  if (result.error) throw result.error
+  const mapped = (result.data ?? []).map((row) => mapPost(row))
+  return sortPostsByPin(mapped)
+}
+
+function sortPostsByPin(posts: CommunityPost[]): CommunityPost[] {
+  return [...posts].sort((a, b) => {
+    if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
+    return 0
+  })
 }
 
 export async function createPost(params: {
   authorId: string
   content: string
   mediaFile?: File
+  pinned?: boolean
 }) {
   const { data: session } = await supabase.auth.getSession()
   const userId = session.session?.user.id
@@ -80,12 +97,18 @@ export async function createPost(params: {
       content,
       media_url: mediaUrl,
       media_type: mediaType,
+      pinned: params.pinned ?? false,
     })
     .select(postSelect)
     .single()
 
   if (error) throw error
   return mapPost(data)
+}
+
+export async function updatePostPin(id: string, pinned: boolean) {
+  const { error } = await supabase.from('posts').update({ pinned }).eq('id', id)
+  if (error) throw error
 }
 
 export async function deletePost(id: string) {

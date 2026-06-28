@@ -7,7 +7,7 @@ import { PublicFooter } from './PublicFooter'
 export function AppLayout() {
   return (
     <>
-      <ResponsiveShell sidebar={<AppSidebar />} mainClassName="bg-surface lg:bg-cream">
+      <ResponsiveShell sidebar={<AppSidebar />} mainClassName="bg-cream">
         <div className="flex flex-col min-h-full">
           <Outlet />
           <PublicFooter />

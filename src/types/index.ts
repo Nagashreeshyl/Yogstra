@@ -73,6 +73,7 @@ export interface CommunityPost {
   likes: number
   comments: number
   date: string
+  pinned: boolean
   teacherComment?: {
     teacherName: string
     text: string

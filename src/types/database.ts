@@ -42,6 +42,7 @@ export interface DbPost {
   media_url: string | null
   media_type: 'image' | 'video' | null
   likes: number | null
+  pinned?: boolean | null
   created_at: string
 }
 

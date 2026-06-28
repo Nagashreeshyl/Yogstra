@@ -18,7 +18,8 @@ import { Textarea } from '../ui/Textarea'
 interface CreatePostModalProps {
   isOpen: boolean
   onClose: () => void
-  onPost: (data: { text: string; file?: File }) => void | Promise<void>
+  onPost: (data: { text: string; file?: File; pinned?: boolean }) => void | Promise<void>
+  showPinOption?: boolean
 }
 
 type MediaPreview = {
@@ -27,10 +28,11 @@ type MediaPreview = {
   file: File
 }
 
-export function CreatePostModal({ isOpen, onClose, onPost }: CreatePostModalProps) {
+export function CreatePostModal({ isOpen, onClose, onPost, showPinOption = false }: CreatePostModalProps) {
   const { user } = useApp()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [caption, setCaption] = useState('')
+  const [pinned, setPinned] = useState(false)
   const [media, setMedia] = useState<MediaPreview | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [showCropModal, setShowCropModal] = useState(false)
@@ -60,6 +62,7 @@ export function CreatePostModal({ isOpen, onClose, onPost }: CreatePostModalProp
 
   const reset = useCallback(() => {
     setCaption('')
+    setPinned(false)
     setMedia((prev) => {
       if (prev) URL.revokeObjectURL(prev.url)
       return null
@@ -163,6 +166,7 @@ export function CreatePostModal({ isOpen, onClose, onPost }: CreatePostModalProp
     onPost({
       text: caption.trim(),
       file: media?.file,
+      pinned: showPinOption ? pinned : undefined,
     })
     reset()
   }
@@ -278,6 +282,23 @@ export function CreatePostModal({ isOpen, onClose, onPost }: CreatePostModalProp
               onChange={(e) => setCaption(e.target.value)}
               className="flex-1 min-h-[120px] md:min-h-[200px] border-0 px-0 focus:border-0 resize-none"
             />
+
+            {showPinOption && (
+              <label className="mt-4 flex items-start gap-3 rounded-sm border border-border bg-cream-dark/40 px-3 py-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={pinned}
+                  onChange={(e) => setPinned(e.target.checked)}
+                  className="mt-0.5 accent-teal"
+                />
+                <span>
+                  <span className="block text-sm font-medium text-charcoal">Pin to top</span>
+                  <span className="block text-xs text-charcoal/55 mt-0.5">
+                    Pinned posts stay at the top of the community feed.
+                  </span>
+                </span>
+              </label>
+            )}
 
             {media && (
               <button

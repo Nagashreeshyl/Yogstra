@@ -90,19 +90,26 @@ export function mapStudent(row: DbProfile | ProfileWithTeacher, email = '', sess
 
 export function mapPost(row: PostWithRelations): CommunityPost {
   const teacherComment = row.comments?.find((c) => c.author?.role === 'teacher')
+  const authorRole = row.author?.role
 
   return {
     id: row.id,
     studentId: row.author_id ?? '',
     studentName: row.author?.full_name ?? 'Unknown',
     studentAvatar: row.author?.avatar_url ?? '',
-    level: row.author?.role === 'teacher' ? 'Teacher' : 'Student',
+    level:
+      authorRole === 'admin'
+        ? 'Yogstra'
+        : authorRole === 'teacher'
+          ? 'Teacher'
+          : 'Student',
     text: row.content ?? '',
     image: row.media_type === 'image' ? row.media_url ?? undefined : undefined,
     video: row.media_type === 'video' ? row.media_url ?? undefined : undefined,
     likes: row.likes ?? 0,
     comments: row.comments?.length ?? 0,
     date: formatRelativeDate(row.created_at),
+    pinned: Boolean(row.pinned),
     teacherComment: teacherComment
       ? {
           teacherName: teacherComment.author?.full_name ?? 'Teacher',
