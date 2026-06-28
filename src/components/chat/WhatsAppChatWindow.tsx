@@ -1,4 +1,4 @@
-import { ArrowLeft, BadgeCheck, CornerUpLeft, Search, Send, ShoppingBag, X } from 'lucide-react'
+import { ArrowLeft, BadgeCheck, CornerUpLeft, Search, Send, ShoppingBag, Video, X } from 'lucide-react'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Avatar } from '../ui/Avatar'
@@ -25,6 +25,8 @@ import { BuyClassModal } from './BuyClassModal'
 import { ChatEphemeralToast } from './ChatEphemeralToast'
 import { ChatMessageMenu } from './ChatMessageMenu'
 import { ChatHeaderMenu, ReportChatModal } from './ReportChatModal'
+import { useDirectVideoCall } from './DirectVideoCallProvider'
+import { canDirectVideoCall } from '../../services/directVideoCalls'
 
 interface WhatsAppChatWindowProps {
   threadId: string
@@ -73,6 +75,8 @@ export function WhatsAppChatWindow({
     hidden: false,
   })
   const [replyTo, setReplyTo] = useState<{ id: string; content: string } | null>(null)
+  const [startingCall, setStartingCall] = useState(false)
+  const { startCall, callBusy } = useDirectVideoCall()
 
   const canBuyClass = currentUserRole === 'student' && participantRole === 'teacher'
   const { hasActivePurchase, refetchActivePurchase } = useActiveClassPurchase(
@@ -83,6 +87,12 @@ export function WhatsAppChatWindow({
 
   const showBuyButton = canBuyClass && !hasActivePurchase
   const isBlocked = threadSettings.blocked
+  const showVideoCall = canDirectVideoCall({
+    currentUserRole,
+    participantRole,
+    threadStatus: 'accepted',
+    blocked: isBlocked,
+  })
 
   const lastReadAt = messages.at(-1)?.createdAt
 
@@ -171,6 +181,23 @@ export function WhatsAppChatWindow({
     currentUserRole,
   )
 
+  const handleVideoCall = async () => {
+    if (!showVideoCall || callBusy || startingCall) return
+    setStartingCall(true)
+    try {
+      await startCall({
+        threadId,
+        calleeId: participantId,
+        calleeName: participantName,
+        calleeAvatar: participantAvatar,
+      })
+    } catch {
+      flashNotice('Could not start video call. Run supabase/direct-video-calls.sql in Supabase.')
+    } finally {
+      setStartingCall(false)
+    }
+  }
+
   const handleCopy = async (text: string) => {
     try {
       await navigator.clipboard.writeText(stripProfileTokens(text))
@@ -225,6 +252,18 @@ export function WhatsAppChatWindow({
             </div>
           </button>
           <div className="flex items-center gap-1 shrink-0">
+            {showVideoCall && (
+              <button
+                type="button"
+                onClick={() => void handleVideoCall()}
+                disabled={callBusy || startingCall}
+                className="p-2 text-cream/70 hover:text-teal rounded-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                aria-label="Video call"
+                title="Video call"
+              >
+                <Video size={20} />
+              </button>
+            )}
             {showBuyButton && (
               <Button
                 size="sm"
