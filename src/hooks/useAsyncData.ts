@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { formatUserFacingError } from '../utils/format'
 
 interface UseAsyncDataOptions {
   /** When false, skip fetching until enabled (keeps prior data). */
@@ -26,7 +27,7 @@ export function useAsyncData<T>(
       setData(result)
       if (silent) setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
+      setError(formatUserFacingError(err))
     } finally {
       if (!silent) setLoading(false)
     }

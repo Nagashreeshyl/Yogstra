@@ -31,7 +31,9 @@ export function ExplorePage() {
       <TeacherGridSkeleton count={3} />
     </div>
   ) : teachersError ? (
-    <p className="text-sm text-red-600">Could not load teachers: {teachersError}</p>
+    <p className="text-sm text-red-600 border border-red-200 bg-red-50 px-4 py-3 rounded-sm">
+      Unable to load teachers right now. Please refresh the page.
+    </p>
   ) : featuredList.length === 0 ? (
     <div className="border border-border rounded-sm p-6 text-center bg-cream">
       <p className="text-charcoal/60 text-sm">No verified teachers yet.</p>
@@ -61,7 +63,7 @@ export function ExplorePage() {
                 <PostFeedSkeleton count={2} />
               ) : postsError ? (
                 <p className="text-sm text-red-600 border border-red-200 bg-red-50 px-4 py-3 rounded-sm">
-                  Could not load posts: {postsError}
+                  Unable to load community posts right now. Please refresh the page.
                 </p>
               ) : (posts ?? []).length === 0 ? (
                 <div className="border border-border rounded-sm p-8 text-center bg-cream">

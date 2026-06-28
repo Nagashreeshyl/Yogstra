@@ -5,6 +5,8 @@ import {
   useEffect,
   useRef,
   useState,
+  lazy,
+  Suspense,
   type ReactNode,
 } from 'react'
 import { createPortal } from 'react-dom'
@@ -23,8 +25,11 @@ import {
   type DirectVideoCallStatus,
 } from '../../services/directVideoCalls'
 import { ChatVideoCallRingOverlay } from './ChatVideoCallRingOverlay'
-import { DirectVideoCallRoom } from './DirectVideoCallRoom'
 import { preflightCameraAndMic } from '../../utils/preflightMedia'
+
+const DirectVideoCallRoom = lazy(() =>
+  import('./DirectVideoCallRoom').then((m) => ({ default: m.DirectVideoCallRoom })),
+)
 
 const OUTGOING_RING_MS = 45_000
 const TERMINAL_STATUSES: DirectVideoCallStatus[] = ['ended', 'declined', 'missed']
@@ -346,15 +351,17 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
         )}
 
         {liveKitCall && user && (
-          <DirectVideoCallRoom
-            call={liveKitCall}
-            participantName={user.name}
-            participantId={user.id}
-            otherName={otherParty(liveKitCall).name}
-            ringing={isCallerRinging}
-            onLeave={handleLeaveCall}
-            onRemoteEnd={handleRemoteEnd}
-          />
+          <Suspense fallback={null}>
+            <DirectVideoCallRoom
+              call={liveKitCall}
+              participantName={user.name}
+              participantId={user.id}
+              otherName={otherParty(liveKitCall).name}
+              ringing={isCallerRinging}
+              onLeave={handleLeaveCall}
+              onRemoteEnd={handleRemoteEnd}
+            />
+          </Suspense>
         )}
 
         {callNotice && !activeCall && !outgoingCall && !incomingCall && (

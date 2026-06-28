@@ -76,5 +76,19 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), tailwindcss(), livekitTokenDevMiddleware()],
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules/@livekit') || id.includes('node_modules/livekit-client')) {
+              return 'livekit'
+            }
+            if (id.includes('node_modules/react-dom') || id.includes('node_modules/react-router')) {
+              return 'vendor'
+            }
+          },
+        },
+      },
+    },
   }
 })

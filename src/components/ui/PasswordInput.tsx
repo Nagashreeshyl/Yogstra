@@ -27,7 +27,7 @@ export function PasswordInput({ label, value, onChange, required, id }: Password
           required={required}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full px-4 py-2.5 pr-11 bg-cream border border-border rounded-sm text-charcoal placeholder:text-charcoal/40 focus:outline-none focus:border-teal transition-colors"
+          className="w-full px-4 py-2.5 pr-11 text-base sm:text-sm bg-cream border border-border rounded-sm text-charcoal placeholder:text-charcoal/40 focus:outline-none focus:border-teal transition-colors"
         />
         <button
           type="button"

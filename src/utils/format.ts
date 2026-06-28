@@ -64,7 +64,35 @@ export function formatAuthError(err: unknown): string {
     if (msg.includes('Email not confirmed')) {
       return 'Please confirm your email before signing in.'
     }
-    return msg
+    return formatUserFacingError(err, 'Authentication failed. Please try again.')
   }
   return 'Something went wrong. Please try again.'
+}
+
+/** Maps API/Supabase errors to plain language — never expose status codes, SQL, or stack details. */
+export function formatUserFacingError(
+  err: unknown,
+  fallback = 'Something went wrong. Please try again.',
+): string {
+  const raw =
+    err instanceof Error
+      ? err.message
+      : typeof err === 'object' && err !== null && 'message' in err
+        ? String((err as { message: unknown }).message)
+        : typeof err === 'string'
+          ? err
+          : ''
+
+  if (!raw.trim()) return fallback
+
+  if (
+    /PGRST\d+|JWT|row.level security|permission denied|violates|Run supabase\//i.test(raw) ||
+    /^\d{3}\s|Unprocessable Entity|Internal Server Error|NetworkError|Failed to fetch/i.test(raw)
+  ) {
+    return fallback
+  }
+
+  if (raw.length > 160) return fallback
+
+  return raw
 }

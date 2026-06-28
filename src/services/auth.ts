@@ -292,6 +292,16 @@ export async function signOut() {
   if (error) throw error
 }
 
+export async function requestPasswordReset(email: string) {
+  const trimmed = email.trim()
+  if (!trimmed) throw new Error('Enter your email address.')
+
+  const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
+    redirectTo: `${window.location.origin}/auth/student`,
+  })
+  if (error) throw error
+}
+
 export async function getSession() {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session?.user) return null

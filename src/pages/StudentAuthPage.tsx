@@ -6,6 +6,7 @@ import { PasswordInput } from '../components/ui/PasswordInput'
 import { Button } from '../components/ui/Button'
 import { formatAuthError } from '../utils/format'
 import { getPostLoginPath } from '../utils/authRouting'
+import { requestPasswordReset } from '../services/auth'
 
 export function StudentAuthPage() {
   const [mode, setMode] = useState<'login' | 'signup'>('login')
@@ -53,6 +54,24 @@ export function StudentAuthPage() {
 
       const profile = await signIn(form.email, form.password)
       navigate(getPostLoginPath(profile))
+    } catch (err) {
+      setError(formatAuthError(err))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleForgotPassword = async () => {
+    setError(null)
+    setSuccess(null)
+    if (!form.email.trim()) {
+      setError('Enter your email above, then tap Forgot Password.')
+      return
+    }
+    setLoading(true)
+    try {
+      await requestPasswordReset(form.email)
+      setSuccess('Password reset link sent. Check your email and follow the link to set a new password.')
     } catch (err) {
       setError(formatAuthError(err))
     } finally {
@@ -138,7 +157,12 @@ export function StudentAuthPage() {
 
           {mode === 'login' && (
             <div className="text-right">
-              <button type="button" className="text-sm text-teal hover:underline cursor-pointer">
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => void handleForgotPassword()}
+                className="text-sm text-teal hover:underline cursor-pointer disabled:opacity-50"
+              >
                 Forgot Password?
               </button>
             </div>
