@@ -150,50 +150,102 @@ export async function fetchUserActiveDirectCall(userId: string): Promise<DirectV
   return data ? mapCall(data as Record<string, unknown>) : null
 }
 
-type Listener = () => void
+type CallChangeHandlers = {
+  onChange: () => void
+  /** Fired immediately when someone starts ringing this user (INSERT). */
+  onIncomingRinging?: (callId: string) => void
+  /** Fired when a ringing call targeting this user changes status (UPDATE). */
+  onIncomingUpdated?: (call: DirectVideoCall) => void
+}
 
-const userCallChannels = new Map<
-  string,
-  { channel: ReturnType<typeof supabase.channel>; listeners: Set<Listener> }
->()
+type HandlerEntry = {
+  handlers: Set<CallChangeHandlers>
+  channel: ReturnType<typeof supabase.channel> | null
+}
 
-export function subscribeToDirectVideoCalls(userId: string, onChange: () => void) {
+const userCallChannels = new Map<string, HandlerEntry>()
+
+function notifyHandlers(entry: HandlerEntry, fn: (h: CallChangeHandlers) => void) {
+  entry.handlers.forEach((h) => fn(h))
+}
+
+function ensureDirectVideoCallChannel(userId: string) {
   let entry = userCallChannels.get(userId)
   if (!entry) {
-    const listeners = new Set<Listener>()
-    const channel = supabase
-      .channel(`direct_video_calls:${userId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'direct_video_calls',
-          filter: `caller_id=eq.${userId}`,
-        },
-        () => listeners.forEach((l) => l()),
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'direct_video_calls',
-          filter: `callee_id=eq.${userId}`,
-        },
-        () => listeners.forEach((l) => l()),
-      )
-      .subscribe()
-
-    entry = { channel, listeners }
+    entry = { handlers: new Set(), channel: null }
     userCallChannels.set(userId, entry)
   }
 
-  entry.listeners.add(onChange)
+  if (entry.channel) return entry
+
+  const channel = supabase
+    .channel(`direct_video_calls:${userId}`, {
+      config: { broadcast: { self: false } },
+    })
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'direct_video_calls',
+        filter: `callee_id=eq.${userId}`,
+      },
+      (payload) => {
+        const row = payload.new as Record<string, unknown>
+        const call = mapCall(row)
+        if (call.status === 'ringing' && call.calleeId === userId) {
+          notifyHandlers(entry!, (h) => h.onIncomingRinging?.(call.id))
+        }
+        notifyHandlers(entry!, (h) => h.onChange())
+      },
+    )
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'direct_video_calls',
+        filter: `callee_id=eq.${userId}`,
+      },
+      (payload) => {
+        const call = mapCall(payload.new as Record<string, unknown>)
+        notifyHandlers(entry!, (h) => h.onIncomingUpdated?.(call))
+        notifyHandlers(entry!, (h) => h.onChange())
+      },
+    )
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'direct_video_calls',
+        filter: `caller_id=eq.${userId}`,
+      },
+      () => notifyHandlers(entry!, (h) => h.onChange()),
+    )
+    .subscribe((status) => {
+      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        void supabase.removeChannel(channel)
+        entry!.channel = null
+        window.setTimeout(() => {
+          if (entry!.handlers.size > 0) ensureDirectVideoCallChannel(userId)
+        }, 1_500)
+      }
+    })
+
+  entry.channel = channel
+  return entry
+}
+
+export function subscribeToDirectVideoCalls(userId: string, handlers: CallChangeHandlers) {
+  const entry = ensureDirectVideoCallChannel(userId)
+  entry.handlers.add(handlers)
+
   return () => {
-    entry!.listeners.delete(onChange)
-    if (entry!.listeners.size === 0) {
-      void supabase.removeChannel(entry!.channel)
+    entry.handlers.delete(handlers)
+    if (entry.handlers.size === 0 && entry.channel) {
+      void supabase.removeChannel(entry.channel)
+      entry.channel = null
       userCallChannels.delete(userId)
     }
   }

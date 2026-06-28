@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import { useApp } from '../../context/AppContext'
+import { INCOMING_CALL_POLL_MS } from '../../constants/refresh'
 import { useAppIntervalRefresh } from '../../hooks/useIntervalRefresh'
 import {
   createDirectVideoCall,
@@ -52,6 +53,13 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
   const [activeCall, setActiveCall] = useState<DirectVideoCall | null>(null)
   const [callNotice, setCallNotice] = useState<string | null>(null)
   const outgoingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const activeCallRef = useRef<DirectVideoCall | null>(null)
+  const incomingCallRef = useRef<DirectVideoCall | null>(null)
+  const outgoingCallRef = useRef<DirectVideoCall | null>(null)
+
+  activeCallRef.current = activeCall
+  incomingCallRef.current = incomingCall
+  outgoingCallRef.current = outgoingCall
 
   const clearOutgoingTimer = () => {
     if (outgoingTimerRef.current) {
@@ -60,14 +68,22 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const applyIncomingCall = useCallback(async (callId: string) => {
+    if (activeCallRef.current) return
+    const call = await fetchDirectVideoCall(callId)
+    if (call?.status === 'ringing' && call.calleeId === user?.id) {
+      setIncomingCall(call)
+    }
+  }, [user?.id])
+
   const refreshCalls = useCallback(async () => {
     if (!user || (user.role !== 'student' && user.role !== 'teacher')) {
       setIncomingCall(null)
-      if (!activeCall) setOutgoingCall(null)
+      if (!activeCallRef.current) setOutgoingCall(null)
       return
     }
 
-    if (activeCall) return
+    if (activeCallRef.current) return
 
     const incoming = await fetchIncomingRingingCall(user.id)
     setIncomingCall(incoming)
@@ -83,7 +99,7 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
     if (active?.status === 'ringing' && active.callerId === user.id) {
       setOutgoingCall((prev) => prev ?? active)
     }
-  }, [user, activeCall])
+  }, [user])
 
   useEffect(() => {
     void refreshCalls()
@@ -91,14 +107,60 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!user || (user.role !== 'student' && user.role !== 'teacher')) return
-    return subscribeToDirectVideoCalls(user.id, () => {
-      void refreshCalls()
+
+    return subscribeToDirectVideoCalls(user.id, {
+      onChange: () => {
+        void refreshCalls()
+      },
+      onIncomingRinging: (callId) => {
+        void applyIncomingCall(callId)
+      },
+      onIncomingUpdated: (call) => {
+        if (call.status === 'ringing' && call.calleeId === user.id) {
+          void applyIncomingCall(call.id)
+          return
+        }
+        if (incomingCallRef.current?.id === call.id && call.status !== 'ringing') {
+          setIncomingCall(null)
+        }
+      },
     })
-  }, [user, refreshCalls])
+  }, [user, refreshCalls, applyIncomingCall])
 
   useAppIntervalRefresh(() => {
     void refreshCalls()
   }, Boolean(user && (user.role === 'student' || user.role === 'teacher') && !activeCall))
+
+  useEffect(() => {
+    if (!user || activeCall) return
+    if (user.role !== 'student' && user.role !== 'teacher') return
+
+    const id = window.setInterval(() => {
+      void refreshCalls()
+    }, INCOMING_CALL_POLL_MS)
+
+    return () => window.clearInterval(id)
+  }, [user, activeCall, refreshCalls])
+
+  useEffect(() => {
+    const wake = () => {
+      void refreshCalls()
+    }
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') wake()
+    }
+
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('focus', wake)
+    window.addEventListener('pageshow', wake)
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('focus', wake)
+      window.removeEventListener('pageshow', wake)
+    }
+  }, [refreshCalls])
 
   useEffect(() => {
     if (!outgoingCall || outgoingCall.callerId !== user?.id) {
@@ -145,7 +207,7 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
       calleeAvatar?: string
     }) => {
       if (!user) return
-      if (activeCall || outgoingCall || incomingCall) {
+      if (activeCallRef.current || outgoingCallRef.current || incomingCallRef.current) {
         setCallNotice('Already on a call')
         return
       }
@@ -158,7 +220,7 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
       })
       setOutgoingCall(call)
     },
-    [user, activeCall, outgoingCall, incomingCall],
+    [user],
   )
 
   const handleAcceptIncoming = async () => {
@@ -214,11 +276,15 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(timer)
   }, [callNotice])
 
+  const canReceiveCalls = Boolean(
+    user && (user.role === 'student' || user.role === 'teacher'),
+  )
+
   return (
     <DirectVideoCallContext.Provider value={{ startCall, callBusy }}>
       {children}
 
-      {incomingCall && !activeCall && (
+      {canReceiveCalls && incomingCall && !activeCall && (
         <ChatVideoCallRingOverlay
           callId={incomingCall.id}
           peerName={otherParty(incomingCall).name}
@@ -229,7 +295,7 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
         />
       )}
 
-      {outgoingCall && !activeCall && (
+      {canReceiveCalls && outgoingCall && !activeCall && (
         <ChatVideoCallRingOverlay
           callId={outgoingCall.id}
           peerName={otherParty(outgoingCall).name}
@@ -239,7 +305,7 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
         />
       )}
 
-      {activeCall && user && (
+      {canReceiveCalls && activeCall && user && (
         <DirectVideoCallRoom
           call={activeCall}
           participantName={user.name}

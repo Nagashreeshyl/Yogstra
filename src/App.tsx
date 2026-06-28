@@ -43,11 +43,13 @@ import { AdminPayoutsPage } from './pages/admin/AdminPayoutsPage'
 import { AdminCategoriesPage } from './pages/admin/AdminCategoriesPage'
 import { AdminSettingsPage } from './pages/admin/AdminSettingsPage'
 import { InstallAppPrompt } from './components/pwa/InstallAppPrompt'
+import { DirectVideoCallProvider } from './components/chat/DirectVideoCallProvider'
 
 export default function App() {
   return (
     <AppProvider>
       <AppRefreshProvider>
+      <DirectVideoCallProvider>
       <BrowserRouter>
         <InstallAppPrompt variant="banner" />
         <Routes>
@@ -135,6 +137,7 @@ export default function App() {
           </Route>
         </Routes>
       </BrowserRouter>
+      </DirectVideoCallProvider>
       </AppRefreshProvider>
     </AppProvider>
   )
