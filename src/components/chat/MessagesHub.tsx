@@ -241,72 +241,72 @@ export function MessagesHub() {
     }
   }, [inChatView])
 
+  const showListChrome = !inChatView
+
   return (
     <div
       className={`h-full flex flex-col min-h-0 ${
         inChatView ? 'p-0 md:p-4 sm:p-6 lg:p-8' : 'p-4 sm:p-6 lg:p-8'
       }`}
     >
-      {!inChatView && (
-        <>
-          <div className="flex items-center flex-wrap gap-2 mb-4 shrink-0">
-            <h1 className="text-xl font-semibold">Messages</h1>
-            {unreadTotal > 0 && (
-              <span className="text-xs font-semibold text-cream bg-teal px-2.5 py-1 rounded-full">
-                {unreadTotal} unread
-              </span>
-            )}
-            {incomingCount > 0 && (
-              <span className="text-xs font-semibold text-teal bg-teal-soft px-2 py-1 rounded-full">
-                {incomingCount} new request{incomingCount === 1 ? '' : 's'}
-              </span>
-            )}
-            {outgoingCount > 0 && (
-              <span className="text-xs font-semibold text-amber-800 bg-amber-100 px-2 py-1 rounded-full">
-                {outgoingCount} sent
-              </span>
-            )}
-          </div>
-
-          {fetchError && (
-            <p className="text-sm text-red-600 mb-4 border border-red-200 bg-cream px-4 py-3 rounded-sm">
-              {fetchError}
-            </p>
+      <div className={showListChrome ? 'contents' : 'hidden md:contents'}>
+        <div className="flex items-center flex-wrap gap-2 mb-4 shrink-0">
+          <h1 className="text-xl font-semibold">Messages</h1>
+          {unreadTotal > 0 && (
+            <span className="text-xs font-semibold text-cream bg-teal px-2.5 py-1 rounded-full">
+              {unreadTotal} unread
+            </span>
           )}
+          {incomingCount > 0 && (
+            <span className="text-xs font-semibold text-teal bg-teal-soft px-2 py-1 rounded-full">
+              {incomingCount} new request{incomingCount === 1 ? '' : 's'}
+            </span>
+          )}
+          {outgoingCount > 0 && (
+            <span className="text-xs font-semibold text-amber-800 bg-amber-100 px-2 py-1 rounded-full">
+              {outgoingCount} sent
+            </span>
+          )}
+        </div>
 
-          <div className="flex gap-1 mb-4 shrink-0 border-b border-border">
-            {(['students', 'teachers'] as const).map((t) => {
-              const tabUnread = t === 'students' ? studentsTabUnread : teachersTabUnread
-              const tabRequests = t === 'students' ? studentsTabBadge : 0
-              const tabIndicator = tabUnread + tabRequests
+        {fetchError && (
+          <p className="text-sm text-red-600 mb-4 border border-red-200 bg-cream px-4 py-3 rounded-sm">
+            {fetchError}
+          </p>
+        )}
 
-              return (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => handleTabChange(t)}
-                  className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold capitalize cursor-pointer border-b-2 -mb-px transition-colors ${
-                    tab === t
-                      ? 'border-teal text-charcoal'
-                      : 'border-transparent text-charcoal/45 hover:text-charcoal/70'
-                  }`}
-                >
-                  {t}
-                  {tabIndicator > 0 && (
-                    <span
-                      className={`min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center rounded-full text-[10px] font-bold ${
-                        tabUnread > 0 ? 'bg-teal text-cream' : 'bg-amber-500 text-cream'
-                      }`}
-                    >
-                      {tabIndicator > 99 ? '99+' : tabIndicator}
-                    </span>
-                  )}
-                </button>
-              )
-            })}
-          </div>
-        </>
-      )}
+        <div className="flex gap-1 mb-4 shrink-0 border-b border-border">
+          {(['students', 'teachers'] as const).map((t) => {
+            const tabUnread = t === 'students' ? studentsTabUnread : teachersTabUnread
+            const tabRequests = t === 'students' ? studentsTabBadge : 0
+            const tabIndicator = tabUnread + tabRequests
+
+            return (
+              <button
+                key={t}
+                type="button"
+                onClick={() => handleTabChange(t)}
+                className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold capitalize cursor-pointer border-b-2 -mb-px transition-colors ${
+                  tab === t
+                    ? 'border-teal text-charcoal'
+                    : 'border-transparent text-charcoal/45 hover:text-charcoal/70'
+                }`}
+              >
+                {t}
+                {tabIndicator > 0 && (
+                  <span
+                    className={`min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center rounded-full text-[10px] font-bold ${
+                      tabUnread > 0 ? 'bg-teal text-cream' : 'bg-amber-500 text-cream'
+                    }`}
+                  >
+                    {tabIndicator > 99 ? '99+' : tabIndicator}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      </div>
 
       {inChatView && fetchError && (
         <p className="text-sm text-red-600 mb-4 border border-red-200 bg-cream px-4 py-3 rounded-sm shrink-0">
