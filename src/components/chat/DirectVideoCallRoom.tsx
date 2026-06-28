@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   LiveKitRoom,
+  RoomAudioRenderer,
   VideoTrack,
   useLocalParticipant,
   useRemoteParticipants,
+  useRoomContext,
   useTracks,
 } from '@livekit/components-react'
-import { Track } from 'livekit-client'
+import '@livekit/components-styles'
+import { RoomEvent, Track, type RemoteParticipant, type RemoteTrackPublication } from 'livekit-client'
 import { Loader2, Mic, MicOff, PhoneOff, Video, VideoOff } from 'lucide-react'
 import { ClassRoomAudioSetup } from '../classes/ClassRoomAudioSetup'
 import {
@@ -28,10 +31,53 @@ interface DirectVideoCallRoomProps {
   onRemoteEnd?: (status: DirectVideoCallStatus) => void
 }
 
+/** Force-subscribe to remote camera/mic — some mobile browsers miss autoSubscribe. */
+function RemoteMediaSubscription() {
+  const room = useRoomContext()
+
+  useEffect(() => {
+    const subscribeParticipant = (participant: RemoteParticipant) => {
+      participant.trackPublications.forEach((publication: RemoteTrackPublication) => {
+        if (publication.kind === Track.Kind.Audio || publication.kind === Track.Kind.Video) {
+          void publication.setSubscribed(true)
+        }
+      })
+    }
+
+    const subscribeAll = () => {
+      room.remoteParticipants.forEach(subscribeParticipant)
+    }
+
+    const onTrackPublished = (publication: RemoteTrackPublication, participant: RemoteParticipant) => {
+      if (publication.kind === Track.Kind.Audio || publication.kind === Track.Kind.Video) {
+        void publication.setSubscribed(true)
+      }
+      subscribeParticipant(participant)
+    }
+
+    subscribeAll()
+
+    room.on(RoomEvent.ParticipantConnected, subscribeParticipant)
+    room.on(RoomEvent.TrackPublished, onTrackPublished)
+
+    return () => {
+      room.off(RoomEvent.ParticipantConnected, subscribeParticipant)
+      room.off(RoomEvent.TrackPublished, onTrackPublished)
+    }
+  }, [room])
+
+  return null
+}
+
 function CallControls({ onEnd }: { onEnd: () => void }) {
   const { localParticipant } = useLocalParticipant()
   const [micOn, setMicOn] = useState(true)
   const [camOn, setCamOn] = useState(true)
+
+  useEffect(() => {
+    void localParticipant.setMicrophoneEnabled(true)
+    void localParticipant.setCameraEnabled(true)
+  }, [localParticipant])
 
   const toggleMic = async () => {
     const next = !micOn
@@ -77,32 +123,46 @@ function CallControls({ onEnd }: { onEnd: () => void }) {
 
 function CallVideoLayout({ otherName, onEnd }: { otherName: string; onEnd: () => void }) {
   const remoteParticipants = useRemoteParticipants()
-  const remote = remoteParticipants[0]
-  const allCameraTracks = useTracks([Track.Source.Camera], { onlySubscribed: true })
-  const remoteTrack = allCameraTracks.find((t) => t.participant.identity === remote?.identity)
-  const localTrack = allCameraTracks.find((t) => t.participant.isLocal)
+  const remoteParticipant = remoteParticipants[0]
+
+  const cameraTracks = useTracks([Track.Source.Camera], { onlySubscribed: true })
+  const remoteTrack =
+    cameraTracks.find((track) => !track.participant.isLocal) ??
+    cameraTracks.find((track) => track.participant.sid === remoteParticipant?.sid)
+  const localTrack = cameraTracks.find((track) => track.participant.isLocal)
 
   return (
     <div className="relative h-full w-full bg-charcoal overflow-hidden">
       <div className="absolute inset-0 flex items-center justify-center">
         {remoteTrack ? (
-          <VideoTrack trackRef={remoteTrack} className="w-full h-full object-cover" />
+          <VideoTrack
+            trackRef={remoteTrack}
+            className="w-full h-full [&>video]:w-full [&>video]:h-full [&>video]:object-cover"
+          />
         ) : (
           <div className="text-center px-6">
             <p className="text-cream/50 text-sm">Waiting for {otherName}…</p>
+            {remoteParticipants.length === 0 && (
+              <p className="text-cream/35 text-xs mt-2">Connecting video…</p>
+            )}
           </div>
         )}
       </div>
 
       {localTrack && (
         <div className="absolute top-[max(1rem,env(safe-area-inset-top))] right-4 w-28 h-40 sm:w-32 sm:h-44 rounded-xl overflow-hidden border-2 border-cream/20 shadow-xl z-10 [transform:scaleX(-1)]">
-          <VideoTrack trackRef={localTrack} className="w-full h-full object-cover" />
+          <VideoTrack
+            trackRef={localTrack}
+            className="w-full h-full [&>video]:w-full [&>video]:h-full [&>video]:object-cover"
+          />
         </div>
       )}
 
       <div className="absolute top-[max(1rem,env(safe-area-inset-top))] left-4 z-10">
         <p className="text-cream text-sm font-medium drop-shadow-md">{otherName}</p>
-        <p className="text-cream/50 text-xs">Video call</p>
+        <p className="text-cream/50 text-xs">
+          {remoteTrack ? 'Connected' : 'Video call'}
+        </p>
       </div>
 
       <CallControls onEnd={onEnd} />
@@ -237,7 +297,7 @@ export function DirectVideoCallRoom({
   return (
     <div className="fixed inset-0 z-[100] bg-charcoal">
       <LiveKitRoom
-        key={call.id}
+        key={`${call.id}-${participantId}`}
         token={connectInfo.token}
         serverUrl={connectInfo.serverUrl}
         connect
@@ -245,10 +305,15 @@ export function DirectVideoCallRoom({
         audio
         connectOptions={{ autoSubscribe: true }}
         options={{
+          adaptiveStream: true,
+          dynacast: true,
           audioCaptureDefaults: {
             echoCancellation: true,
             noiseSuppression: true,
             autoGainControl: true,
+          },
+          videoCaptureDefaults: {
+            facingMode: 'user',
           },
         }}
         onDisconnected={() => finishLeave(true)}
@@ -256,6 +321,8 @@ export function DirectVideoCallRoom({
         style={{ height: '100%' }}
       >
         <RemoteEndWatcher callId={call.id} onRemoteEnd={handleRemoteEnd} />
+        <RemoteMediaSubscription />
+        <RoomAudioRenderer />
         <ClassRoomAudioSetup />
         <CallVideoLayout otherName={otherName} onEnd={() => finishLeave(true)} />
       </LiveKitRoom>
