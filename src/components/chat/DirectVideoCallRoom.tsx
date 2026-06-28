@@ -1,8 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { PhoneOff } from 'lucide-react'
-import { LiveKitRoom, useRoomContext, VideoConference } from '@livekit/components-react'
+import {
+  LiveKitRoom,
+  RoomAudioRenderer,
+  useRoomContext,
+  VideoConference,
+} from '@livekit/components-react'
 import '@livekit/components-styles'
 import { Loader2 } from 'lucide-react'
+import {
+  RemoteTrackPublication,
+  RoomEvent,
+  Track,
+  type RemoteParticipant,
+} from 'livekit-client'
 import { ClassRoomAudioSetup } from '../classes/ClassRoomAudioSetup'
 import {
   fetchDirectVideoCall,
@@ -20,8 +31,68 @@ interface DirectVideoCallRoomProps {
   participantName: string
   participantId: string
   otherName: string
+  /** Caller is in the LiveKit room while the callee's phone is still ringing. */
+  ringing?: boolean
   onLeave: () => void
   onRemoteEnd?: (status: DirectVideoCallStatus) => void
+}
+
+/** Publish local A/V and subscribe to the other person as soon as they appear. */
+function DirectCallMediaBootstrap() {
+  const room = useRoomContext()
+
+  useEffect(() => {
+    const publishLocal = async () => {
+      try {
+        await room.localParticipant.setMicrophoneEnabled(true)
+        await room.localParticipant.setCameraEnabled(true)
+      } catch {
+        /* permissions may be denied — LiveKitRoom still connected */
+      }
+    }
+
+    const subscribeParticipant = (participant: RemoteParticipant) => {
+      participant.trackPublications.forEach((publication) => {
+        if (
+          publication instanceof RemoteTrackPublication &&
+          (publication.kind === Track.Kind.Audio || publication.kind === Track.Kind.Video)
+        ) {
+          void publication.setSubscribed(true)
+        }
+      })
+    }
+
+    const subscribeAll = () => {
+      room.remoteParticipants.forEach(subscribeParticipant)
+    }
+
+    void publishLocal()
+    subscribeAll()
+
+    const onConnected = () => {
+      void publishLocal()
+      subscribeAll()
+    }
+
+    const onTrackPublished = (publication: RemoteTrackPublication, participant: RemoteParticipant) => {
+      if (publication.kind === Track.Kind.Audio || publication.kind === Track.Kind.Video) {
+        void publication.setSubscribed(true)
+      }
+      subscribeParticipant(participant)
+    }
+
+    room.on(RoomEvent.Connected, onConnected)
+    room.on(RoomEvent.ParticipantConnected, subscribeParticipant)
+    room.on(RoomEvent.TrackPublished, onTrackPublished)
+
+    return () => {
+      room.off(RoomEvent.Connected, onConnected)
+      room.off(RoomEvent.ParticipantConnected, subscribeParticipant)
+      room.off(RoomEvent.TrackPublished, onTrackPublished)
+    }
+  }, [room])
+
+  return null
 }
 
 function DirectCallRemoteWatcher({
@@ -62,9 +133,11 @@ function DirectCallRemoteWatcher({
 
 function CallEndBar({
   otherName,
+  ringing,
   onEnd,
 }: {
   otherName: string
+  ringing?: boolean
   onEnd: () => void
 }) {
   const room = useRoomContext()
@@ -78,7 +151,7 @@ function CallEndBar({
     <div className="absolute inset-x-0 top-0 z-[300] flex items-center justify-between gap-3 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] bg-gradient-to-b from-charcoal/95 to-transparent pointer-events-none">
       <div className="min-w-0 pointer-events-auto">
         <p className="text-cream text-sm font-semibold truncate">{otherName}</p>
-        <p className="text-cream/50 text-xs">Video call</p>
+        <p className="text-cream/50 text-xs">{ringing ? 'Calling…' : 'Video call'}</p>
       </div>
       <button
         type="button"
@@ -86,7 +159,7 @@ function CallEndBar({
         className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-red-600 text-cream text-sm font-semibold shadow-lg cursor-pointer hover:bg-red-700 pointer-events-auto"
       >
         <PhoneOff size={18} />
-        End call
+        {ringing ? 'Cancel' : 'End call'}
       </button>
     </div>
   )
@@ -97,6 +170,7 @@ export function DirectVideoCallRoom({
   participantName,
   participantId,
   otherName,
+  ringing = false,
   onLeave,
   onRemoteEnd,
 }: DirectVideoCallRoomProps) {
@@ -161,17 +235,17 @@ export function DirectVideoCallRoom({
   if (error) {
     return (
       <div className="fixed inset-0 z-[200] bg-charcoal flex items-center justify-center p-6">
-      <div className="max-w-md text-center">
-        <p className="text-red-300 mb-4">{error}</p>
-        <button
-          type="button"
-          onClick={onLeave}
-          className="px-4 py-2 bg-cream text-charcoal rounded-sm font-medium cursor-pointer"
-        >
-          Go back
-        </button>
+        <div className="max-w-md text-center">
+          <p className="text-red-300 mb-4">{error}</p>
+          <button
+            type="button"
+            onClick={onLeave}
+            className="px-4 py-2 bg-cream text-charcoal rounded-sm font-medium cursor-pointer"
+          >
+            Go back
+          </button>
+        </div>
       </div>
-    </div>
     )
   }
 
@@ -206,11 +280,13 @@ export function DirectVideoCallRoom({
         style={{ height: '100%' }}
       >
         <DirectCallRemoteWatcher callId={call.id} onRemoteEnd={handleRemoteEnd} />
+        <DirectCallMediaBootstrap />
+        <RoomAudioRenderer />
         <ClassRoomAudioSetup />
         <div className="relative h-full w-full dm-video-call">
           <VideoConference />
         </div>
-        <CallEndBar otherName={otherName} onEnd={() => finishLeave(true)} />
+        <CallEndBar otherName={otherName} ringing={ringing} onEnd={() => finishLeave(true)} />
       </LiveKitRoom>
     </div>
   )

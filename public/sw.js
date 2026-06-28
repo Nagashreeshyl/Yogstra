@@ -1,4 +1,4 @@
-const CACHE = 'yogstra-shell-v1'
+const CACHE = 'yogstra-shell-v2'
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

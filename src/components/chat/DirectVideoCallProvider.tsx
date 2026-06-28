@@ -266,14 +266,6 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
     setIncomingCall(null)
   }
 
-  const handleCancelOutgoing = async () => {
-    if (!outgoingCall) return
-    await updateDirectVideoCallStatus(outgoingCall.id, 'ended', {
-      endedAt: new Date().toISOString(),
-    })
-    setOutgoingCall(null)
-  }
-
   const handleLeaveCall = useCallback(() => {
     clearAllCallState()
   }, [clearAllCallState])
@@ -304,11 +296,16 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
     user && (user.role === 'student' || user.role === 'teacher'),
   )
 
+  const callerRingingCall =
+    outgoingCall && user && outgoingCall.callerId === user.id ? outgoingCall : null
+  const liveKitCall = activeCall ?? callerRingingCall
+  const isCallerRinging = Boolean(callerRingingCall && !activeCall)
+
   const callOverlay =
     canReceiveCalls &&
     createPortal(
       <>
-        {incomingCall && !activeCall && (
+        {incomingCall && !liveKitCall && (
           <ChatVideoCallRingOverlay
             callId={incomingCall.id}
             peerName={otherParty(incomingCall).name}
@@ -319,22 +316,13 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
           />
         )}
 
-        {outgoingCall && !activeCall && (
-          <ChatVideoCallRingOverlay
-            callId={outgoingCall.id}
-            peerName={otherParty(outgoingCall).name}
-            peerPhoto={otherParty(outgoingCall).avatar}
-            mode="outgoing"
-            onDecline={() => void handleCancelOutgoing()}
-          />
-        )}
-
-        {activeCall && user && (
+        {liveKitCall && user && (
           <DirectVideoCallRoom
-            call={activeCall}
+            call={liveKitCall}
             participantName={user.name}
             participantId={user.id}
-            otherName={otherParty(activeCall).name}
+            otherName={otherParty(liveKitCall).name}
+            ringing={isCallerRinging}
             onLeave={handleLeaveCall}
             onRemoteEnd={handleRemoteEnd}
           />
