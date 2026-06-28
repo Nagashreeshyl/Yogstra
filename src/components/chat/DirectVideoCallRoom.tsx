@@ -32,13 +32,14 @@ import { ClassRoomAudioSetup } from '../classes/ClassRoomAudioSetup'
 import {
   fetchDirectVideoCall,
   fetchLiveKitToken,
-  subscribeToDirectVideoCallById,
+  TERMINAL_DIRECT_VIDEO_CALL_STATUSES,
   updateDirectVideoCallStatus,
+  watchDirectVideoCallTerminalStatus,
   type DirectVideoCall,
   type DirectVideoCallStatus,
 } from '../../services/directVideoCalls'
 
-const TERMINAL_STATUSES: DirectVideoCallStatus[] = ['ended', 'declined', 'missed']
+const TERMINAL_STATUSES = TERMINAL_DIRECT_VIDEO_CALL_STATUSES
 
 interface DirectVideoCallRoomProps {
   call: DirectVideoCall
@@ -122,22 +123,28 @@ function DirectCallRemoteWatcher({
   useEffect(() => {
     handledRef.current = false
 
-    const maybeEnd = (status: DirectVideoCallStatus) => {
+    const endForRemote = (status: DirectVideoCallStatus) => {
       if (handledRef.current || !TERMINAL_STATUSES.includes(status)) return
       handledRef.current = true
       room.disconnect()
       onRemoteEndRef.current(status)
     }
 
-    const unsub = subscribeToDirectVideoCallById(callId, (call) => {
-      maybeEnd(call.status)
-    })
+    const unsubWatch = watchDirectVideoCallTerminalStatus(callId, endForRemote)
 
-    void fetchDirectVideoCall(callId).then((call) => {
-      if (call) maybeEnd(call.status)
-    })
+    const onParticipantDisconnected = () => {
+      if (room.remoteParticipants.size > 0) return
+      void fetchDirectVideoCall(callId).then((call) => {
+        if (call) endForRemote(call.status)
+      })
+    }
 
-    return unsub
+    room.on(RoomEvent.ParticipantDisconnected, onParticipantDisconnected)
+
+    return () => {
+      room.off(RoomEvent.ParticipantDisconnected, onParticipantDisconnected)
+      unsubWatch()
+    }
   }, [callId, room])
 
   return null
@@ -429,6 +436,18 @@ export function DirectVideoCallRoom({
       cancelled = true
     }
   }, [call.id, call.roomName, participantName, participantId])
+
+  useEffect(() => {
+    const markEndedOnLeave = () => {
+      if (endHandledRef.current || localEndRef.current) return
+      void updateDirectVideoCallStatus(call.id, 'ended', {
+        endedAt: new Date().toISOString(),
+      })
+    }
+
+    window.addEventListener('pagehide', markEndedOnLeave)
+    return () => window.removeEventListener('pagehide', markEndedOnLeave)
+  }, [call.id])
 
   const finishLeave = useCallback(
     (localEnd: boolean) => {

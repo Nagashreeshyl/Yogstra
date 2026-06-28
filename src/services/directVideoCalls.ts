@@ -1,8 +1,15 @@
 import { supabase } from '../lib/supabase'
+import { INCOMING_CALL_POLL_MS } from '../constants/refresh'
 import { fetchLiveKitToken } from './classSessions'
 import { requiresChatRequest } from './directChat'
 
 export type DirectVideoCallStatus = 'ringing' | 'active' | 'ended' | 'declined' | 'missed'
+
+export const TERMINAL_DIRECT_VIDEO_CALL_STATUSES: DirectVideoCallStatus[] = [
+  'ended',
+  'declined',
+  'missed',
+]
 
 export type DirectVideoCall = {
   id: string
@@ -290,5 +297,34 @@ export function subscribeToDirectVideoCallById(callId: string, onChange: CallLis
       void supabase.removeChannel(entry!.channel)
       callByIdChannels.delete(callId)
     }
+  }
+}
+
+/** Realtime + poll until the call reaches a terminal status (ended / declined / missed). */
+export function watchDirectVideoCallTerminalStatus(
+  callId: string,
+  onTerminal: (status: DirectVideoCallStatus) => void,
+  pollMs = INCOMING_CALL_POLL_MS,
+) {
+  let handled = false
+
+  const maybeTerminal = (call: DirectVideoCall | null) => {
+    if (!call || handled || !TERMINAL_DIRECT_VIDEO_CALL_STATUSES.includes(call.status)) return
+    handled = true
+    onTerminal(call.status)
+  }
+
+  void fetchDirectVideoCall(callId).then(maybeTerminal)
+
+  const unsub = subscribeToDirectVideoCallById(callId, maybeTerminal)
+
+  const poll = window.setInterval(() => {
+    void fetchDirectVideoCall(callId).then(maybeTerminal)
+  }, pollMs)
+
+  return () => {
+    handled = true
+    unsub()
+    window.clearInterval(poll)
   }
 }

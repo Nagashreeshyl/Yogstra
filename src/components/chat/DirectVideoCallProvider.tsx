@@ -19,6 +19,7 @@ import {
   subscribeToDirectVideoCallById,
   subscribeToDirectVideoCalls,
   updateDirectVideoCallStatus,
+  watchDirectVideoCallTerminalStatus,
   type DirectVideoCall,
   type DirectVideoCallStatus,
 } from '../../services/directVideoCalls'
@@ -167,15 +168,40 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
     if (!activeCall) return
 
     const unsub = subscribeToDirectVideoCallById(activeCall.id, (call) => {
+      if (call.status === 'active') return
       if (TERMINAL_STATUSES.includes(call.status)) {
         clearAllCallState()
-        if (call.status === 'declined') setCallNotice('Call ended')
+        if (call.status === 'declined' || call.status === 'ended') setCallNotice('Call ended')
         else if (call.status === 'missed') setCallNotice('Missed call')
       }
     })
 
     return unsub
   }, [activeCall, clearAllCallState])
+
+  const callerRingingCall =
+    outgoingCall && user && outgoingCall.callerId === user.id ? outgoingCall : null
+  const liveKitCall = activeCall ?? callerRingingCall
+  const isCallerRinging = Boolean(callerRingingCall && !activeCall)
+
+  useEffect(() => {
+    if (!liveKitCall) return
+
+    return watchDirectVideoCallTerminalStatus(liveKitCall.id, (status) => {
+      clearAllCallState()
+      if (status === 'declined' || status === 'ended') setCallNotice('Call ended')
+      else if (status === 'missed') setCallNotice('Missed call')
+    })
+  }, [liveKitCall?.id, clearAllCallState])
+
+  useEffect(() => {
+    if (!incomingCall || liveKitCall) return
+
+    return watchDirectVideoCallTerminalStatus(incomingCall.id, () => {
+      setIncomingCall(null)
+      setCallNotice('Call ended')
+    })
+  }, [incomingCall?.id, liveKitCall, clearAllCallState])
 
   useEffect(() => {
     if (!outgoingCall || outgoingCall.callerId !== user?.id) {
@@ -295,11 +321,6 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
   const canReceiveCalls = Boolean(
     user && (user.role === 'student' || user.role === 'teacher'),
   )
-
-  const callerRingingCall =
-    outgoingCall && user && outgoingCall.callerId === user.id ? outgoingCall : null
-  const liveKitCall = activeCall ?? callerRingingCall
-  const isCallerRinging = Boolean(callerRingingCall && !activeCall)
 
   const callOverlay =
     canReceiveCalls &&
