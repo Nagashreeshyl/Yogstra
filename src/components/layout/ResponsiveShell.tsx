@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { Menu, X } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
+import { InstallAppPrompt } from '../pwa/InstallAppPrompt'
 
 interface ResponsiveShellProps {
   sidebar: ReactNode
@@ -54,6 +55,7 @@ export function ResponsiveShell({
           <Menu size={22} />
         </button>
         <h1 className="font-heading text-lg font-semibold text-cream truncate">{title}</h1>
+        <InstallAppPrompt variant="header" />
       </header>
 
       <div className="hidden lg:flex shrink-0 h-full min-h-0">{sidebar}</div>

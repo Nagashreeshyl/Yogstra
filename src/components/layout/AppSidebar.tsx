@@ -5,6 +5,7 @@ import {
 import { useApp } from '../../context/AppContext'
 import { getDashboardPath, formatRoleLabel } from '../../utils/authRouting'
 import { Avatar } from '../ui/Avatar'
+import { InstallAppPrompt } from '../pwa/InstallAppPrompt'
 
 const navItems = [
   { to: '/', label: 'Explore', icon: Compass },
@@ -101,6 +102,7 @@ export function AppSidebar() {
           </div>
         ) : (
           <div className="space-y-1">
+            <InstallAppPrompt variant="sidebar" />
             <button
               onClick={handleAuth}
               className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-cream/60 hover:text-cream hover:bg-charcoal/50 rounded-sm transition-colors cursor-pointer"

@@ -4,6 +4,7 @@ import { useApp } from '../../context/AppContext'
 import { useMessageNotifications } from '../../hooks/useMessageNotifications'
 import { useStudentCoachingAccess } from '../../hooks/useStudentCoachingAccess'
 import { Avatar } from '../ui/Avatar'
+import { InstallAppPrompt } from '../pwa/InstallAppPrompt'
 
 const baseStudentNav = [
   { to: '/dashboard/student/explore', label: 'Explore', end: true },
@@ -63,6 +64,7 @@ export function StudentSidebar() {
         ))}
       </nav>
       <div className="p-4 border-t border-charcoal/20 space-y-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <InstallAppPrompt variant="sidebar" />
         {user && (
           <div className="flex items-center gap-3 px-2">
             <Avatar src={user.avatar} name={user.name} size={36} />

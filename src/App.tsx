@@ -42,12 +42,14 @@ import { AdminChatsPage } from './pages/admin/AdminChatsPage'
 import { AdminPayoutsPage } from './pages/admin/AdminPayoutsPage'
 import { AdminCategoriesPage } from './pages/admin/AdminCategoriesPage'
 import { AdminSettingsPage } from './pages/admin/AdminSettingsPage'
+import { InstallAppPrompt } from './components/pwa/InstallAppPrompt'
 
 export default function App() {
   return (
     <AppProvider>
       <AppRefreshProvider>
       <BrowserRouter>
+        <InstallAppPrompt variant="banner" />
         <Routes>
           <Route
             element={

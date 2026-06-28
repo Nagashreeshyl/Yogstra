@@ -4,6 +4,7 @@ import {
   Clock, MessageCircle, IndianRupee, Grid3X3, Settings, LogOut, Home,
 } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
+import { InstallAppPrompt } from '../pwa/InstallAppPrompt'
 
 const adminNav = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -48,6 +49,7 @@ export function AdminSidebar() {
         ))}
       </nav>
       <div className="p-4 border-t border-charcoal/20 space-y-1 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <InstallAppPrompt variant="sidebar" />
         {user && (
           <p className="px-3 py-2 text-xs text-cream/50 truncate">{user.email}</p>
         )}
