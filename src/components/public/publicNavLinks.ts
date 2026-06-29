@@ -5,40 +5,31 @@ export type PublicNavLink = {
 }
 
 export const primaryPublicNav: PublicNavLink[] = [
-  { to: '/explore', label: 'Explore' },
+  { to: '/discover', label: 'Discover' },
   { to: '/teachers', label: 'Teachers' },
   { to: '/academies', label: 'Academies' },
   { to: '/competitions', label: 'Competitions' },
   { to: '/community', label: 'Community' },
-  { to: '/pricing', label: 'Pricing' },
-]
-
-export const resourcePublicNav: PublicNavLink[] = [
-  { to: '/help', label: 'Help Center' },
   { to: '/about', label: 'About' },
-  { to: '/contact', label: 'Contact' },
+  { to: '/help', label: 'Help Center' },
 ]
 
 export const footerNav = {
-  company: [
-    { to: '/about', label: 'About' },
-    { to: '/contact', label: 'Contact' },
-    { to: '/pricing', label: 'Pricing' },
-  ],
   platform: [
-    { to: '/explore', label: 'Explore' },
+    { to: '/discover', label: 'Discover' },
     { to: '/teachers', label: 'Teachers' },
     { to: '/academies', label: 'Academies' },
     { to: '/competitions', label: 'Competitions' },
     { to: '/community', label: 'Community' },
   ],
-  resources: [
+  company: [
+    { to: '/about', label: 'About' },
     { to: '/help', label: 'Help Center' },
-    { to: '/shop', label: 'Shop' },
+    { to: '/how-it-works', label: 'How Yogstra Works' },
   ],
   legal: [
-    { to: '/privacy-policy', label: 'Privacy Policy' },
-    { to: '/terms-of-service', label: 'Terms of Service' },
-    { to: '/refund-policy', label: 'Refund Policy' },
+    { to: '/privacy-policy', label: 'Privacy' },
+    { to: '/terms-of-service', label: 'Terms' },
+    { to: '/refund-policy', label: 'Refund' },
   ],
 } as const

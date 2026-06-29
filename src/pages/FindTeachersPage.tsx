@@ -37,7 +37,7 @@ export function FindTeachersPage() {
   return (
     <PageContainer>
       <div className="space-y-8">
-        <PageHeader title="Teachers" description="Browse verified yoga teachers across India." className="mb-8" />
+        <PageHeader title="Coaches" description="Discover verified yoga coaches across India." className="mb-8" />
 
         <SearchBar />
         <CategoryFlashCards onSelect={() => setPage(1)} />
@@ -45,7 +45,7 @@ export function FindTeachersPage() {
         {loading ? (
           <TeacherGridSkeleton count={PAGE_SIZE} />
         ) : filtered.length === 0 ? (
-          <EmptyState title="No teachers match your filters" description="Try adjusting your search or category filters." />
+          <EmptyState title="No coaches match your filters" description="Try adjusting your search or category filters." />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {paginated.map((t) => (

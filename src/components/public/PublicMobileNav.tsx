@@ -1,5 +1,5 @@
 import { Link, NavLink } from 'react-router-dom'
-import { primaryPublicNav, resourcePublicNav } from './publicNavLinks'
+import { primaryPublicNav } from './publicNavLinks'
 import { Button } from '../ui/Button'
 
 type PublicMobileNavProps = {
@@ -37,14 +37,6 @@ export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
         <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
           {primaryPublicNav.map((item) => (
             <NavLink key={item.to} to={item.to} end={item.end} className={linkClass} onClick={onClose}>
-              {item.label}
-            </NavLink>
-          ))}
-          <p className="px-4 pt-4 pb-2 text-xs font-medium uppercase tracking-wide text-sidebar-muted">
-            Resources
-          </p>
-          {resourcePublicNav.map((item) => (
-            <NavLink key={item.to} to={item.to} className={linkClass} onClick={onClose}>
               {item.label}
             </NavLink>
           ))}

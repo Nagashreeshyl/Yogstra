@@ -28,6 +28,14 @@ import {
   SESSION_TIME_OPTIONS,
 } from '../../utils/sessionTimeOptions'
 
+function todayDateInputValue(): string {
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 export function BuyClassModal({
   isOpen,
   onClose,
@@ -57,18 +65,21 @@ export function BuyClassModal({
     finalAmount: number
   } | null>(null)
 
+  const minStartDate = useMemo(() => todayDateInputValue(), [isOpen])
+
   useEffect(() => {
     if (!isOpen) return
     setError(null)
     setAppliedCoupon(null)
     setCouponInput('')
     setTime(DEFAULT_SESSION_TIME)
+    setStartDate((prev) => (prev && prev >= minStartDate ? prev : ''))
     setLoadingFee(true)
     void fetchTeacherFee(teacherId, classType, duration)
       .then(setBaseFee)
       .catch(() => setBaseFee(0))
       .finally(() => setLoadingFee(false))
-  }, [isOpen, teacherId, classType, duration])
+  }, [isOpen, teacherId, classType, duration, minStartDate])
 
   const amountDue = appliedCoupon?.finalAmount ?? baseFee
 
@@ -118,6 +129,11 @@ export function BuyClassModal({
   const handleProceed = async () => {
     if (!startDate || !time) {
       setError('Please choose a start date and preferred time for your first session.')
+      return
+    }
+
+    if (startDate < minStartDate) {
+      setError('Start date must be today or a future date.')
       return
     }
 
@@ -214,23 +230,23 @@ export function BuyClassModal({
       <div className="relative bg-elevated rounded-[16px] border border-border w-full max-w-md p-6 shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center gap-2 mb-1">
           <ShoppingBag size={20} className="text-primary" />
-          <h3 className="font-heading text-lg font-medium">Buy Online Class</h3>
+          <h3 className="font-heading text-lg font-medium">Enroll in Program</h3>
         </div>
         <p className="text-sm text-foreground/55 mb-5">
-          Book a session with {teacherName}. Your teacher is notified only after payment succeeds.
+          Confirm your enrollment with {teacherName}. Your coach is notified after payment succeeds.
         </p>
 
         <div className="space-y-4">
           <Select
-            label="Class type"
+            label="Program type"
             value={classType}
             onChange={(e) => {
               setClassType(e.target.value as ClassType)
               setAppliedCoupon(null)
             }}
           >
-            <option value="1:1">1-on-1 (one teacher, one student)</option>
-            <option value="group">1-to-many (group coaching)</option>
+            <option value="1:1">Personal Coaching</option>
+            <option value="group">Training Batch</option>
           </Select>
 
           <Select
@@ -250,6 +266,7 @@ export function BuyClassModal({
               label="Start date"
               type="date"
               value={startDate}
+              min={minStartDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
             <Select
@@ -335,7 +352,7 @@ export function BuyClassModal({
             onClick={() => void handleProceed()}
             disabled={submitting || loadingFee || amountDue <= 0}
           >
-            {submitting ? 'Processing...' : 'Proceed to Pay'}
+            {submitting ? 'Processing…' : 'Confirm Enrollment'}
           </Button>
         </div>
       </div>

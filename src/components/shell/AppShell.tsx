@@ -1,8 +1,6 @@
-import { useState } from 'react'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
 import { MobileNavigation } from './MobileNavigation'
-import { MobileSidebarDrawer } from './MobileSidebarDrawer'
 import { useNavBadges } from './useNavBadges'
 import { useApp } from '../../context/AppContext'
 import { getDashboardPath } from '../../utils/authRouting'
@@ -29,7 +27,6 @@ export function AppShell({
   const badges = useNavBadges(variant)
   const homeLink = resolveHomeLink(variant, isLoggedIn, user)
   const notificationCount = badges.notifications ?? 0
-  const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   return (
     <div className="flex min-h-screen flex-col bg-background lg:h-full lg:min-h-0 lg:flex-row">
@@ -57,12 +54,11 @@ export function AppShell({
           homeLink={homeLink}
           showRoleSwitcher={isLoggedIn}
           notificationCount={notificationCount}
-          onOpenMobileNav={() => setMobileNavOpen(true)}
         />
 
         <main
           id="main-content"
-          className={`flex flex-1 flex-col min-h-0 min-w-0 overflow-y-auto pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0 ${mainClassName}`}
+          className={`flex flex-1 flex-col min-h-0 min-w-0 overflow-y-auto max-lg:pb-[calc(3.75rem+1.25rem+max(0.75rem,env(safe-area-inset-bottom)))] lg:pb-0 ${mainClassName}`}
         >
           {fullBleed ? (
             children
@@ -72,14 +68,6 @@ export function AppShell({
         </main>
 
         <MobileNavigation navItems={navItems} badges={badges} />
-        <MobileSidebarDrawer
-          open={mobileNavOpen}
-          onClose={() => setMobileNavOpen(false)}
-          title={title}
-          navItems={navItems}
-          badges={badges}
-          footer={footer}
-        />
       </div>
     </div>
   )

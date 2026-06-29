@@ -1,9 +1,10 @@
 import { useNavigate } from 'react-router-dom'
-import { Award, MapPin, Star, Users } from 'lucide-react'
+import { BadgeCheck, MapPin, Star, Trophy, Users } from 'lucide-react'
 import type { Teacher } from '../../types'
 import { Avatar } from '../ui/Avatar'
 import { Badge } from '../ui/Badge'
 import { Button } from '../ui/Button'
+import { TERMS } from '../../constants/terminology'
 
 interface TeacherCardProps {
   teacher: Teacher
@@ -13,7 +14,10 @@ interface TeacherCardProps {
 export function TeacherCard({ teacher, compact = false }: TeacherCardProps) {
   const navigate = useNavigate()
   const cardImage = teacher.coverPhoto || teacher.photo
-  const primarySpec = teacher.specializations[0]
+  const startingPrice = Math.min(
+    teacher.pricing.oneOnOneMonth || teacher.monthlyFee,
+    teacher.pricing.groupMonth || teacher.monthlyFee,
+  ) || teacher.monthlyFee
 
   if (compact) {
     return (
@@ -35,78 +39,81 @@ export function TeacherCard({ teacher, compact = false }: TeacherCardProps) {
   }
 
   return (
-    <article className="rounded-[20px] border border-border bg-elevated overflow-hidden shadow-sm transition-shadow hover:shadow-md hover:border-accent/20">
-      <div className="relative aspect-[4/5] w-full bg-sidebar-secondary">
+    <article className="group rounded-[24px] border border-border bg-elevated overflow-hidden transition-all hover:border-accent/30 hover:shadow-lg hover:shadow-black/5 flex flex-col">
+      <div className="relative aspect-[5/4] w-full bg-sidebar-secondary">
         {cardImage ? (
           <img
             src={cardImage}
             alt={teacher.name}
             loading="lazy"
-            className="absolute inset-0 h-full w-full object-cover object-center"
+            className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.02]"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-5xl font-medium text-sidebar-foreground">
-            {teacher.name.charAt(0).toUpperCase()}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Avatar src={teacher.photo} name={teacher.name} size={80} />
           </div>
         )}
         {teacher.verified && (
-          <Badge variant="primary" className="absolute top-3 left-3 text-xs">
+          <Badge variant="primary" className="absolute top-3 left-3 text-xs gap-1">
+            <BadgeCheck size={12} />
             Verified
           </Badge>
         )}
       </div>
 
-      <div className="p-5 space-y-3">
+      <div className="p-5 sm:p-6 space-y-4 flex-1 flex flex-col">
         <div>
           <h3 className="font-heading text-lg font-semibold text-foreground">{teacher.name}</h3>
-          {primarySpec && (
-            <p className="text-sm text-accent mt-0.5">{primarySpec}</p>
-          )}
+          <div className="flex items-center gap-2 mt-1">
+            <Star size={14} className="fill-accent text-accent" />
+            <span className="text-sm font-medium text-foreground">{teacher.rating.toFixed(1)}</span>
+            <span className="text-xs text-muted-foreground">· {teacher.experienceYears} years</span>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-1.5">
-          {teacher.specializations.slice(0, 2).map((s) => (
+          {teacher.specializations.slice(0, 3).map((s) => (
             <Badge key={s} variant="default" className="text-xs">
               {s}
             </Badge>
           ))}
         </div>
 
-        <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1">
-            <Star size={14} className="fill-accent text-accent shrink-0" />
-            {teacher.rating.toFixed(1)} rating
+        <div className="grid grid-cols-2 gap-y-2 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <MapPin size={13} className="text-accent shrink-0" />
+            {teacher.city}{teacher.state ? `, ${teacher.state}` : ''}
           </span>
-          <span className="inline-flex items-center gap-1">
-            <Award size={14} className="text-accent shrink-0" />
-            {teacher.experienceYears}y exp
+          <span className="inline-flex items-center gap-1.5">
+            <Users size={13} className="text-accent shrink-0" />
+            {teacher.totalStudents} trained
           </span>
-          <span className="inline-flex items-center gap-1">
-            <Users size={14} className="text-accent shrink-0" />
-            {teacher.totalStudents} students
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <MapPin size={14} className="text-accent shrink-0" />
-            {teacher.city}
-          </span>
+          {teacher.achievements.length > 0 && (
+            <span className="inline-flex items-center gap-1.5 col-span-2">
+              <Trophy size={13} className="text-accent shrink-0" />
+              {teacher.achievements[0]}
+            </span>
+          )}
         </div>
 
-        <p className="text-sm font-medium text-foreground">
-          ₹{teacher.monthlyFee.toLocaleString('en-IN')}
-          <span className="text-muted-foreground font-normal">/month</span>
-        </p>
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          <Badge variant="default" className="text-xs">{TERMS.personalCoaching}</Badge>
+          <Badge variant="default" className="text-xs">{TERMS.trainingBatch}</Badge>
+        </div>
 
-        <div className="flex gap-2 pt-1">
-          <Button size="sm" className="flex-1" onClick={() => navigate(`/teachers/${teacher.id}`)}>
-            View Profile
+        {startingPrice > 0 && (
+          <p className="text-sm font-semibold text-foreground">
+            From ₹{startingPrice.toLocaleString('en-IN')}
+            <span className="text-muted-foreground font-normal text-xs"> / month</span>
+          </p>
+        )}
+
+        <div className="flex gap-2 pt-2 mt-auto">
+          <Button size="sm" variant="secondary" className="flex-1" onClick={() => navigate(`/teachers/${teacher.id}`)}>
+            {TERMS.bookTrial}
           </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            className="flex-1"
-            onClick={() => navigate(`/teachers/${teacher.id}`)}
-          >
-            Book Session
+          <Button size="sm" className="flex-1" onClick={() => navigate(`/teachers/${teacher.id}`)}>
+            {TERMS.viewProfile}
           </Button>
         </div>
       </div>
@@ -120,12 +127,11 @@ interface FeaturedTeachersProps {
 
 export function MobileFeaturedTeachers({ teachers }: FeaturedTeachersProps) {
   const navigate = useNavigate()
-
   if (teachers.length === 0) return null
 
   return (
     <section className="lg:hidden -mx-1">
-      <h2 className="mb-3 px-1 font-heading text-base font-semibold text-foreground">Featured Teachers</h2>
+      <h2 className="mb-3 px-1 font-heading text-base font-semibold text-foreground">Featured Coaches</h2>
       <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-1">
         {teachers.map((teacher) => (
           <button
@@ -148,7 +154,7 @@ export function MobileFeaturedTeachers({ teachers }: FeaturedTeachersProps) {
 export function FeaturedTeachers({ teachers }: FeaturedTeachersProps) {
   return (
     <div>
-      <h2 className="mb-4 font-heading text-lg font-semibold text-foreground">Featured Teachers</h2>
+      <h2 className="mb-4 font-heading text-lg font-semibold text-foreground">Featured Coaches</h2>
       <div className="space-y-1">
         {teachers.map((t) => (
           <TeacherCard key={t.id} teacher={t} compact />

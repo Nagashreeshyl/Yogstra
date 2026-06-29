@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { MoreHorizontal, X } from 'lucide-react'
+import { MOBILE_TAB_BAR_BOTTOM } from '../../constants/mobileNav'
 import type { NavBadgeKey, ShellNavItem } from './types'
 
 interface MobileNavigationProps {
@@ -41,76 +42,83 @@ export function MobileNavigation({ navItems, badges }: MobileNavigationProps) {
 
   return (
     <>
+      {/* Floating pill tab bar — mobile/tablet only; desktop uses sidebar */}
       <nav
-        className="lg:hidden fixed bottom-0 inset-x-0 z-[70] border-t border-border bg-elevated/98 backdrop-blur-md pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_24px_rgba(15,31,23,0.08)]"
+        className="lg:hidden fixed inset-x-0 bottom-0 z-[70] pointer-events-none px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
         aria-label="Mobile navigation"
       >
-        <ul className="grid grid-cols-5 h-16">
-          {tabItems.map((item) => (
-            <li key={item.to}>
-              <NavLink
-                to={item.to}
-                end={item.end}
-                className={({ isActive }) =>
-                  `relative flex flex-col items-center justify-center gap-1 h-full px-1 text-[11px] transition-colors duration-150 ${
-                    isActive ? 'text-accent font-semibold' : 'text-muted-foreground'
-                  }`
-                }
-              >
-                <span className="relative">
-                  <item.icon size={20} strokeWidth={1.75} aria-hidden />
-                  <TabBadge count={item.badgeKey ? badges[item.badgeKey] : undefined} />
-                </span>
-                <span className="truncate max-w-full">{item.label}</span>
-              </NavLink>
-            </li>
-          ))}
+        <div className="pointer-events-auto mx-auto max-w-lg rounded-[28px] border border-border/80 bg-elevated/95 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.28)]">
+          <ul className="grid grid-cols-5 h-[3.75rem] px-1">
+            {tabItems.map((item) => (
+              <li key={item.to}>
+                <NavLink
+                  to={item.to}
+                  end={item.end}
+                  className={({ isActive }) =>
+                    `relative flex flex-col items-center justify-center gap-0.5 h-full px-0.5 text-[10px] transition-colors duration-150 rounded-[20px] ${
+                      isActive ? 'text-accent font-semibold' : 'text-muted-foreground'
+                    }`
+                  }
+                >
+                  <span className="relative">
+                    <item.icon size={20} strokeWidth={1.75} aria-hidden />
+                    <TabBadge count={item.badgeKey ? badges[item.badgeKey] : undefined} />
+                  </span>
+                  <span className="truncate max-w-full leading-tight">{item.label}</span>
+                </NavLink>
+              </li>
+            ))}
 
-          <li>
-            <button
-              type="button"
-              onClick={() => setMoreOpen(true)}
-              className={`relative flex flex-col items-center justify-center gap-1 h-full w-full px-1 text-[11px] transition-colors duration-150 cursor-pointer ${
-                moreActive ? 'text-accent font-semibold' : 'text-muted-foreground'
-              }`}
-              aria-label="More navigation"
-              aria-expanded={moreOpen}
-            >
-              <MoreHorizontal size={20} strokeWidth={1.75} />
-              <span>More</span>
-            </button>
-          </li>
-        </ul>
+            <li>
+              <button
+                type="button"
+                onClick={() => setMoreOpen(true)}
+                className={`relative flex flex-col items-center justify-center gap-0.5 h-full w-full px-0.5 text-[10px] transition-colors duration-150 cursor-pointer rounded-[20px] ${
+                  moreActive || moreOpen ? 'text-accent font-semibold' : 'text-muted-foreground'
+                }`}
+                aria-label="More navigation"
+                aria-expanded={moreOpen}
+              >
+                <MoreHorizontal size={20} strokeWidth={1.75} />
+                <span className="leading-tight">More</span>
+              </button>
+            </li>
+          </ul>
+        </div>
       </nav>
 
       {moreOpen && (
-        <div className="lg:hidden fixed inset-0 z-[60]">
+        <div className="lg:hidden fixed inset-0 z-[80]">
           <button
             type="button"
-            className="absolute inset-0 bg-foreground/40"
+            className="absolute inset-0 bg-foreground/50 backdrop-blur-[2px]"
             aria-label="Close menu"
             onClick={() => setMoreOpen(false)}
           />
-          <div className="absolute bottom-0 inset-x-0 rounded-t-[20px] border-t border-border bg-elevated shadow-md max-h-[70vh] overflow-y-auto pb-[env(safe-area-inset-bottom)]">
-            <div className="flex items-center justify-between px-4 py-4 border-b border-border">
-              <h2 className="font-heading text-lg font-semibold text-foreground">More</h2>
+          <div
+            className="absolute inset-x-3 max-w-lg mx-auto rounded-[24px] border border-border bg-elevated shadow-2xl max-h-[min(55vh,420px)] overflow-y-auto"
+            style={{ bottom: MOBILE_TAB_BAR_BOTTOM }}
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border sticky top-0 bg-elevated rounded-t-[24px] z-10">
+              <h2 className="font-heading text-base font-semibold text-foreground">More</h2>
               <button
                 type="button"
                 onClick={() => setMoreOpen(false)}
-                className="p-2 -mr-2 text-muted-foreground hover:text-foreground rounded-[12px] cursor-pointer"
+                className="p-2 -mr-1 text-muted-foreground hover:text-foreground rounded-[12px] cursor-pointer"
                 aria-label="Close"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
-            <ul className="p-2 space-y-1">
+            <ul className="p-2 space-y-0.5 pb-2">
               {moreItems.map((item) => (
                 <li key={item.to}>
                   <NavLink
                     to={item.to}
                     end={item.end}
+                    onClick={() => setMoreOpen(false)}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 px-4 py-3 rounded-[12px] text-sm transition-colors ${
+                      `flex items-center gap-3 px-4 py-3 rounded-[14px] text-sm transition-colors ${
                         isActive
                           ? 'bg-primary/10 text-primary font-medium'
                           : 'text-foreground hover:bg-muted'

@@ -1,5 +1,5 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Calendar, MapPin, Phone, User, MessageCircle } from 'lucide-react'
+import { Award, Calendar, Flame, MapPin, MessageCircle, Trophy, User } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { useLiveSync } from '../hooks/useLiveSync'
@@ -19,6 +19,15 @@ function formatJoinedDate(isoDate: string) {
   return date.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
 }
 
+function ProfileSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="mb-8">
+      <h2 className="font-heading text-lg font-semibold text-foreground mb-4">{title}</h2>
+      {children}
+    </section>
+  )
+}
+
 export function StudentProfilePage() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -29,17 +38,14 @@ export function StudentProfilePage() {
     [id],
   )
 
-  const { data: posts, refetch: refetchPosts } = useAsyncData(
-    () => fetchPosts(),
-    [],
-  )
+  const { data: posts, refetch: refetchPosts } = useAsyncData(() => fetchPosts(), [])
 
   useLiveSync(refetchStudent, ['teachers'], Boolean(id))
   useLiveSync(refetchPosts, ['posts'], Boolean(id))
 
   const studentPosts = (posts ?? []).filter((p) => p.studentId === id).slice(0, 6)
-
   const isTeacher = user?.role === 'teacher'
+  const isOwnProfile = user?.id === id
 
   const handleMessage = () => {
     if (!user || user.role !== 'teacher' || !student) return
@@ -51,9 +57,7 @@ export function StudentProfilePage() {
     })
   }
 
-  if (loading) {
-    return <ProfilePageSkeleton />
-  }
+  if (loading) return <ProfilePageSkeleton />
 
   if (!student) {
     return (
@@ -70,87 +74,85 @@ export function StudentProfilePage() {
   const location = [student.city, student.state].filter(Boolean).join(', ')
 
   return (
-    <PageContainer width="narrow">
-      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8 pb-8 border-b border-border/70">
-        <Avatar src={student.avatar} name={student.name} size={96} />
+    <PageContainer width="default">
+      {/* Hero */}
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-10 pb-8 border-b border-border">
+        <Avatar src={student.avatar} name={student.name} size={112} />
         <div className="flex-1 text-center sm:text-left min-w-0">
-          <h1 className="text-xl font-semibold truncate">{student.name}</h1>
+          <h1 className="font-heading text-2xl font-semibold">{student.name}</h1>
           <Badge className="mt-2">{student.level}</Badge>
-
-          <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-            <div>
-              <p className="text-xs text-muted-foreground/70 mb-0.5">Sessions</p>
-              <p className="font-semibold">{student.totalSessions}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground/70 mb-0.5">Member since</p>
-              <p className="font-semibold flex items-center justify-center sm:justify-start gap-1">
-                <Calendar size={14} className="text-muted-foreground/70" />
-                {formatJoinedDate(student.joinedDate)}
-              </p>
-            </div>
+          {location && (
+            <p className="text-sm text-muted-foreground mt-2 inline-flex items-center gap-1">
+              <MapPin size={14} /> {location}
+            </p>
+          )}
+          <div className="mt-4 flex flex-wrap justify-center sm:justify-start gap-4 text-sm">
+            <span className="inline-flex items-center gap-1.5">
+              <Calendar size={14} className="text-accent" />
+              {student.totalSessions} sessions
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Flame size={14} className="text-accent" />
+              Member since {formatJoinedDate(student.joinedDate)}
+            </span>
           </div>
-
           {isTeacher && (
-            <button
-              type="button"
-              onClick={handleMessage}
-              className="inline-flex items-center gap-1.5 mt-4 text-sm font-semibold text-primary hover:text-primary-dark cursor-pointer"
-            >
-              <MessageCircle size={16} />
-              Message
-            </button>
+            <Button size="sm" className="mt-4 gap-1.5" onClick={handleMessage}>
+              <MessageCircle size={16} /> Message
+            </Button>
+          )}
+          {isOwnProfile && (
+            <Link to="/dashboard/student/settings" className="block mt-3 text-sm text-accent hover:underline">
+              Account settings →
+            </Link>
           )}
         </div>
       </div>
 
-      <section className="space-y-4 mb-8">
-        <h2 className="text-sm font-semibold text-muted-foreground">About</h2>
-        <Card className="p-4 space-y-3 text-sm">
-          {student.phone && (
-            <div className="flex items-center gap-3">
-              <Phone size={16} className="text-muted-foreground/70 shrink-0" />
-              <span>{student.phone}</span>
-            </div>
-          )}
-          {location && (
-            <div className="flex items-center gap-3">
-              <MapPin size={16} className="text-muted-foreground/70 shrink-0" />
-              <span>{location}</span>
-            </div>
-          )}
+      <ProfileSection title="Current Coach">
+        <Card className="p-5">
           {student.activeTeacherName ? (
-            <div className="flex items-start gap-3">
-              <User size={16} className="text-muted-foreground/70 shrink-0 mt-0.5" />
+            <div className="flex items-center gap-3">
+              <User size={20} className="text-accent shrink-0" />
               <div>
-                <p className="text-muted-foreground/70 text-xs mb-0.5">Active teacher</p>
+                <p className="text-xs text-muted-foreground mb-0.5">Coach</p>
                 {student.activeTeacherId ? (
-                  <Link
-                    to={`/teachers/${student.activeTeacherId}`}
-                    className="font-semibold text-primary hover:text-primary-dark"
-                  >
+                  <Link to={`/teachers/${student.activeTeacherId}`} className="font-medium text-accent hover:underline">
                     {student.activeTeacherName}
                   </Link>
                 ) : (
-                  <span className="font-semibold">{student.activeTeacherName}</span>
+                  <span className="font-medium">{student.activeTeacherName}</span>
                 )}
               </div>
             </div>
           ) : (
-            <p className="text-muted-foreground/70 text-sm">Not enrolled with a teacher yet.</p>
+            <p className="text-sm text-muted-foreground">Not enrolled with a coach yet.</p>
           )}
         </Card>
-      </section>
+      </ProfileSection>
+
+      <ProfileSection title="Progress">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[
+            { icon: Calendar, label: 'Sessions', value: student.totalSessions },
+            { icon: Flame, label: 'Level', value: student.level },
+            { icon: Award, label: 'Achievements', value: '—' },
+            { icon: Trophy, label: 'Competitions', value: '—' },
+          ].map(({ icon: Icon, label, value }) => (
+            <Card key={label} className="p-4 text-center">
+              <Icon size={20} className="text-accent mx-auto mb-2" />
+              <p className="text-lg font-semibold text-foreground">{value}</p>
+              <p className="text-xs text-muted-foreground">{label}</p>
+            </Card>
+          ))}
+        </div>
+      </ProfileSection>
 
       {studentPosts.length > 0 && (
-        <section>
-          <h2 className="text-sm font-semibold text-muted-foreground mb-3">Community posts</h2>
-          <div className="grid grid-cols-3 gap-1">
+        <ProfileSection title="Community">
+          <div className="grid grid-cols-3 gap-1.5">
             {studentPosts.map((post) => (
-              <div
-                key={post.id}
-                className="aspect-square bg-sidebar/5 overflow-hidden rounded-sm"
-              >
+              <div key={post.id} className="aspect-square bg-muted overflow-hidden rounded-[12px]">
                 {post.image ? (
                   <img src={post.image} alt="" className="w-full h-full object-cover" />
                 ) : post.video ? (
@@ -163,7 +165,7 @@ export function StudentProfilePage() {
               </div>
             ))}
           </div>
-        </section>
+        </ProfileSection>
       )}
     </PageContainer>
   )

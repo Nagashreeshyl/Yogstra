@@ -46,7 +46,7 @@ export function UserDirectory({
 
   return (
     <div
-      className={`overflow-hidden bg-elevated shrink-0 w-full flex flex-col md:border md:border-border md:rounded-sm md:h-full md:w-72 ${className}`}
+      className={`md:overflow-hidden bg-elevated shrink-0 w-full flex flex-col md:border md:border-border md:rounded-sm md:h-full md:w-72 ${className}`}
     >
       <div className="overflow-y-auto flex-1">
         {users.map((user) => {

@@ -19,8 +19,9 @@ const LandingPage = lazy(() => import('./pages/public/LandingPage').then((m) => 
 const GetStartedPage = lazy(() => import('./pages/public/GetStartedPage').then((m) => ({ default: m.GetStartedPage })))
 const LoginPage = lazy(() => import('./pages/public/LoginPage').then((m) => ({ default: m.LoginPage })))
 const WorkspacePickerPage = lazy(() => import('./pages/public/WorkspacePickerPage').then((m) => ({ default: m.WorkspacePickerPage })))
-const PricingPage = lazy(() => import('./pages/public/PricingPage').then((m) => ({ default: m.PricingPage })))
-const ContactPage = lazy(() => import('./pages/public/ContactPage').then((m) => ({ default: m.ContactPage })))
+const HowYogstraWorksPage = lazy(() => import('./pages/public/HowYogstraWorksPage').then((m) => ({ default: m.HowYogstraWorksPage })))
+const AcademySignupPage = lazy(() => import('./pages/public/AcademySignupPage').then((m) => ({ default: m.AcademySignupPage })))
+const OrganizerSignupPage = lazy(() => import('./pages/public/OrganizerSignupPage').then((m) => ({ default: m.OrganizerSignupPage })))
 const AboutPage = lazy(() => import('./pages/public/AboutPage').then((m) => ({ default: m.AboutPage })))
 const HelpCenterPage = lazy(() => import('./pages/public/HelpCenterPage').then((m) => ({ default: m.HelpCenterPage })))
 const AcademiesPage = lazy(() => import('./pages/public/AcademiesPage').then((m) => ({ default: m.AcademiesPage })))
@@ -36,7 +37,6 @@ const PublicCompetitionDetailPage = lazy(() =>
 )
 const ShopPage = lazy(() => import('./pages/ShopPage').then((m) => ({ default: m.ShopPage })))
 const StudentAuthPage = lazy(() => import('./pages/StudentAuthPage').then((m) => ({ default: m.StudentAuthPage })))
-const TeacherLoginPage = lazy(() => import('./pages/TeacherLoginPage').then((m) => ({ default: m.TeacherLoginPage })))
 const TeacherRegistrationPage = lazy(() => import('./pages/TeacherRegistrationPage').then((m) => ({ default: m.TeacherRegistrationPage })))
 const TeacherPendingPage = lazy(() => import('./pages/TeacherPendingPage').then((m) => ({ default: m.TeacherPendingPage })))
 const StudentMessagesPage = lazy(() => import('./pages/StudentMessagesPage').then((m) => ({ default: m.StudentMessagesPage })))
@@ -159,7 +159,8 @@ export default function App() {
                 }
               >
                 <Route index element={<LandingPage />} />
-                <Route path="explore" element={<ExplorePage />} />
+                <Route path="discover" element={<ExplorePage />} />
+                <Route path="explore" element={<Navigate to="/discover" replace />} />
                 <Route path="teachers" element={<FindTeachersPage />} />
                 <Route path="teachers/:id" element={<TeacherProfilePage />} />
                 <Route path="academies" element={<AcademiesPage />} />
@@ -168,11 +169,12 @@ export default function App() {
                 <Route path="community" element={<CommunityPage />} />
                 <Route path="competitions" element={<CompetitionsPage />} />
                 <Route path="competitions/:slug" element={<PublicCompetitionDetailPage />} />
-                <Route path="pricing" element={<PricingPage />} />
+                <Route path="how-it-works" element={<HowYogstraWorksPage />} />
+                <Route path="pricing" element={<Navigate to="/how-it-works" replace />} />
+                <Route path="contact" element={<Navigate to="/help" replace />} />
                 <Route path="about" element={<AboutPage />} />
-                <Route path="contact" element={<ContactPage />} />
                 <Route path="help" element={<HelpCenterPage />} />
-                <Route path="shop" element={<ShopPage />} />
+                <Route path="shop" element={<Navigate to="/discover" replace />} />
                 <Route path="privacy-policy" element={<PrivacyPolicyPage />} />
                 <Route path="terms-of-service" element={<TermsOfServicePage />} />
                 <Route path="refund-policy" element={<RefundPolicyPage />} />
@@ -206,7 +208,9 @@ export default function App() {
 
               <Route element={<RequireGuest />}>
                 <Route path="auth/student" element={<StudentAuthPage />} />
-                <Route path="auth/teacher" element={<TeacherLoginPage />} />
+                <Route path="auth/academy" element={<AcademySignupPage />} />
+                <Route path="auth/organizer" element={<OrganizerSignupPage />} />
+                <Route path="auth/teacher" element={<Navigate to="/auth/login" replace />} />
                 <Route path="auth/teacher/register" element={<TeacherRegistrationPage />} />
               </Route>
 

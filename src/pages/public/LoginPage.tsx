@@ -26,11 +26,10 @@ export function LoginPage() {
     setLoading(true)
     try {
       const profile = await signIn(email, password)
-      if (profile.role === 'teacher' && profile.teacherStatus === 'pending') {
-        navigate('/auth/teacher/pending')
-        return
+      if (remember) {
+        localStorage.setItem('yogstra_remember_email', email)
       }
-      if (profile.role === 'teacher' && profile.teacherStatus === 'removed') {
+      if (profile.role === 'teacher' && (profile.teacherStatus === 'pending' || profile.teacherStatus === 'removed')) {
         navigate('/auth/teacher/pending')
         return
       }
@@ -61,7 +60,7 @@ export function LoginPage() {
   }
 
   return (
-    <AuthLayout title="Welcome back" description="Sign in to your Yogstra workspace">
+    <AuthLayout title="Welcome back" description="Sign in to your Yogstra account">
       {success && (
         <p role="status" className="mb-4 rounded-[12px] border border-primary/30 bg-primary/10 px-3 py-2 text-sm text-foreground">
           {success}
@@ -100,30 +99,19 @@ export function LoginPage() {
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? 'Signing in…' : 'Continue'}
         </Button>
-
-        <div className="relative py-2">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-border" />
-          </div>
-          <p className="relative text-center text-xs text-muted-foreground bg-elevated px-2 mx-auto w-fit">or continue with</p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <Button type="button" variant="secondary" disabled title="Coming soon">
-            Google
-          </Button>
-          <Button type="button" variant="secondary" disabled title="Coming soon">
-            Apple
-          </Button>
-        </div>
       </form>
 
-      <p className="mt-6 text-center text-sm text-muted-foreground">
-        New to Yogstra?{' '}
-        <Link to="/auth/get-started" className="text-accent hover:underline font-medium">
-          Get started
+      <div className="mt-6 flex flex-col items-center gap-3 text-sm text-muted-foreground">
+        <p>
+          New to Yogstra?{' '}
+          <Link to="/auth/get-started" className="text-accent hover:underline font-medium">
+            Get started
+          </Link>
+        </p>
+        <Link to="/" className="hover:text-foreground transition-colors">
+          ← Back to Home
         </Link>
-      </p>
+      </div>
     </AuthLayout>
   )
 }

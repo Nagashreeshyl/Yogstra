@@ -1,23 +1,36 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { AuthLayout } from '../components/public/AuthLayout'
 import { Input } from '../components/ui/Input'
 import { PasswordInput } from '../components/ui/PasswordInput'
+import { Select } from '../components/ui/Select'
 import { Button } from '../components/ui/Button'
 import { formatAuthError } from '../utils/format'
-import { requestPasswordReset } from '../services/auth'
+import { indianStates } from '../lib/constants'
 import { resolvePostLoginPath } from '../utils/workspacePreference'
 
+const experienceLevels = ['Complete beginner', 'Some experience', 'Intermediate', 'Advanced']
+const goalOptions = ['General wellness', 'Flexibility & strength', 'Competition prep', 'Teacher training', 'Stress relief']
+
 export function StudentAuthPage() {
-  const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [form, setForm] = useState({
-    fullName: '', email: '', phone: '', password: '', confirmPassword: '',
+    fullName: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+    country: 'India',
+    state: '',
+    city: '',
+    experience: '',
+    goals: '',
+    agreed: false,
   })
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const { signIn, signUpStudent } = useApp()
+  const { signUpStudent } = useApp()
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,36 +38,30 @@ export function StudentAuthPage() {
     setError(null)
     setSuccess(null)
 
-    if (mode === 'signup' && form.password !== form.confirmPassword) {
+    if (form.password !== form.confirmPassword) {
       setError('Passwords do not match')
+      return
+    }
+    if (!form.agreed) {
+      setError('Please accept the terms to continue')
       return
     }
 
     setLoading(true)
-
     try {
-      if (mode === 'signup') {
-        const result = await signUpStudent({
-          fullName: form.fullName,
-          email: form.email,
-          phone: form.phone,
-          password: form.password,
-        })
+      const result = await signUpStudent({
+        fullName: form.fullName,
+        email: form.email,
+        phone: form.phone,
+        password: form.password,
+      })
 
-        if (result.status === 'email_confirmation_required') {
-          setSuccess(
-            'Account created! Check your email to confirm, then log in here with the same email and password.',
-          )
-          setMode('login')
-          return
-        }
-
-        navigate(resolvePostLoginPath(result.profile))
+      if (result.status === 'email_confirmation_required') {
+        setSuccess('Account created! Check your email to confirm, then log in.')
         return
       }
 
-      const profile = await signIn(form.email, form.password)
-      navigate(resolvePostLoginPath(profile))
+      navigate(resolvePostLoginPath(result.profile))
     } catch (err) {
       setError(formatAuthError(err))
     } finally {
@@ -62,122 +69,78 @@ export function StudentAuthPage() {
     }
   }
 
-  const handleForgotPassword = async () => {
-    setError(null)
-    setSuccess(null)
-    if (!form.email.trim()) {
-      setError('Enter your email above, then tap Forgot Password.')
-      return
-    }
-    setLoading(true)
-    try {
-      await requestPasswordReset(form.email)
-      setSuccess('Password reset link sent. Check your email and follow the link to set a new password.')
-    } catch (err) {
-      setError(formatAuthError(err))
-    } finally {
-      setLoading(false)
-    }
+  if (success) {
+    return (
+      <AuthLayout title="Welcome to Yogstra!" description="Your student account has been created.">
+        <div className="rounded-[20px] border border-border bg-elevated p-8 text-center space-y-4">
+          <p className="text-sm text-muted-foreground">{success}</p>
+          <Link to="/auth/login">
+            <Button>Continue to Login</Button>
+          </Link>
+        </div>
+      </AuthLayout>
+    )
   }
 
   return (
     <AuthLayout
-      title={mode === 'login' ? 'Student login' : 'Create student account'}
-      description="Learn yoga, join academies, and compete on Yogstra."
+      title="Create your student account"
+      description="Discover coaches, join programs, and track your yoga journey."
     >
-      <div className="flex rounded-[16px] border border-border mb-6 overflow-hidden p-1 bg-elevated">
-          {(['login', 'signup'] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => { setMode(m); setError(null); setSuccess(null) }}
-              className={`flex-1 py-2.5 text-sm font-medium capitalize cursor-pointer transition-colors rounded-[12px] ${
-                mode === m
-                  ? 'bg-sidebar text-primary-foreground font-medium'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              }`}
-            >
-              {m === 'login' ? 'Login' : 'Sign Up'}
-            </button>
-          ))}
-        </div>
+      {error && (
+        <p role="alert" className="mb-4 rounded-[12px] border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {error}
+        </p>
+      )}
 
-        {success && (
-          <p role="status" aria-live="polite" className="text-sm text-primary mb-4 border border-primary/20 bg-primary/10 px-3 py-2 rounded-sm">
-            {success}
-          </p>
-        )}
+      <form onSubmit={handleSubmit} className="space-y-4 rounded-[20px] border border-border bg-elevated p-6 sm:p-8">
+        <Input label="Full Name" required value={form.fullName} onChange={(e) => setForm((p) => ({ ...p, fullName: e.target.value }))} />
+        <Input label="Email" type="email" required value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} />
+        <PasswordInput label="Password" required value={form.password} onChange={(v) => setForm((p) => ({ ...p, password: v }))} />
+        <PasswordInput label="Confirm Password" required value={form.confirmPassword} onChange={(v) => setForm((p) => ({ ...p, confirmPassword: v }))} />
+        <Input label="Phone" type="tel" required value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} />
+        <Input label="Country" value={form.country} onChange={(e) => setForm((p) => ({ ...p, country: e.target.value }))} />
+        <Select label="State" value={form.state} onChange={(e) => setForm((p) => ({ ...p, state: e.target.value }))}>
+          <option value="">Select state</option>
+          {indianStates.map((s) => <option key={s} value={s}>{s}</option>)}
+        </Select>
+        <Input label="City" value={form.city} onChange={(e) => setForm((p) => ({ ...p, city: e.target.value }))} />
+        <Select label="Yoga Experience" value={form.experience} onChange={(e) => setForm((p) => ({ ...p, experience: e.target.value }))}>
+          <option value="">Select level</option>
+          {experienceLevels.map((l) => <option key={l} value={l}>{l}</option>)}
+        </Select>
+        <Select label="Your Goals" value={form.goals} onChange={(e) => setForm((p) => ({ ...p, goals: e.target.value }))}>
+          <option value="">Select a goal</option>
+          {goalOptions.map((g) => <option key={g} value={g}>{g}</option>)}
+        </Select>
 
-        {error && (
-          <p role="alert" aria-live="assertive" className="text-sm text-red-600 mb-4 border border-red-200 bg-red-50 px-3 py-2 rounded-sm">
-            {error}
-          </p>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {mode === 'signup' && (
-            <Input
-              label="Full Name"
-              required
-              value={form.fullName}
-              onChange={(e) => setForm((p) => ({ ...p, fullName: e.target.value }))}
-            />
-          )}
-          <Input
-            label="Email"
-            type="email"
-            required
-            value={form.email}
-            onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+        <label className="flex items-start gap-3 text-sm text-muted-foreground cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.agreed}
+            onChange={(e) => setForm((p) => ({ ...p, agreed: e.target.checked }))}
+            className="mt-0.5 rounded border-border accent-accent"
           />
-          {mode === 'signup' && (
-            <Input
-              label="Phone"
-              type="tel"
-              required
-              value={form.phone}
-              onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
-            />
-          )}
-          <PasswordInput
-            label="Password"
-            required
-            value={form.password}
-            onChange={(v) => setForm((p) => ({ ...p, password: v }))}
-          />
-          {mode === 'signup' && (
-            <PasswordInput
-              label="Confirm Password"
-              required
-              value={form.confirmPassword}
-              onChange={(v) => setForm((p) => ({ ...p, confirmPassword: v }))}
-            />
-          )}
+          <span>
+            I agree to Yogstra&apos;s{' '}
+            <Link to="/terms-of-service" className="text-accent hover:underline">Terms of Service</Link>
+            {' '}and{' '}
+            <Link to="/privacy-policy" className="text-accent hover:underline">Privacy Policy</Link>
+          </span>
+        </label>
 
-          {mode === 'login' && (
-            <div className="text-right">
-              <button
-                type="button"
-                disabled={loading}
-                onClick={() => void handleForgotPassword()}
-                className="text-sm text-primary hover:underline cursor-pointer disabled:opacity-50"
-              >
-                Forgot Password?
-              </button>
-            </div>
-          )}
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? 'Creating account…' : 'Create Account'}
+        </Button>
+      </form>
 
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Please wait...' : mode === 'login' ? 'Login' : 'Create Account'}
-          </Button>
-        </form>
-
-        <Link
-          to="/auth/get-started"
-          className="block text-center text-sm text-muted-foreground hover:text-foreground mt-6"
-        >
-          ← Back to journeys
-        </Link>
+      <p className="mt-6 text-center text-sm text-muted-foreground">
+        Already have an account?{' '}
+        <Link to="/auth/login" className="text-accent hover:underline font-medium">Log in</Link>
+      </p>
+      <Link to="/auth/get-started" className="block text-center text-sm text-muted-foreground hover:text-foreground mt-3">
+        ← Back to Get Started
+      </Link>
     </AuthLayout>
   )
 }

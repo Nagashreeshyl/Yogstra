@@ -1,16 +1,16 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { signUpTeacher } from '../services/auth'
 import { indianStates } from '../lib/constants'
-import { PageContainer } from '../components/shell/PageContainer'
-import { PageHeader } from '../components/shell/PageHeader'
+import { AuthLayout } from '../components/public/AuthLayout'
 import { Input } from '../components/ui/Input'
 import { PasswordInput } from '../components/ui/PasswordInput'
 import { Textarea } from '../components/ui/Textarea'
 import { Select } from '../components/ui/Select'
 import { Button } from '../components/ui/Button'
-import { formatAuthError, formatIndianNumber } from '../utils/format'
+import { formatAuthError } from '../utils/format'
+import { TERMS } from '../constants/terminology'
 import type { TeacherRegistrationData } from '../types'
 
 const emptyForm: TeacherRegistrationData = {
@@ -28,7 +28,6 @@ export function TeacherRegistrationPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const { categories, setTeacherRegistration } = useApp()
-  const navigate = useNavigate()
 
   const update = (fields: Partial<TeacherRegistrationData>) =>
     setForm((p) => ({ ...p, ...fields }))
@@ -40,10 +39,6 @@ export function TeacherRegistrationPage() {
         ? p.specializations.filter((s) => s !== name)
         : [...p.specializations, name],
     }))
-  }
-
-  const handleMonthlyFeeChange = (raw: string) => {
-    update({ monthlyFee: formatIndianNumber(raw) })
   }
 
   const handleSubmit = async () => {
@@ -75,38 +70,39 @@ export function TeacherRegistrationPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-full flex flex-col items-center justify-center bg-background">
-        <PageContainer width="narrow" className="text-center !py-8">
-          <PageHeader title="Thank You!" description="Your registration has been submitted. We will verify your credentials and contact you within 12–24 hours on your registered phone number." />
-          <Button onClick={() => navigate('/')}>Return to Yogstra</Button>
-        </PageContainer>
-      </div>
+      <AuthLayout title="Application submitted" description="Thank you for applying to coach on Yogstra.">
+        <div className="rounded-[20px] border border-border bg-elevated p-8 text-center space-y-4">
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Your coach application has been submitted. We will review your profile and contact you within 48 hours.
+            Certification verification happens after approval.
+          </p>
+          <Link to="/auth/login"><Button>Continue to Login</Button></Link>
+        </div>
+      </AuthLayout>
     )
   }
 
   return (
-    <div className="min-h-full flex flex-col items-center bg-elevated">
-      <PageContainer width="narrow" className="!py-8">
-        <PageHeader
-          title="Teacher Registration"
-          description={`Step ${step} of 3`}
-          className="text-center [&_h1]:text-center [&_p]:mx-auto"
-        />
-        <div className="flex gap-2 mb-8 justify-center">
-          {[1, 2, 3].map((s) => (
-            <div
-              key={s}
-              className={`h-1 w-16 rounded-full ${s <= step ? 'bg-primary' : 'bg-border'}`}
-            />
-          ))}
-        </div>
+    <AuthLayout
+      title={TERMS.applyAsCoach}
+      description="Apply to teach on Yogstra and build your professional coaching practice."
+    >
+      <div className="flex gap-2 mb-6 justify-center">
+        {[1, 2, 3].map((s) => (
+          <div
+            key={s}
+            className={`h-1 w-16 rounded-full ${s <= step ? 'bg-accent' : 'bg-border'}`}
+          />
+        ))}
+      </div>
 
-        {error && (
-          <p className="text-sm text-red-600 mb-4 border border-red-200 bg-red-50 px-3 py-2 rounded-sm">
-            {error}
-          </p>
-        )}
+      {error && (
+        <p className="text-sm text-destructive mb-4 border border-destructive/30 bg-destructive/10 px-3 py-2 rounded-[12px]">
+          {error}
+        </p>
+      )}
 
+      <div className="rounded-[20px] border border-border bg-elevated p-6 sm:p-8">
         {step === 1 && (
           <div className="space-y-4">
             <Input label="Full Name" required value={form.fullName} onChange={(e) => update({ fullName: e.target.value })} />
@@ -119,7 +115,7 @@ export function TeacherRegistrationPage() {
               <option value="">Select state</option>
               {indianStates.map((s) => <option key={s} value={s}>{s}</option>)}
             </Select>
-            <Button className="w-full" onClick={() => setStep(2)}>Next</Button>
+            <Button className="w-full" onClick={() => setStep(2)}>Continue</Button>
           </div>
         )}
 
@@ -133,17 +129,17 @@ export function TeacherRegistrationPage() {
             </Select>
 
             <div>
-              <p className="text-sm font-medium mb-2">Yoga Specializations</p>
+              <p className="text-sm font-medium mb-2">Teaching Styles</p>
               <div className="flex flex-wrap gap-2">
                 {categories.map((cat) => (
                   <button
                     key={cat.id}
                     type="button"
                     onClick={() => toggleSpec(cat.name)}
-                    className={`px-3 py-1.5 text-xs rounded-[16px] border border-border cursor-pointer ${
+                    className={`px-3 py-1.5 text-xs rounded-[16px] border cursor-pointer ${
                       form.specializations.includes(cat.name)
-                        ? 'bg-primary/10 border-primary'
-                        : 'border-border hover:border-primary/40'
+                        ? 'bg-accent/10 border-accent text-foreground'
+                        : 'border-border hover:border-accent/40'
                     }`}
                   >
                     {cat.name}
@@ -152,27 +148,11 @@ export function TeacherRegistrationPage() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="monthly-fee" className="text-sm font-medium text-foreground">
-                Monthly Fee (₹)
-              </label>
-              <input
-                id="monthly-fee"
-                type="text"
-                inputMode="numeric"
-                placeholder="e.g. 10,000"
-                value={form.monthlyFee}
-                onChange={(e) => handleMonthlyFeeChange(e.target.value)}
-                className="w-full px-4 py-2.5 bg-elevated rounded-[16px] border border-border text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary transition-colors"
-              />
-            </div>
-
-            <Textarea label="Bio" placeholder="Tell students about yourself" value={form.bio} onChange={(e) => update({ bio: e.target.value })} />
-            <Input label="Certifications (optional)" value={form.certifications} onChange={(e) => update({ certifications: e.target.value })} />
+            <Textarea label="Bio" placeholder="Tell students about your teaching philosophy and experience" value={form.bio} onChange={(e) => update({ bio: e.target.value })} />
 
             <div className="flex gap-3">
               <Button variant="secondary" className="flex-1" onClick={() => setStep(1)}>Back</Button>
-              <Button className="flex-1" onClick={() => setStep(3)}>Next</Button>
+              <Button className="flex-1" onClick={() => setStep(3)}>Continue</Button>
             </div>
           </div>
         )}
@@ -183,31 +163,33 @@ export function TeacherRegistrationPage() {
               <SummaryRow label="Name" value={form.fullName} />
               <SummaryRow label="Email" value={form.email} />
               <SummaryRow label="Phone" value={form.phone} />
-              <SummaryRow label="Location" value={`${form.city}, ${form.state}`} />
-              <SummaryRow label="Experience" value={`${form.experienceYears} years`} />
-              <SummaryRow label="Specializations" value={form.specializations.join(', ')} />
-              <SummaryRow label="Monthly Fee" value={form.monthlyFee ? `₹${form.monthlyFee}` : '—'} />
-              {form.certifications && <SummaryRow label="Certifications" value={form.certifications} />}
+              <SummaryRow label="Location" value={`${form.city}${form.state ? `, ${form.state}` : ''}`} />
+              <SummaryRow label="Experience" value={form.experienceYears ? `${form.experienceYears} years` : '—'} />
+              <SummaryRow label="Teaching Styles" value={form.specializations.join(', ') || '—'} />
             </div>
 
-            <div className="bg-primary/10 border border-primary/20 rounded-[16px] p-4 text-sm leading-relaxed">
-              Your profile is under review. We will verify your credentials and contact you within 12–24 hours on your registered phone number. You will receive login access once verified.
-            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Your application will be reviewed by our team. Certification verification happens after approval.
+            </p>
 
             <div className="flex gap-3">
               <Button variant="secondary" className="flex-1" onClick={() => setStep(2)}>Back</Button>
               <Button className="flex-1" onClick={handleSubmit} disabled={loading}>
-                {loading ? 'Submitting...' : 'Submit for Verification'}
+                {loading ? 'Submitting…' : 'Submit Application'}
               </Button>
             </div>
           </div>
         )}
+      </div>
 
-        <Link to="/auth/role" className="block text-center text-sm text-muted-foreground hover:text-foreground mt-6">
-          ← Back
-        </Link>
-      </PageContainer>
-    </div>
+      <p className="mt-6 text-center text-sm text-muted-foreground">
+        Already have an account?{' '}
+        <Link to="/auth/login" className="text-accent hover:underline font-medium">Log in</Link>
+      </p>
+      <Link to="/auth/get-started" className="block text-center text-sm text-muted-foreground hover:text-foreground mt-3">
+        ← Back to Get Started
+      </Link>
+    </AuthLayout>
   )
 }
 

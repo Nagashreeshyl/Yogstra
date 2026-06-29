@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { Menu } from 'lucide-react'
 import { Breadcrumb } from './Breadcrumb'
 import { SearchBar } from './SearchBar'
 import { NotificationDropdown } from './NotificationDropdown'
@@ -18,7 +17,6 @@ interface TopBarProps {
   showNotifications?: boolean
   showRoleSwitcher?: boolean
   notificationCount?: number
-  onOpenMobileNav?: () => void
 }
 
 export function TopBar({
@@ -30,7 +28,6 @@ export function TopBar({
   showNotifications = true,
   showRoleSwitcher = true,
   notificationCount = 0,
-  onOpenMobileNav,
 }: TopBarProps) {
   const autoBreadcrumbs = useBreadcrumbs()
   const breadcrumbs = breadcrumbsOverride ?? autoBreadcrumbs
@@ -38,17 +35,7 @@ export function TopBar({
   return (
     <header className="sticky top-0 z-40 shrink-0 border-b border-border bg-background/90 backdrop-blur-md pt-[env(safe-area-inset-top)]">
       <div className="flex items-center gap-3 px-4 h-14 sm:px-6 lg:px-8">
-        <div className="lg:hidden min-w-0 flex-1 flex items-center gap-2">
-          {onOpenMobileNav && (
-            <button
-              type="button"
-              onClick={onOpenMobileNav}
-              className="shrink-0 p-2 -ml-1 rounded-[12px] text-foreground hover:bg-muted cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-              aria-label="Open navigation menu"
-            >
-              <Menu size={22} strokeWidth={1.75} />
-            </button>
-          )}
+        <div className="lg:hidden min-w-0 flex-1 flex items-center">
           <Link to={homeLink} className="font-heading text-lg font-semibold text-foreground truncate block min-w-0">
             {title}
           </Link>

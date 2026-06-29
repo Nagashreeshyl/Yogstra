@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
@@ -16,6 +16,7 @@ import type { MessagingUser } from '../../types'
 import { UserDirectory } from './UserDirectory'
 import { DirectChatPanel } from './DirectChatPanel'
 import { ChatWindowSkeleton } from '../ui/Skeleton'
+import { MOBILE_TAB_BAR_BOTTOM } from '../../constants/mobileNav'
 
 type Tab = 'students' | 'teachers'
 
@@ -229,7 +230,7 @@ export function MessagesHub() {
 
   useEffect(() => {
     if (!inChatView) return
-    const isMobile = window.matchMedia('(max-width: 767px)').matches
+    const isMobile = window.matchMedia('(max-width: 1023px)').matches
     if (!isMobile) return
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -240,9 +241,16 @@ export function MessagesHub() {
 
   const showListChrome = !inChatView
 
+  const mobileChatOverlayStyle: CSSProperties | undefined = inChatView
+    ? { bottom: MOBILE_TAB_BAR_BOTTOM }
+    : undefined
+
+  const mobileChatOverlayClass =
+    'fixed inset-x-0 top-0 z-[55] flex flex-col overflow-hidden bg-elevated md:static md:z-auto md:inset-auto md:bottom-auto md:h-auto md:max-h-none md:flex-1 md:min-h-0'
+
   return (
     <div
-      className={`h-full flex flex-col min-h-0 ${
+      className={`h-full flex flex-col min-h-0 max-lg:overflow-y-auto ${
         inChatView ? 'p-0 md:p-4 sm:p-6 lg:p-8' : 'p-4 sm:p-6 lg:p-8'
       }`}
     >
@@ -329,21 +337,15 @@ export function MessagesHub() {
 
         {awaitingNavTarget ? (
           <div
-            className={
-              inChatView
-                ? 'fixed inset-x-0 top-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-[55] flex flex-col overflow-hidden bg-elevated md:static md:z-auto md:inset-auto md:bottom-auto md:h-auto md:max-h-none md:flex-1 md:min-h-0'
-                : 'hidden md:block flex-1 min-h-0'
-            }
+            className={inChatView ? mobileChatOverlayClass : 'hidden md:block flex-1 min-h-0'}
+            style={mobileChatOverlayStyle}
           >
             <ChatWindowSkeleton />
           </div>
         ) : selectedUser && user ? (
           <div
-            className={
-              inChatView
-                ? 'fixed inset-x-0 top-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-[55] flex flex-col overflow-hidden bg-elevated md:static md:z-auto md:inset-auto md:bottom-auto md:h-auto md:max-h-none md:flex-1 md:min-h-0'
-                : 'hidden md:flex flex-1 min-h-0 flex-col'
-            }
+            className={inChatView ? mobileChatOverlayClass : 'hidden md:flex flex-1 min-h-0 flex-col'}
+            style={mobileChatOverlayStyle}
           >
             <DirectChatPanel
               key={`${selectedUser.id}-${selectedUser.threadId ?? 'new'}-${selectedUser.threadStatus ?? 'none'}-${selectedUser.threadHidden ?? false}`}

@@ -5,6 +5,7 @@ import {
   GraduationCap,
   Shield,
   Sparkles,
+  Star,
   Trophy,
   Users,
 } from 'lucide-react'
@@ -12,65 +13,80 @@ import { PublicSection } from '../../components/public/PublicSection'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 
-const trusted = ['Shiva Yoga Academy', 'Ashtanga Institute Pune', 'Kerala Wellness Collective', 'Delhi Competition League']
+const showcases = {
+  coaches: [
+    { name: 'Priya Sharma', style: 'Iyengar Yoga', location: 'Mumbai', rating: 4.9, students: 340 },
+    { name: 'Amit Kumar', style: 'Ashtanga', location: 'Pune', rating: 4.8, students: 210 },
+    { name: 'Meera Patel', style: 'Competition Prep', location: 'Delhi', rating: 5.0, students: 156 },
+  ],
+  academies: [
+    { name: 'Shanti Yoga Academy', location: 'Bangalore', programs: 8 },
+    { name: 'Kaivalyadhama Institute', location: 'Pune', programs: 12 },
+    { name: 'Kerala Wellness Collective', location: 'Kochi', programs: 6 },
+  ],
+  competitions: [
+    { name: 'National Yoga Championship 2026', date: 'Aug 15', venue: 'New Delhi' },
+    { name: 'State Level Championship', date: 'Jul 20', venue: 'Mumbai' },
+  ],
+}
 
-const journeys = [
+const testimonials = [
   {
-    icon: GraduationCap,
-    title: 'Students',
-    description: 'Discover teachers, join academies, and compete nationally.',
-    to: '/auth/get-started',
+    quote: 'Yogstra transformed how we run our academy. Batches, teachers, and competitions — all in one place.',
+    author: 'Rajesh K.',
+    role: 'Academy Owner',
   },
   {
-    icon: Users,
-    title: 'Teachers',
-    description: 'Build your practice, manage students, and grow your brand.',
-    to: '/auth/teacher/register',
+    quote: 'I found my coach, joined a foundation program, and competed at state level within six months.',
+    author: 'Ananya S.',
+    role: 'Student',
   },
   {
-    icon: Building2,
-    title: 'Academies',
-    description: 'Run batches, finance, attendance, and staff in one place.',
-    to: '/auth/get-started',
-  },
-  {
-    icon: Trophy,
-    title: 'Competitions',
-    description: 'Organize events, manage judges, and publish results.',
-    to: '/auth/get-started',
+    quote: 'Managing registrations and judges for our championship has never been this smooth.',
+    author: 'Dr. Lakshmi M.',
+    role: 'Competition Organizer',
   },
 ]
 
 const faqs = [
   {
-    q: 'Is Yogstra a yoga marketplace?',
-    a: 'No. Yogstra is an operating system for academies and competitions — connecting students, teachers, organizers, and judges on one platform.',
+    q: 'What is Yogstra?',
+    a: 'Yogstra is the operating system for yoga academies, coaches, students, and competitions — connecting every stakeholder on one premium platform.',
+  },
+  {
+    q: 'Is Yogstra a marketplace?',
+    a: 'No. Yogstra is a professional training platform where students join programs, coaches run their practice, and academies manage operations.',
+  },
+  {
+    q: 'How does Yogstra make money?',
+    a: 'Yogstra earns a small platform commission on successful paid enrollments and competition registrations. There are no monthly subscription fees.',
+  },
+  {
+    q: 'Can I attend live online classes?',
+    a: 'Yes. Built-in live online classes and instant messaging connect you directly with your coach.',
   },
   {
     q: 'Can one account access multiple workspaces?',
-    a: 'Yes. A teacher can also be an organizer or academy owner. After login, choose the workspace you need.',
-  },
-  {
-    q: 'Do you support live classes and video calls?',
-    a: 'Yes. Built-in LiveKit video for live classes and direct message video calls.',
+    a: 'Yes. A coach can also run an academy or serve as a competition judge. After login, you go directly to your primary workspace.',
   },
 ]
 
 export function LandingPage() {
   return (
     <>
+      {/* Hero */}
       <section className="relative overflow-hidden border-b border-border">
         <div className="absolute inset-0 bg-gradient-to-br from-sidebar via-background to-sidebar-secondary opacity-90" />
         <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-32">
           <Badge variant="primary" className="mb-6">
-            Yogstra V2
+            Premium Yoga Platform
           </Badge>
           <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-semibold text-foreground max-w-3xl leading-tight tracking-tight">
-            The Operating System for Yoga Academies &amp; Competitions
+            The Operating System for Yoga Academies, Teachers, Students and Competitions
           </h1>
           <p className="mt-6 text-lg text-muted-foreground max-w-2xl leading-relaxed">
-            Run your academy, coach students, organize championships, and judge performances — all on one
-            premium platform built for modern yoga institutions.
+            Discover coaches, join structured programs, run academies, and host world-class competitions —
+            everything yoga training needs, in one place.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row gap-3">
             <Link to="/auth/get-started">
@@ -79,65 +95,40 @@ export function LandingPage() {
                 <ArrowRight size={18} className="ml-1" />
               </Button>
             </Link>
-            <Link to="/explore">
+            <Link to="/discover">
               <Button variant="secondary" size="lg" className="w-full sm:w-auto">
-                Explore Platform
+                Discover Platform
               </Button>
             </Link>
-          </div>
-          <div className="mt-16 rounded-[24px] border border-border bg-elevated/80 p-8 sm:p-12 backdrop-blur-sm">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
-              {[
-                { label: 'Academies', value: '120+' },
-                { label: 'Teachers', value: '850+' },
-                { label: 'Competitions', value: '40+' },
-                { label: 'Students', value: '12k+' },
-              ].map((stat) => (
-                <div key={stat.label}>
-                  <p className="font-heading text-2xl sm:text-3xl font-semibold text-accent">{stat.value}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </section>
 
-      <PublicSection title="Trusted by academies" centered>
-        <div className="flex flex-wrap justify-center gap-3">
-          {trusted.map((name) => (
-            <span
-              key={name}
-              className="rounded-full border border-border bg-elevated px-4 py-2 text-sm text-muted-foreground"
-            >
-              {name}
-            </span>
+      {/* Platform Overview */}
+      <PublicSection title="One platform. Every stakeholder." description="Yogstra connects the entire yoga ecosystem." centered>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
+          {[
+            { icon: GraduationCap, label: 'Students', desc: 'Learn & compete' },
+            { icon: Users, label: 'Coaches', desc: 'Teach & grow' },
+            { icon: Building2, label: 'Academies', desc: 'Manage & scale' },
+            { icon: Trophy, label: 'Competitions', desc: 'Organize & judge' },
+          ].map(({ icon: Icon, label, desc }) => (
+            <div key={label} className="rounded-[20px] border border-border bg-elevated p-6 text-center">
+              <Icon size={24} className="text-accent mx-auto mb-3" />
+              <p className="font-heading font-semibold text-foreground">{label}</p>
+              <p className="text-xs text-muted-foreground mt-1">{desc}</p>
+            </div>
           ))}
         </div>
       </PublicSection>
 
-      <PublicSection
-        title="Why Yogstra"
-        description="One platform for every stakeholder in the yoga ecosystem — not another listing site."
-        className="bg-muted/30"
-      >
+      {/* Why Yogstra */}
+      <PublicSection title="Why Yogstra" description="Built for professional yoga institutions, not another listing site." className="bg-muted/30">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
-            {
-              icon: Shield,
-              title: 'Verified ecosystem',
-              text: 'Teachers, academies, and competitions go through structured verification.',
-            },
-            {
-              icon: Sparkles,
-              title: 'Premium experience',
-              text: 'Dashboards, video, payments, and community — unified under V2 design.',
-            },
-            {
-              icon: Trophy,
-              title: 'Competition-ready',
-              text: 'Organizers, judges, registrations, rankings, and certificates built in.',
-            },
+            { icon: Shield, title: 'Verified ecosystem', text: 'Coaches, academies, and competitions go through structured verification.' },
+            { icon: Sparkles, title: 'Premium experience', text: 'Programs, live classes, secure payments, and community — unified under one design.' },
+            { icon: Trophy, title: 'Competition-ready', text: 'Organizers, judges, registrations, rankings, and certificates built in.' },
           ].map(({ icon: Icon, title, text }) => (
             <div key={title} className="rounded-[20px] border border-border bg-elevated p-6">
               <Icon size={22} className="text-accent mb-4" />
@@ -148,53 +139,110 @@ export function LandingPage() {
         </div>
       </PublicSection>
 
-      <PublicSection title="Built for every journey" description="Choose the path that matches your role." centered>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {journeys.map(({ icon: Icon, title, description, to }) => (
-            <Link
-              key={title}
-              to={to}
-              className="rounded-[20px] border border-border bg-elevated p-6 hover:border-accent/40 transition-colors group"
-            >
-              <Icon size={24} className="text-accent mb-4" />
-              <h3 className="font-heading text-lg font-semibold text-foreground mb-2">{title}</h3>
-              <p className="text-sm text-muted-foreground mb-4">{description}</p>
-              <span className="text-sm font-medium text-accent inline-flex items-center gap-1 group-hover:gap-2 transition-all">
-                Learn more <ArrowRight size={14} />
-              </span>
-            </Link>
-          ))}
-        </div>
-      </PublicSection>
-
-      <PublicSection title="Simple pricing" description="Plans for every stage of growth." centered className="bg-muted/30">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-          {[
-            { name: 'Student', price: 'Free', desc: 'Explore, book, and compete' },
-            { name: 'Teacher', price: '₹499/mo', desc: 'Students, classes, earnings' },
-            { name: 'Academy', price: 'Custom', desc: 'Full academy operations' },
-          ].map((plan) => (
-            <div key={plan.name} className="rounded-[20px] border border-border bg-elevated p-6 text-center">
-              <p className="text-sm text-muted-foreground">{plan.name}</p>
-              <p className="font-heading text-2xl font-semibold text-foreground mt-2">{plan.price}</p>
-              <p className="text-sm text-muted-foreground mt-2">{plan.desc}</p>
+      {/* Coach Showcase */}
+      <PublicSection title="Featured Coaches" description="Verified coaches ready to guide your journey.">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          {showcases.coaches.map((coach) => (
+            <div key={coach.name} className="rounded-[20px] border border-border bg-elevated p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center font-heading font-semibold text-accent">
+                  {coach.name.charAt(0)}
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">{coach.name}</p>
+                  <p className="text-xs text-muted-foreground">{coach.style}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-1">
+                  <Star size={12} className="fill-accent text-accent" />
+                  {coach.rating}
+                </span>
+                <span>{coach.students} students</span>
+                <span>{coach.location}</span>
+              </div>
             </div>
           ))}
         </div>
         <div className="text-center mt-8">
-          <Link to="/pricing">
-            <Button variant="secondary">View full pricing</Button>
+          <Link to="/teachers">
+            <Button variant="secondary">Discover Coaches</Button>
           </Link>
         </div>
       </PublicSection>
 
-      <PublicSection title="FAQ" centered>
-        <div className="max-w-2xl mx-auto space-y-4">
+      {/* Academy Showcase */}
+      <PublicSection title="Featured Academies" description="Professional institutions on Yogstra." className="bg-muted/30">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          {showcases.academies.map((academy) => (
+            <div key={academy.name} className="rounded-[20px] border border-border bg-elevated p-6">
+              <Building2 size={22} className="text-accent mb-3" />
+              <p className="font-heading font-semibold text-foreground">{academy.name}</p>
+              <p className="text-sm text-muted-foreground mt-1">{academy.location}</p>
+              <p className="text-xs text-accent mt-2">{academy.programs} programs</p>
+            </div>
+          ))}
+        </div>
+        <div className="text-center mt-8">
+          <Link to="/academies">
+            <Button variant="secondary">Browse Academies</Button>
+          </Link>
+        </div>
+      </PublicSection>
+
+      {/* Competition Showcase */}
+      <PublicSection title="Upcoming Competitions" description="Register, prepare, and compete.">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-3xl">
+          {showcases.competitions.map((comp) => (
+            <div key={comp.name} className="rounded-[20px] border border-border bg-elevated p-6 flex gap-4">
+              <Trophy size={22} className="text-accent shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-foreground">{comp.name}</p>
+                <p className="text-sm text-muted-foreground mt-1">{comp.date} · {comp.venue}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="text-center mt-8">
+          <Link to="/competitions">
+            <Button variant="secondary">View Competitions</Button>
+          </Link>
+        </div>
+      </PublicSection>
+
+      {/* Community */}
+      <PublicSection title="Community" description="Share progress, celebrate achievements, stay connected." className="bg-muted/30" centered>
+        <p className="text-muted-foreground max-w-xl mx-auto mb-8">
+          An Instagram-like feed where coaches share insights, students celebrate milestones, and academies post updates.
+        </p>
+        <Link to="/community">
+          <Button variant="secondary">Join Community</Button>
+        </Link>
+      </PublicSection>
+
+      {/* Testimonials */}
+      <PublicSection title="Trusted by the yoga community" centered>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {testimonials.map((t) => (
+            <blockquote key={t.author} className="rounded-[20px] border border-border bg-elevated p-6">
+              <p className="text-sm text-muted-foreground leading-relaxed italic">&ldquo;{t.quote}&rdquo;</p>
+              <footer className="mt-4">
+                <p className="text-sm font-medium text-foreground">{t.author}</p>
+                <p className="text-xs text-muted-foreground">{t.role}</p>
+              </footer>
+            </blockquote>
+          ))}
+        </div>
+      </PublicSection>
+
+      {/* FAQ */}
+      <PublicSection title="Frequently asked questions" centered className="bg-muted/30">
+        <div className="max-w-2xl mx-auto space-y-3">
           {faqs.map((item) => (
             <details key={item.q} className="rounded-[16px] border border-border bg-elevated px-5 py-4 group">
               <summary className="font-medium text-foreground cursor-pointer list-none flex justify-between items-center">
                 {item.q}
-                <span className="text-muted-foreground group-open:rotate-45 transition-transform">+</span>
+                <span className="text-muted-foreground group-open:rotate-45 transition-transform text-lg">+</span>
               </summary>
               <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{item.a}</p>
             </details>
@@ -202,17 +250,28 @@ export function LandingPage() {
         </div>
       </PublicSection>
 
-      <section className="border-t border-border bg-sidebar-secondary py-16 sm:py-20">
-        <div className="mx-auto max-w-3xl px-4 text-center">
-          <h2 className="font-heading text-3xl font-semibold text-sidebar-foreground">
-            Ready to run your academy like a modern institution?
+      {/* Final CTA */}
+      <section className="border-t border-border">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20 text-center">
+          <h2 className="font-heading text-3xl sm:text-4xl font-semibold text-foreground">
+            Ready to begin your journey?
           </h2>
-          <p className="mt-4 text-sidebar-muted">
-            Join Yogstra — the platform built for yoga academies and competitions.
+          <p className="mt-4 text-muted-foreground max-w-lg mx-auto">
+            Join thousands of students, coaches, and academies on the platform built for modern yoga training.
           </p>
-          <Link to="/auth/get-started" className="inline-block mt-8">
-            <Button size="lg">Get Started Free</Button>
-          </Link>
+          <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+            <Link to="/auth/get-started">
+              <Button size="lg">
+                Get Started
+                <ArrowRight size={18} className="ml-1" />
+              </Button>
+            </Link>
+            <Link to="/how-it-works">
+              <Button variant="secondary" size="lg">
+                How Yogstra Works
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
     </>

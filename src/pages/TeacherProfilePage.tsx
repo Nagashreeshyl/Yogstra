@@ -1,6 +1,14 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { MapPin, BadgeCheck, Users, MessageCircle, ShoppingBag } from 'lucide-react'
+import {
+  Award,
+  BadgeCheck,
+  MapPin,
+  MessageCircle,
+  Star,
+  Trophy,
+  Users,
+} from 'lucide-react'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { useActiveClassPurchase } from '../hooks/useActiveClassPurchase'
 import { useLiveDataRefresh } from '../hooks/useLiveDataRefresh'
@@ -17,52 +25,50 @@ import { StarRating } from '../components/ui/StarRating'
 import { ProfilePageSkeleton } from '../components/ui/Skeleton'
 import { BuyClassModal } from '../components/chat/BuyClassModal'
 import { buildChatNavigationState, messagesPathForRole } from '../utils/chatNavigation'
+import { TERMS } from '../constants/terminology'
 
-const tabs = ['About', 'Teaching Style', 'Achievements', 'Pricing', 'Reviews'] as const
+function ProfileSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="py-10 border-b border-border last:border-0">
+      <h2 className="font-heading text-xl sm:text-2xl font-semibold text-foreground mb-6">{title}</h2>
+      {children}
+    </section>
+  )
+}
 
 export function TeacherProfilePage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { requireAuth, user } = useApp()
-  const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>('About')
   const [requesting, setRequesting] = useState(false)
   const [openingBuy, setOpeningBuy] = useState(false)
   const [buyOpen, setBuyOpen] = useState(false)
   const [buyThreadId, setBuyThreadId] = useState<string | null>(null)
   const [requestError, setRequestError] = useState<string | null>(null)
-  const [requestNotice, setRequestNotice] = useState<string | null>(null)
-  const { data: teacher, loading, refetch } = useAsyncData(
-    () => fetchTeacherById(id!),
-    [id],
-  )
+  const { data: teacher, loading, refetch } = useAsyncData(() => fetchTeacherById(id!), [id])
 
   useLiveDataRefresh(refetch, ['teachers'], Boolean(id))
 
   const isStudent = user?.role === 'student'
+  const { hasActivePurchase, refetchActivePurchase } = useActiveClassPurchase(user?.id, id, isStudent && Boolean(id))
 
-  const { hasActivePurchase, refetchActivePurchase } = useActiveClassPurchase(
-    user?.id,
-    id,
-    isStudent && Boolean(id),
-  )
-
-  if (loading) {
-    return <ProfilePageSkeleton />
-  }
+  if (loading) return <ProfilePageSkeleton />
 
   if (!teacher) {
     return (
       <PageContainer>
         <EmptyState
-          title="Teacher not found"
-          description="This teacher profile may have been removed."
-          action={<Button onClick={() => navigate('/teachers')}>Back to Teachers</Button>}
+          title="Coach not found"
+          description="This coach profile may have been removed."
+          action={<Button onClick={() => navigate('/teachers')}>Discover Coaches</Button>}
         />
       </PageContainer>
     )
   }
 
-  const openChatWithTeacher = () => {
+  const coverImage = teacher.coverPhoto || teacher.photo
+
+  const openChat = () => {
     navigate(messagesPathForRole('student'), {
       state: buildChatNavigationState(
         { id: teacher.id, name: teacher.name, photo: teacher.photo, verified: teacher.verified },
@@ -71,49 +77,9 @@ export function TeacherProfilePage() {
     })
   }
 
-  const handleRequest = async () => {
-    if (!requireAuth()) return
-    if (!user) return
-    if (user.role !== 'student') {
-      setRequestError('Only students can request a teacher.')
-      return
-    }
-
-    setRequesting(true)
-    setRequestError(null)
-    setRequestNotice(null)
-
-    try {
-      const { isNewRequest } = await requestTeacherWithIntro({
-        studentId: user.id,
-        studentName: user.name,
-        teacher,
-      })
-
-      setRequestNotice(
-        isNewRequest
-          ? 'Intro message sent — opening your chat. Complete payment when you are ready to book a class.'
-          : 'Opening your chat with this teacher.',
-      )
-
-      openChatWithTeacher()
-    } catch (err) {
-      setRequestError(err instanceof Error ? err.message : 'Could not send your request.')
-    } finally {
-      setRequesting(false)
-    }
-  }
-
-  const handleMessage = () => {
+  const handleEnroll = async () => {
     if (!requireAuth()) return
     if (!user || user.role !== 'student') return
-    openChatWithTeacher()
-  }
-
-  const handleBuy = async () => {
-    if (!requireAuth()) return
-    if (!user || user.role !== 'student') return
-
     setOpeningBuy(true)
     setRequestError(null)
     try {
@@ -127,183 +93,184 @@ export function TeacherProfilePage() {
     }
   }
 
+  const handleTrial = async () => {
+    if (!requireAuth()) return
+    if (!user || user.role !== 'student') return
+    setRequesting(true)
+    setRequestError(null)
+    try {
+      await requestTeacherWithIntro({ studentId: user.id, studentName: user.name, teacher })
+      openChat()
+    } catch (err) {
+      setRequestError(err instanceof Error ? err.message : 'Could not send your request.')
+    } finally {
+      setRequesting(false)
+    }
+  }
+
   return (
     <>
-      <PageContainer width="default">
-      <div className="flex flex-col sm:flex-row gap-8 mb-8 pb-8 border-b border-border">
-          <Avatar src={teacher.photo} name={teacher.name} size={160} />
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="font-heading text-3xl font-medium">{teacher.name}</h1>
-              {teacher.verified && (
-                <Badge variant="verified" className="flex items-center gap-1">
-                  <BadgeCheck size={12} /> Verified Teacher
-                </Badge>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-2 mb-4">
-              {teacher.specializations.map((s) => (
-                <Badge key={s}>{s}</Badge>
-              ))}
-            </div>
-            <StarRating rating={teacher.rating} size={16} />
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 text-sm">
-              <div>
-                <p className="text-muted-foreground text-xs">Experience</p>
-                <p className="font-medium">{teacher.experienceYears} years</p>
+      {/* Cover + Hero */}
+      <div className="relative">
+        <div className="h-48 sm:h-64 lg:h-72 bg-gradient-to-br from-sidebar via-accent/20 to-sidebar-secondary overflow-hidden">
+          {coverImage && (
+            <img src={coverImage} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
+          )}
+        </div>
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <div className="relative -mt-16 sm:-mt-20 flex flex-col sm:flex-row gap-6 pb-8">
+            <Avatar src={teacher.photo} name={teacher.name} size={128} className="ring-4 ring-background shrink-0" />
+            <div className="flex-1 pt-2 sm:pt-16">
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <h1 className="font-heading text-2xl sm:text-3xl font-semibold text-foreground">{teacher.name}</h1>
+                {teacher.verified && (
+                  <Badge variant="verified" className="gap-1">
+                    <BadgeCheck size={12} /> Verified Coach
+                  </Badge>
+                )}
               </div>
-              <div>
-                <p className="text-muted-foreground text-xs">Students</p>
-                <p className="font-medium flex items-center gap-1">
-                  <Users size={14} /> {teacher.totalStudents}
-                </p>
+              <p className="text-muted-foreground text-sm sm:text-base mb-3">
+                {teacher.specializations.slice(0, 2).join(' · ')}
+              </p>
+              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-4">
+                <StarRating rating={teacher.rating} size={14} />
+                <span className="inline-flex items-center gap-1"><Users size={14} />{teacher.totalStudents} students trained</span>
+                <span className="inline-flex items-center gap-1"><MapPin size={14} />{teacher.city}</span>
+                <span>{teacher.experienceYears} years experience</span>
               </div>
-              <div>
-                <p className="text-muted-foreground text-xs">Monthly Fee</p>
-                <p className="font-medium">₹{teacher.monthlyFee.toLocaleString('en-IN')}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-xs">Location</p>
-                <p className="font-medium flex items-center gap-1">
-                  <MapPin size={14} /> {teacher.city}
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-3 mt-6">
-              {isStudent && (
-                <>
-                  <Button onClick={() => void handleRequest()} disabled={requesting}>
-                    {requesting ? 'Sending request...' : 'Request Teacher'}
-                  </Button>
-                  {!hasActivePurchase && (
-                    <Button
-                      variant="secondary"
-                      onClick={() => void handleBuy()}
-                      disabled={openingBuy}
-                      className="gap-1.5"
-                    >
-                      <ShoppingBag size={16} />
-                      {openingBuy ? 'Opening...' : 'Buy Class'}
+              <div className="hidden sm:flex flex-wrap gap-3">
+                {isStudent && (
+                  <>
+                    <Button onClick={() => void handleTrial()} disabled={requesting}>{requesting ? 'Booking…' : TERMS.bookTrial}</Button>
+                    {!hasActivePurchase && (
+                      <Button variant="secondary" onClick={() => void handleEnroll()} disabled={openingBuy}>
+                        {openingBuy ? 'Opening…' : TERMS.enrollInProgram}
+                      </Button>
+                    )}
+                    <Button variant="secondary" onClick={openChat} className="gap-1.5">
+                      <MessageCircle size={16} />{TERMS.messageCoach}
                     </Button>
-                  )}
-                  <Button variant="secondary" onClick={handleMessage} className="gap-1.5">
-                    <MessageCircle size={16} />
-                    Message
-                  </Button>
-                </>
-              )}
+                  </>
+                )}
+              </div>
             </div>
-            {requestError && (
-              <p className="text-sm text-red-600 mt-3 border border-red-200 bg-red-50 px-3 py-2 rounded-[16px] max-w-md">
-                {requestError}
-              </p>
-            )}
-            {requestNotice && (
-              <p className="text-sm text-primary mt-3 border border-primary/20 bg-primary/10 px-3 py-2 rounded-[16px] max-w-md">
-                {requestNotice}
-              </p>
-            )}
           </div>
         </div>
+      </div>
 
-        <div className="flex gap-1 border-b border-border mb-6 overflow-x-auto">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2.5 text-sm transition-colors cursor-pointer border-b-2 -mb-px whitespace-nowrap ${
-                activeTab === tab
-                  ? 'border-primary text-foreground font-medium'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
+      {/* Mobile sticky CTA */}
+      {isStudent && (
+        <div className="sm:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur-md p-3 flex gap-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+          <Button size="sm" variant="secondary" className="flex-1" onClick={() => void handleTrial()} disabled={requesting}>
+            {TERMS.bookTrial}
+          </Button>
+          <Button size="sm" className="flex-1" onClick={() => void handleEnroll()} disabled={openingBuy}>
+            {TERMS.enrollInProgram}
+          </Button>
         </div>
+      )}
 
-        <div className="prose-sm max-w-none">
-          {activeTab === 'About' && (
-            <p className="text-muted-foreground leading-relaxed">{teacher.bio}</p>
+      <PageContainer width="default" className="pb-24 sm:pb-14">
+        {requestError && (
+          <p className="mb-6 rounded-[12px] border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{requestError}</p>
+        )}
+
+        <ProfileSection title="About">
+          <p className="text-muted-foreground leading-relaxed max-w-3xl">{teacher.bio || 'This coach has not added a bio yet.'}</p>
+          {teacher.teachingStyle && (
+            <p className="mt-4 text-sm text-muted-foreground leading-relaxed max-w-3xl">
+              <strong className="text-foreground">Teaching approach:</strong> {teacher.teachingStyle}
+            </p>
           )}
-          {activeTab === 'Teaching Style' && (
-            <p className="text-muted-foreground leading-relaxed">{teacher.teachingStyle}</p>
-          )}
-          {activeTab === 'Achievements' && (
-            <ul className="space-y-2">
+          <div className="flex flex-wrap gap-2 mt-4">
+            {teacher.specializations.map((s) => <Badge key={s}>{s}</Badge>)}
+          </div>
+        </ProfileSection>
+
+        <ProfileSection title="Programs">
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="rounded-[20px] border border-border bg-elevated p-6">
+              <h3 className="font-medium text-foreground mb-1">{TERMS.trainingBatch}</h3>
+              <p className="text-sm text-muted-foreground mb-4">Group training sessions with structured curriculum.</p>
+              <p className="text-sm font-semibold text-foreground">
+                {teacher.pricing.groupMonth > 0 ? `₹${teacher.pricing.groupMonth.toLocaleString('en-IN')}/month` : 'Contact for pricing'}
+              </p>
+            </div>
+            <div className="rounded-[20px] border border-border bg-elevated p-6">
+              <h3 className="font-medium text-foreground mb-1">{TERMS.personalCoaching}</h3>
+              <p className="text-sm text-muted-foreground mb-4">One-on-one sessions tailored to your goals.</p>
+              <p className="text-sm font-semibold text-foreground">
+                {teacher.pricing.oneOnOneMonth > 0 ? `₹${teacher.pricing.oneOnOneMonth.toLocaleString('en-IN')}/month` : 'Contact for pricing'}
+              </p>
+            </div>
+            {teacher.achievements.some((a) => a.toLowerCase().includes('competition')) && (
+              <div className="rounded-[20px] border border-border bg-elevated p-6 sm:col-span-2">
+                <h3 className="font-medium text-foreground mb-1">{TERMS.competitionCoaching}</h3>
+                <p className="text-sm text-muted-foreground">Competition preparation and performance coaching.</p>
+              </div>
+            )}
+          </div>
+        </ProfileSection>
+
+        <ProfileSection title="Achievements & Certifications">
+          {teacher.achievements.length > 0 ? (
+            <ul className="space-y-3">
               {teacher.achievements.map((a) => (
-                <li key={a} className="text-muted-foreground flex items-start gap-2">
-                  <span className="text-primary mt-1">•</span> {a}
+                <li key={a} className="flex items-start gap-3 text-sm text-muted-foreground">
+                  <Trophy size={16} className="text-accent shrink-0 mt-0.5" />
+                  {a}
                 </li>
               ))}
             </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">Achievements will appear here.</p>
           )}
-          {activeTab === 'Pricing' && (
-            <div className="grid sm:grid-cols-2 gap-6 max-w-xl">
-              <div className="rounded-[16px] border border-border p-4 bg-elevated">
-                <h3 className="font-medium mb-3">1-on-1 classes</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">1 week</span>
-                    <span className="font-medium">
-                      {teacher.pricing.oneOnOneWeek > 0
-                        ? `₹${teacher.pricing.oneOnOneWeek.toLocaleString('en-IN')}`
-                        : 'Not set'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">1 month</span>
-                    <span className="font-medium">
-                      {teacher.pricing.oneOnOneMonth > 0
-                        ? `₹${teacher.pricing.oneOnOneMonth.toLocaleString('en-IN')}`
-                        : 'Not set'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div className="rounded-[16px] border border-border p-4 bg-elevated">
-                <h3 className="font-medium mb-3">Group classes</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">1 week</span>
-                    <span className="font-medium">
-                      {teacher.pricing.groupWeek > 0
-                        ? `₹${teacher.pricing.groupWeek.toLocaleString('en-IN')}`
-                        : 'Not set'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">1 month</span>
-                    <span className="font-medium">
-                      {teacher.pricing.groupMonth > 0
-                        ? `₹${teacher.pricing.groupMonth.toLocaleString('en-IN')}`
-                        : 'Not set'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              {isStudent && !hasActivePurchase && (
-                <Button className="sm:col-span-2 gap-1.5 w-full sm:w-auto" onClick={() => void handleBuy()}>
-                  <ShoppingBag size={16} />
-                  Buy a class with {teacher.name.split(' ')[0]}
-                </Button>
-              )}
+          {teacher.certifications && (
+            <div className="mt-6 flex items-start gap-3 text-sm text-muted-foreground">
+              <Award size={16} className="text-accent shrink-0 mt-0.5" />
+              {teacher.certifications}
             </div>
           )}
-          {activeTab === 'Reviews' && (
-            <p className="text-muted-foreground text-sm">Reviews will appear here once students leave feedback.</p>
+        </ProfileSection>
+
+        <ProfileSection title="Student Reviews">
+          <div className="flex items-center gap-2 mb-4">
+            <Star size={18} className="fill-accent text-accent" />
+            <span className="font-semibold text-foreground">{teacher.rating.toFixed(1)}</span>
+            <span className="text-sm text-muted-foreground">average rating</span>
+          </div>
+          <p className="text-sm text-muted-foreground">Reviews from enrolled students will appear here.</p>
+        </ProfileSection>
+
+        <ProfileSection title="FAQs & Policies">
+          <div className="space-y-4 text-sm text-muted-foreground max-w-2xl">
+            <details className="rounded-[12px] border border-border px-4 py-3">
+              <summary className="font-medium text-foreground cursor-pointer">What should I bring to my first class?</summary>
+              <p className="mt-2">A yoga mat, comfortable clothing, and water. Your coach may share specific requirements before your first session.</p>
+            </details>
+            <details className="rounded-[12px] border border-border px-4 py-3">
+              <summary className="font-medium text-foreground cursor-pointer">What is the cancellation policy?</summary>
+              <p className="mt-2">Contact your coach directly for cancellation and rescheduling. Policies may vary by program.</p>
+            </details>
+          </div>
+        </ProfileSection>
+
+        <ProfileSection title="Get in Touch">
+          <p className="text-muted-foreground mb-4">Have questions before enrolling? Reach out to {teacher.name.split(' ')[0]}.</p>
+          {isStudent && (
+            <div className="flex flex-wrap gap-3">
+              <Button onClick={() => void handleTrial()} disabled={requesting}>{TERMS.bookTrial}</Button>
+              <Button variant="secondary" onClick={() => void handleEnroll()} disabled={openingBuy}>{TERMS.enrollInProgram}</Button>
+              <Button variant="secondary" onClick={openChat} className="gap-1.5"><MessageCircle size={16} />{TERMS.messageCoach}</Button>
+            </div>
           )}
-        </div>
+        </ProfileSection>
       </PageContainer>
 
       {isStudent && user && buyThreadId && (
         <BuyClassModal
           isOpen={buyOpen}
-          onClose={() => {
-            setBuyOpen(false)
-            void refetchActivePurchase(true)
-          }}
+          onClose={() => { setBuyOpen(false); void refetchActivePurchase(true) }}
           studentId={user.id}
           studentName={user.name}
           teacherId={teacher.id}

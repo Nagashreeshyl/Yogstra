@@ -6,16 +6,24 @@ import { AuthLoadingSkeleton } from './AuthLoadingSkeleton'
 
 const STUDENT_PUBLIC: Record<string, string> = {
   '/': '/dashboard/student',
+  '/discover': '/dashboard/student/explore',
   '/explore': '/dashboard/student/explore',
   '/community': '/dashboard/student/community',
   '/teachers': '/dashboard/student/teachers',
   '/academies': '/dashboard/student/explore',
   '/competitions': '/dashboard/student/competitions',
-  '/shop': '/dashboard/student/shop',
-  '/pricing': '/dashboard/student/explore',
 }
 
-const AUTH_PATHS = ['/auth/role', '/auth/get-started', '/auth/student', '/auth/teacher', '/auth/teacher/register', '/auth/login']
+const AUTH_PATHS = [
+  '/auth/role',
+  '/auth/get-started',
+  '/auth/student',
+  '/auth/academy',
+  '/auth/organizer',
+  '/auth/teacher',
+  '/auth/teacher/register',
+  '/auth/login',
+]
 
 /** Sends returning logged-in users to their dashboard instead of public/auth pages */
 export function LoggedInRedirect({ children }: { children: React.ReactNode }) {
@@ -48,7 +56,7 @@ export function LoggedInRedirect({ children }: { children: React.ReactNode }) {
   }
 
   if (user.role === 'teacher') {
-    if (path === '/' || path.startsWith('/teachers') || path === '/community') {
+    if (path === '/' || path.startsWith('/teachers') || path === '/community' || path === '/discover') {
       return <Navigate to={dashboard} replace />
     }
     const studentProfileMatch = path.match(/^\/students\/([^/]+)$/)
