@@ -8,7 +8,9 @@ import { TeacherDashboardLayout } from './components/layout/TeacherDashboardLayo
 import { AdminLayout } from './components/admin/AdminLayout'
 import { RequireRole, RequireVerifiedTeacher, RequireGuest } from './components/auth/ProtectedRoute'
 import { RequireAcademyFoundationAccess } from './components/auth/RequireAcademyFoundationAccess'
+import { RequireCompetitionFoundationAccess } from './components/auth/RequireCompetitionFoundationAccess'
 import { AcademyRouteLayout } from './components/academy/AcademyRouteLayout'
+import { CompetitionRouteLayout } from './components/competition/CompetitionRouteLayout'
 import { RouteAwareInstallBanner } from './components/pwa/RouteAwareInstallBanner'
 import { DirectVideoCallProvider } from './components/chat/DirectVideoCallProvider'
 import { PageLoadingFallback } from './components/ui/PageLoadingFallback'
@@ -57,6 +59,13 @@ const AcademyTeachersPage = lazy(() => import('./pages/academy/academyPages').th
 const AcademyStudentsPage = lazy(() => import('./pages/academy/academyPages').then((m) => ({ default: m.AcademyStudentsPage })))
 const AcademyBatchesPage = lazy(() => import('./pages/academy/academyPages').then((m) => ({ default: m.AcademyBatchesPage })))
 const AcademyFinancePage = lazy(() => import('./pages/academy/academyPages').then((m) => ({ default: m.AcademyFinancePage })))
+const CompetitionHomePage = lazy(() => import('./pages/competition/competitionPages').then((m) => ({ default: m.CompetitionHomePage })))
+const CompetitionDetailPage = lazy(() => import('./pages/competition/competitionPages').then((m) => ({ default: m.CompetitionDetailPage })))
+const JudgeHomePage = lazy(() => import('./pages/competition/competitionPages').then((m) => ({ default: m.JudgeHomePage })))
+const OrganizerHomePage = lazy(() => import('./pages/competition/competitionPages').then((m) => ({ default: m.OrganizerHomePage })))
+const CompetitionResultsPage = lazy(() => import('./pages/competition/competitionPages').then((m) => ({ default: m.CompetitionResultsPage })))
+const CompetitionRankingsPage = lazy(() => import('./pages/competition/competitionPages').then((m) => ({ default: m.CompetitionRankingsPage })))
+const CompetitionCertificatesPage = lazy(() => import('./pages/competition/competitionPages').then((m) => ({ default: m.CompetitionCertificatesPage })))
 
 export default function App() {
   return (
@@ -145,6 +154,28 @@ export default function App() {
                   <Route path="students" element={<AcademyStudentsPage />} />
                   <Route path="batches" element={<AcademyBatchesPage />} />
                   <Route path="finance" element={<AcademyFinancePage />} />
+                </Route>
+              </Route>
+
+              <Route element={<RequireCompetitionFoundationAccess />}>
+                <Route path="dashboard/competitions" element={<CompetitionRouteLayout />}>
+                  <Route index element={<CompetitionHomePage />} />
+                  <Route path=":id" element={<CompetitionDetailPage />} />
+                </Route>
+                <Route path="dashboard/judge" element={<CompetitionRouteLayout />}>
+                  <Route index element={<JudgeHomePage />} />
+                </Route>
+                <Route path="dashboard/organizer" element={<CompetitionRouteLayout />}>
+                  <Route index element={<OrganizerHomePage />} />
+                </Route>
+                <Route path="dashboard/results" element={<CompetitionRouteLayout />}>
+                  <Route index element={<CompetitionResultsPage />} />
+                </Route>
+                <Route path="dashboard/rankings" element={<CompetitionRouteLayout />}>
+                  <Route index element={<CompetitionRankingsPage />} />
+                </Route>
+                <Route path="dashboard/certificates" element={<CompetitionRouteLayout />}>
+                  <Route index element={<CompetitionCertificatesPage />} />
                 </Route>
               </Route>
 

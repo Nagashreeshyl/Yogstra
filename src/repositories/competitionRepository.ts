@@ -1,0 +1,195 @@
+import { supabase } from '../lib/supabase'
+import type {
+  CreateCompetitionCategoryInput,
+  CreateCompetitionInput,
+} from '../domain/competition/models'
+import {
+  mapCompetition,
+  mapCompetitionAnnouncement,
+  mapCompetitionCategory,
+  mapCompetitionEvent,
+} from '../utils/competitionMappers'
+
+const competitionSelect = `
+  id,
+  slug,
+  name,
+  description,
+  organizer_id,
+  academy_id,
+  venue,
+  city,
+  state,
+  country,
+  start_date,
+  end_date,
+  registration_deadline,
+  entry_fee,
+  format,
+  scope,
+  status,
+  max_participants,
+  rules,
+  settings,
+  created_by,
+  created_at,
+  updated_at,
+  organizer:profiles!organizer_id(full_name),
+  academy:academies!academy_id(name)
+`
+
+const categorySelect = `
+  id,
+  competition_id,
+  name,
+  age_group,
+  style_type,
+  difficulty,
+  max_participants,
+  entry_fee_override,
+  sort_order,
+  status,
+  created_at,
+  updated_at
+`
+
+export const competitionRepository = {
+  async findById(id: string) {
+    const { data, error } = await supabase
+      .from('competitions')
+      .select(competitionSelect)
+      .eq('id', id)
+      .maybeSingle()
+
+    if (error) throw error
+    return data ? mapCompetition(data) : null
+  },
+
+  async findBySlug(slug: string) {
+    const { data, error } = await supabase
+      .from('competitions')
+      .select(competitionSelect)
+      .eq('slug', slug)
+      .maybeSingle()
+
+    if (error) throw error
+    return data ? mapCompetition(data) : null
+  },
+
+  async listPublished(limit = 50) {
+    const { data, error } = await supabase
+      .from('competitions')
+      .select(competitionSelect)
+      .in('status', [
+        'published',
+        'registration_open',
+        'registration_closed',
+        'in_progress',
+        'scoring',
+        'results_pending',
+        'completed',
+      ])
+      .order('start_date', { ascending: true, nullsFirst: false })
+      .limit(limit)
+
+    if (error) throw error
+    return (data ?? []).map(mapCompetition)
+  },
+
+  async listForOrganizer(userId: string) {
+    const { data, error } = await supabase
+      .from('competitions')
+      .select(competitionSelect)
+      .or(`organizer_id.eq.${userId},created_by.eq.${userId}`)
+      .order('start_date', { ascending: false, nullsFirst: false })
+
+    if (error) throw error
+    return (data ?? []).map(mapCompetition)
+  },
+
+  async create(input: CreateCompetitionInput & { slug: string; createdBy: string }) {
+    const { data, error } = await supabase
+      .from('competitions')
+      .insert({
+        name: input.name,
+        slug: input.slug,
+        description: input.description ?? null,
+        organizer_id: input.organizerId ?? input.createdBy,
+        academy_id: input.academyId ?? null,
+        venue: input.venue ?? null,
+        city: input.city ?? null,
+        state: input.state ?? null,
+        country: input.country ?? 'IN',
+        start_date: input.startDate ?? null,
+        end_date: input.endDate ?? null,
+        registration_deadline: input.registrationDeadline ?? null,
+        entry_fee: input.entryFee ?? 0,
+        format: input.format ?? 'individual',
+        scope: input.scope ?? 'friendly',
+        max_participants: input.maxParticipants ?? null,
+        rules: input.rules ?? null,
+        created_by: input.createdBy,
+      })
+      .select(competitionSelect)
+      .single()
+
+    if (error) throw error
+    return mapCompetition(data)
+  },
+
+  async listEvents(competitionId: string) {
+    const { data, error } = await supabase
+      .from('competition_events')
+      .select('*')
+      .eq('competition_id', competitionId)
+      .order('sort_order', { ascending: true })
+      .order('starts_at', { ascending: true })
+
+    if (error) throw error
+    return (data ?? []).map(mapCompetitionEvent)
+  },
+
+  async listCategories(competitionId: string) {
+    const { data, error } = await supabase
+      .from('competition_categories')
+      .select(categorySelect)
+      .eq('competition_id', competitionId)
+      .eq('status', 'active')
+      .order('sort_order', { ascending: true })
+
+    if (error) throw error
+    return (data ?? []).map(mapCompetitionCategory)
+  },
+
+  async createCategory(input: CreateCompetitionCategoryInput) {
+    const { data, error } = await supabase
+      .from('competition_categories')
+      .insert({
+        competition_id: input.competitionId,
+        name: input.name,
+        age_group: input.ageGroup ?? null,
+        style_type: input.styleType ?? null,
+        difficulty: input.difficulty ?? null,
+        max_participants: input.maxParticipants ?? null,
+        entry_fee_override: input.entryFeeOverride ?? null,
+        sort_order: input.sortOrder ?? 0,
+      })
+      .select(categorySelect)
+      .single()
+
+    if (error) throw error
+    return mapCompetitionCategory(data)
+  },
+
+  async listAnnouncements(competitionId: string) {
+    const { data, error } = await supabase
+      .from('competition_announcements')
+      .select('*')
+      .eq('competition_id', competitionId)
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+
+    if (error) throw error
+    return (data ?? []).map(mapCompetitionAnnouncement)
+  },
+}
