@@ -1,20 +1,88 @@
 @import "tailwindcss";
 
+/* Yogstra V2 semantic tokens — light/dark via ThemeProvider */
+:root {
+  color-scheme: light;
+  --y-bg: #f7f5f0;
+  --y-fg: #1c1c1c;
+  --y-muted: #ebe8e2;
+  --y-muted-fg: #6b6560;
+  --y-border: #e0dbd2;
+  --y-elevated: #ffffff;
+  --y-primary: #2d5a3d;
+  --y-primary-hover: #1e3d28;
+  --y-primary-fg: #f7f5f0;
+  --y-accent: #c9a227;
+  --y-accent-fg: #1c1c1c;
+  --y-destructive: #dc2626;
+  --y-sidebar: #1a2e22;
+  --y-sidebar-fg: #f7f5f0;
+  --y-sidebar-muted: rgba(247, 245, 240, 0.62);
+  --y-sidebar-border: rgba(247, 245, 240, 0.1);
+  --y-sidebar-hover: rgba(247, 245, 240, 0.08);
+  --y-sidebar-active: rgba(45, 90, 61, 0.42);
+}
+
+.dark {
+  color-scheme: dark;
+  --y-bg: #121816;
+  --y-fg: #f0ede8;
+  --y-muted: #1e2420;
+  --y-muted-fg: #a8a29e;
+  --y-border: #2a332e;
+  --y-elevated: #1a211c;
+  --y-primary: #3d7a52;
+  --y-primary-hover: #4a9463;
+  --y-primary-fg: #f0ede8;
+  --y-accent: #d4af37;
+  --y-accent-fg: #121816;
+  --y-destructive: #f87171;
+  --y-sidebar: #0f1612;
+  --y-sidebar-fg: #f0ede8;
+  --y-sidebar-muted: rgba(240, 237, 232, 0.58);
+  --y-sidebar-border: rgba(240, 237, 232, 0.08);
+  --y-sidebar-hover: rgba(240, 237, 232, 0.06);
+  --y-sidebar-active: rgba(61, 122, 82, 0.38);
+}
+
 @theme {
+  /* V2 shell tokens */
+  --color-background: var(--y-bg);
+  --color-foreground: var(--y-fg);
+  --color-muted: var(--y-muted);
+  --color-muted-foreground: var(--y-muted-fg);
+  --color-border: var(--y-border);
+  --color-elevated: var(--y-elevated);
+  --color-primary: var(--y-primary);
+  --color-primary-hover: var(--y-primary-hover);
+  --color-primary-foreground: var(--y-primary-fg);
+  --color-accent: var(--y-accent);
+  --color-accent-foreground: var(--y-accent-fg);
+  --color-destructive: var(--y-destructive);
+  --color-sidebar: var(--y-sidebar);
+  --color-sidebar-foreground: var(--y-sidebar-fg);
+  --color-sidebar-muted: var(--y-sidebar-muted);
+  --color-sidebar-border: var(--y-sidebar-border);
+  --color-sidebar-hover: var(--y-sidebar-hover);
+  --color-sidebar-active: var(--y-sidebar-active);
+  --color-forest: #2d5a3d;
+  --color-forest-dark: #1e3d28;
+  --color-gold: #c9a227;
+  /* Legacy palette — existing pages until module redesign */
   --color-cream: #f5ecd7;
   --color-charcoal: #1c1c1c;
   --color-teal: #5bb8c4;
   --color-teal-dark: #4aa3af;
-  --color-border: #e8dcc8;
   --color-cream-dark: #ebe0c8;
   --color-teal-soft: #d4eef2;
-  /* Warm surfaces — breaks up flat cream on main content */
   --color-surface: #ebe3d0;
   --color-surface-elevated: #e2dac7;
   --color-surface-inset: #d9cfba;
   --color-surface-muted: #f0e9d8;
   --font-heading: "Playfair Display", serif;
   --font-body: "Inter", sans-serif;
+  --shadow-sm: 0 1px 2px rgba(28, 28, 28, 0.06);
+  --shadow-md: 0 4px 12px rgba(28, 28, 28, 0.08);
 }
 
 * {
@@ -30,8 +98,10 @@ body,
 body {
   margin: 0;
   font-family: var(--font-body);
-  background-color: var(--color-cream);
-  color: var(--color-charcoal);
+  font-size: 16px;
+  line-height: 1.5;
+  background-color: var(--y-bg);
+  color: var(--y-fg);
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
   padding-left: env(safe-area-inset-left);

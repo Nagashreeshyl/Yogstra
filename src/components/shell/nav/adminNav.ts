@@ -1,0 +1,32 @@
+import {
+  LayoutDashboard,
+  Users,
+  GraduationCap,
+  MessageSquare,
+  Calendar,
+  Clock,
+  MessageCircle,
+  IndianRupee,
+  Grid3X3,
+  Settings,
+} from 'lucide-react'
+import type { ShellNavItem } from '../types'
+
+export const adminNavItems: ShellNavItem[] = [
+  {
+    to: '/admin',
+    label: 'Dashboard',
+    icon: LayoutDashboard,
+    end: true,
+    placement: ['sidebar', 'tab'],
+  },
+  { to: '/admin/teachers', label: 'Teachers', icon: Users, placement: ['sidebar', 'tab'] },
+  { to: '/admin/students', label: 'Students', icon: GraduationCap, placement: ['sidebar', 'tab'] },
+  { to: '/admin/community', label: 'Community', icon: MessageSquare, placement: ['sidebar', 'more'] },
+  { to: '/admin/bookings', label: 'Bookings', icon: Calendar, placement: ['sidebar', 'more'] },
+  { to: '/admin/schedules', label: 'Schedules', icon: Clock, placement: ['sidebar', 'more'] },
+  { to: '/admin/chats', label: 'Chats', icon: MessageCircle, placement: ['sidebar', 'more'] },
+  { to: '/admin/payouts', label: 'Payouts', icon: IndianRupee, placement: ['sidebar', 'more'] },
+  { to: '/admin/categories', label: 'Categories', icon: Grid3X3, placement: ['sidebar', 'more'] },
+  { to: '/admin/settings', label: 'Settings', icon: Settings, placement: ['sidebar', 'more'] },
+]

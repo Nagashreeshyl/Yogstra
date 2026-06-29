@@ -1,15 +1,24 @@
-import { Outlet } from 'react-router-dom'
-import { AdminSidebar } from './AdminSidebar'
-import { ResponsiveShell } from '../layout/ResponsiveShell'
+import { Link, Outlet } from 'react-router-dom'
+import { AppShell, adminNavItems } from '../shell'
+
+const adminFooter = (
+  <Link
+    to="/"
+    className="block text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+  >
+    Return to Yogstra
+  </Link>
+)
 
 export function AdminLayout() {
   return (
-    <ResponsiveShell
-      sidebar={<AdminSidebar />}
+    <AppShell
+      variant="admin"
       title="Yogstra Admin"
-      mainClassName="bg-cream"
+      navItems={adminNavItems}
+      footer={adminFooter}
     >
       <Outlet />
-    </ResponsiveShell>
+    </AppShell>
   )
 }
