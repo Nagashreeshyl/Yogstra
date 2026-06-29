@@ -56,7 +56,6 @@ export function getStudentNavItems(hasClasses: boolean): ShellNavItem[] {
       to: '/dashboard/student/competitions',
       label: 'Competitions',
       icon: Trophy,
-      badge: 'Soon',
       placement: ['sidebar', 'more'],
     },
     {

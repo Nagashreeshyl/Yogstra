@@ -468,3 +468,32 @@ h6 {
     color: #f5f5f5;
   }
 }
+
+/* Student competition experience */
+.student-competition {
+  --student-competition-accent: var(--color-accent);
+}
+
+.student-competition-timeline li[data-current='true'] {
+  font-weight: 600;
+}
+
+.student-competition-live {
+  animation: student-competition-pulse 2s ease-in-out infinite;
+}
+
+@keyframes student-competition-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .student-competition-live {
+    animation: none;
+  }
+}

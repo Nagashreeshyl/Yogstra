@@ -68,6 +68,62 @@ const CompetitionResultsPage = lazy(() => import('./pages/competition/competitio
 const CompetitionRankingsPage = lazy(() => import('./pages/competition/competitionPages').then((m) => ({ default: m.CompetitionRankingsPage })))
 const CompetitionCertificatesPage = lazy(() => import('./pages/competition/competitionPages').then((m) => ({ default: m.CompetitionCertificatesPage })))
 
+const StudentCompetitionLayout = lazy(() =>
+  import('./components/student/competition/StudentCompetitionLayout').then((m) => ({
+    default: m.StudentCompetitionLayout,
+  })),
+)
+const StudentCompetitionHomePage = lazy(() =>
+  import('./pages/student/competition/studentCompetitionPages').then((m) => ({
+    default: m.StudentCompetitionHomePage,
+  })),
+)
+const StudentMyCompetitionsPage = lazy(() =>
+  import('./pages/student/competition/studentCompetitionPages').then((m) => ({
+    default: m.StudentMyCompetitionsPage,
+  })),
+)
+const StudentCompetitionDetailPage = lazy(() =>
+  import('./pages/student/competition/studentCompetitionPages').then((m) => ({
+    default: m.StudentCompetitionDetailPage,
+  })),
+)
+const StudentRegistrationWizardPage = lazy(() =>
+  import('./pages/student/competition/studentCompetitionPages').then((m) => ({
+    default: m.StudentRegistrationWizardPage,
+  })),
+)
+const StudentPreparationPage = lazy(() =>
+  import('./pages/student/competition/studentCompetitionPages').then((m) => ({
+    default: m.StudentPreparationPage,
+  })),
+)
+const StudentTimelinePage = lazy(() =>
+  import('./pages/student/competition/studentCompetitionPages').then((m) => ({
+    default: m.StudentTimelinePage,
+  })),
+)
+const StudentLiveStatusPage = lazy(() =>
+  import('./pages/student/competition/studentCompetitionPages').then((m) => ({
+    default: m.StudentLiveStatusPage,
+  })),
+)
+const StudentResultsPage = lazy(() =>
+  import('./pages/student/competition/studentCompetitionPages').then((m) => ({
+    default: m.StudentResultsPage,
+  })),
+)
+const StudentCertificatesPage = lazy(() =>
+  import('./pages/student/competition/studentCompetitionPages').then((m) => ({
+    default: m.StudentCertificatesPage,
+  })),
+)
+const StudentRankingsPage = lazy(() =>
+  import('./pages/student/competition/studentCompetitionPages').then((m) => ({
+    default: m.StudentRankingsPage,
+  })),
+)
+
 export default function App() {
   return (
     <AppProvider>
@@ -119,7 +175,18 @@ export default function App() {
                   <Route path="teachers" element={<FindTeachersPage />} />
                   <Route path="teachers/:id" element={<TeacherProfilePage />} />
                   <Route path="community" element={<CommunityPage />} />
-                  <Route path="competitions" element={<CompetitionsPage />} />
+                  <Route path="competitions" element={<StudentCompetitionLayout />}>
+                    <Route index element={<StudentCompetitionHomePage />} />
+                    <Route path="my" element={<StudentMyCompetitionsPage />} />
+                    <Route path="certificates" element={<StudentCertificatesPage />} />
+                    <Route path="rankings" element={<StudentRankingsPage />} />
+                    <Route path=":id" element={<StudentCompetitionDetailPage />} />
+                    <Route path=":id/register" element={<StudentRegistrationWizardPage />} />
+                    <Route path=":id/prepare" element={<StudentPreparationPage />} />
+                    <Route path=":id/timeline" element={<StudentTimelinePage />} />
+                    <Route path=":id/live" element={<StudentLiveStatusPage />} />
+                    <Route path=":id/results" element={<StudentResultsPage />} />
+                  </Route>
                   <Route path="shop" element={<ShopPage />} />
                   <Route path="messages" element={<StudentMessagesPage />} />
                   <Route path="students/:id" element={<StudentProfilePage />} />
