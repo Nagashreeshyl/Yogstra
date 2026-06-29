@@ -7,6 +7,8 @@ import { StudentDashboardLayout } from './components/layout/StudentDashboardLayo
 import { TeacherDashboardLayout } from './components/layout/TeacherDashboardLayout'
 import { AdminLayout } from './components/admin/AdminLayout'
 import { RequireRole, RequireVerifiedTeacher, RequireGuest } from './components/auth/ProtectedRoute'
+import { RequireAcademyFoundationAccess } from './components/auth/RequireAcademyFoundationAccess'
+import { AcademyRouteLayout } from './components/academy/AcademyRouteLayout'
 import { RouteAwareInstallBanner } from './components/pwa/RouteAwareInstallBanner'
 import { DirectVideoCallProvider } from './components/chat/DirectVideoCallProvider'
 import { PageLoadingFallback } from './components/ui/PageLoadingFallback'
@@ -50,6 +52,11 @@ const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage').t
 const PrivacyPolicyPage = lazy(() => import('./pages/legal/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage })))
 const TermsOfServicePage = lazy(() => import('./pages/legal/TermsOfServicePage').then((m) => ({ default: m.TermsOfServicePage })))
 const RefundPolicyPage = lazy(() => import('./pages/legal/RefundPolicyPage').then((m) => ({ default: m.RefundPolicyPage })))
+const AcademyHomePage = lazy(() => import('./pages/academy/academyPages').then((m) => ({ default: m.AcademyHomePage })))
+const AcademyTeachersPage = lazy(() => import('./pages/academy/academyPages').then((m) => ({ default: m.AcademyTeachersPage })))
+const AcademyStudentsPage = lazy(() => import('./pages/academy/academyPages').then((m) => ({ default: m.AcademyStudentsPage })))
+const AcademyBatchesPage = lazy(() => import('./pages/academy/academyPages').then((m) => ({ default: m.AcademyBatchesPage })))
+const AcademyFinancePage = lazy(() => import('./pages/academy/academyPages').then((m) => ({ default: m.AcademyFinancePage })))
 
 export default function App() {
   return (
@@ -129,6 +136,16 @@ export default function App() {
                   <Route path="settings" element={<TeacherSettingsPage />} />
                 </Route>
                 <Route path="teacher/messages" element={<Navigate to="/dashboard/teacher/messages" replace />} />
+              </Route>
+
+              <Route element={<RequireAcademyFoundationAccess />}>
+                <Route path="dashboard/academy" element={<AcademyRouteLayout />}>
+                  <Route index element={<AcademyHomePage />} />
+                  <Route path="teachers" element={<AcademyTeachersPage />} />
+                  <Route path="students" element={<AcademyStudentsPage />} />
+                  <Route path="batches" element={<AcademyBatchesPage />} />
+                  <Route path="finance" element={<AcademyFinancePage />} />
+                </Route>
               </Route>
 
               <Route element={<RequireRole roles={['admin']} />}>

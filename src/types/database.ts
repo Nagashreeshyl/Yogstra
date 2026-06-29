@@ -58,6 +58,7 @@ export interface DbBooking {
   id: string
   student_id: string | null
   teacher_id: string | null
+  academy_id?: string | null
   status: string | null
   payment_status: string | null
   monthly_fee: number | null
@@ -69,6 +70,7 @@ export interface DbSchedule {
   id: string
   teacher_id: string | null
   student_id: string | null
+  batch_id?: string | null
   class_type: '1:1' | 'group' | null
   scheduled_at: string | null
   duration_minutes: number | null
@@ -128,4 +130,78 @@ export type MessageWithRelations = DbMessage & {
 export type PayoutWithRelations = DbPayout & {
   teacher: DbProfile | null
   student?: DbProfile | null
+}
+
+export interface DbAcademy {
+  id: string
+  parent_academy_id: string | null
+  slug: string
+  name: string
+  description: string | null
+  logo_url: string | null
+  city: string | null
+  state: string | null
+  status: 'active' | 'inactive' | 'archived'
+  created_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface DbAcademySettings {
+  academy_id: string
+  timezone: string
+  currency: string
+  settings: Record<string, unknown>
+  updated_at: string
+}
+
+export interface DbAcademyMember {
+  id: string
+  academy_id: string
+  user_id: string
+  role: 'owner' | 'manager' | 'teacher' | 'assistant_teacher' | 'receptionist' | 'finance_manager'
+  status: 'active' | 'invited' | 'suspended' | 'removed'
+  invited_by: string | null
+  joined_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface DbTeacherAcademy {
+  id: string
+  academy_id: string
+  teacher_id: string
+  employment_type: 'employed' | 'affiliated' | 'visiting'
+  is_primary: boolean
+  status: 'active' | 'invited' | 'suspended' | 'removed'
+  started_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface DbBatch {
+  id: string
+  academy_id: string
+  branch_id: string | null
+  teacher_id: string | null
+  name: string
+  description: string | null
+  capacity: number | null
+  difficulty: 'beginner' | 'intermediate' | 'advanced' | null
+  age_group: string | null
+  language: string | null
+  status: 'draft' | 'active' | 'archived'
+  created_at: string
+  updated_at: string
+}
+
+export interface DbBatchStudent {
+  id: string
+  batch_id: string
+  student_id: string
+  enrollment_type: 'academy' | 'independent'
+  status: 'active' | 'transferred' | 'graduated' | 'removed'
+  enrolled_at: string
+  created_at: string
+  updated_at: string
 }
