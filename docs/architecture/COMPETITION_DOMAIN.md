@@ -2,7 +2,7 @@
 
 **Module:** V2 Core — Competition Foundation  
 **Status:** Phase 1 (schema + services + reserved routes)  
-**Migration:** `supabase/competition-foundation.sql`  
+**Migration:** `supabase/migrations/006_competition_domain.sql`  
 **PRD:** [`../../../docs/PRD/10_COMPETITIONS.md`](../../../docs/PRD/10_COMPETITIONS.md)
 
 ---
@@ -151,7 +151,7 @@ src/utils/competitionMappers.ts
 
 | Path | Role |
 |---|---|
-| `supabase/competition-foundation.sql` | Schema, indexes, RLS, triggers |
+| `supabase/migrations/006_competition_domain.sql` | Schema, indexes, RLS, triggers |
 | `src/domain/competition/models.ts` | Entity interfaces + input DTOs |
 | `src/domain/competition/permissions.ts` | Client-side permission helpers |
 | `src/domain/competition/index.ts` | Barrel exports |
@@ -258,8 +258,8 @@ Access during foundation phase: authenticated **student**, **teacher**, or **adm
 
 ## Migration instructions
 
-1. Apply all prior Supabase SQL migrations (including `academy-foundation.sql`).
-2. Run `competition-foundation.sql` once in the Supabase SQL Editor.
+1. Apply migrations `000`–`005` in order (see [Migration Guide](../database/MIGRATION_GUIDE.md)).
+2. Run `006_competition_domain.sql` once in the Supabase SQL Editor (or include it in the full migration sequence).
 3. Verify tables exist and RLS is enabled.
 4. No application restart required — new code is backward compatible until competition data is created.
 

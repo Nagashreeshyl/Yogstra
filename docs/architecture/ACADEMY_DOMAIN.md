@@ -2,7 +2,7 @@
 
 **Module:** V2 Core — Academy Foundation  
 **Status:** Phase 1 (schema + services + reserved routes)  
-**Migration:** `supabase/academy-foundation.sql`
+**Migration:** `supabase/migrations/005_academy_domain.sql`
 
 ---
 
@@ -98,7 +98,7 @@ src/utils/academyMappers.ts
 
 | Path | Role |
 |---|---|
-| `supabase/academy-foundation.sql` | Schema, indexes, RLS, triggers |
+| `supabase/migrations/005_academy_domain.sql` | Schema, indexes, RLS, triggers |
 | `src/domain/academy/models.ts` | Entity interfaces + input DTOs |
 | `src/domain/academy/permissions.ts` | Client-side permission helpers |
 | `src/domain/academy/index.ts` | Barrel exports |
@@ -157,7 +157,7 @@ Access during foundation phase: authenticated **teacher** or **admin** via `Requ
 ## Migration instructions
 
 1. Apply all prior Supabase SQL migrations.
-2. Run `supabase/academy-foundation.sql` once in the Supabase SQL Editor.
+2. Run migrations `000`–`005` in order (see [Migration Guide](../database/MIGRATION_GUIDE.md)), or apply `005_academy_domain.sql` on an existing core schema.
 3. Verify tables exist and RLS is enabled.
 4. No application restart required — new code is backward compatible until academy data is created.
 
