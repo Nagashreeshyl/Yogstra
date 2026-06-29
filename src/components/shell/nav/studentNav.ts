@@ -1,4 +1,5 @@
 import {
+  Home,
   Compass,
   Users,
   MessageSquare,
@@ -20,13 +21,19 @@ export function getStudentNavItems(hasClasses: boolean): ShellNavItem[] {
 
   const core: ShellNavItem[] = [
     {
-      to: '/dashboard/student/explore',
-      label: 'Explore',
-      icon: Compass,
+      to: '/dashboard/student',
+      label: 'Home',
+      icon: Home,
       end: true,
       placement: ['sidebar', 'tab'],
     },
     { to: '/dashboard/student/teachers', label: 'Teachers', icon: Users, placement: ['sidebar', 'tab'] },
+    {
+      to: '/dashboard/student/explore',
+      label: 'Explore',
+      icon: Compass,
+      placement: ['sidebar', 'more'],
+    },
     {
       to: '/dashboard/student/community',
       label: 'Community',

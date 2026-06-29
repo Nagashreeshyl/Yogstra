@@ -2,7 +2,7 @@ import type { AuthUser } from '../services/auth'
 
 export function getPostLoginPath(user: AuthUser): string {
   if (user.role === 'admin') return '/admin'
-  if (user.role === 'student') return '/dashboard/student/explore'
+  if (user.role === 'student') return '/dashboard/student'
   if (user.role === 'teacher') {
     return user.teacherStatus === 'verified' ? '/dashboard/teacher' : '/auth/teacher/pending'
   }

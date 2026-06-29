@@ -35,6 +35,7 @@ const TeacherMessagesPage = lazy(() => import('./pages/teacher/TeacherMessagesPa
 const TeacherNotificationsPage = lazy(() => import('./pages/teacher/TeacherNotificationsPage').then((m) => ({ default: m.TeacherNotificationsPage })))
 const TeacherCouponsPage = lazy(() => import('./pages/teacher/TeacherCouponsPage').then((m) => ({ default: m.TeacherCouponsPage })))
 const TeacherClassesPage = lazy(() => import('./pages/teacher/TeacherClassesPage').then((m) => ({ default: m.TeacherClassesPage })))
+const StudentDashboardPage = lazy(() => import('./pages/student/StudentDashboardPage').then((m) => ({ default: m.StudentDashboardPage })))
 const StudentClassesPage = lazy(() => import('./pages/student/StudentClassesPage').then((m) => ({ default: m.StudentClassesPage })))
 const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage })))
 const AdminTeachersPage = lazy(() => import('./pages/admin/AdminTeachersPage').then((m) => ({ default: m.AdminTeachersPage })))
@@ -96,7 +97,7 @@ export default function App() {
 
               <Route element={<RequireRole roles={['student']} />}>
                 <Route path="dashboard/student" element={<StudentDashboardLayout />}>
-                  <Route index element={<Navigate to="explore" replace />} />
+                  <Route index element={<StudentDashboardPage />} />
                   <Route path="explore" element={<ExplorePage />} />
                   <Route path="teachers" element={<FindTeachersPage />} />
                   <Route path="teachers/:id" element={<TeacherProfilePage />} />
