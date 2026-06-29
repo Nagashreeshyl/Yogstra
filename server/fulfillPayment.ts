@@ -19,6 +19,8 @@ export type PendingClassOrderInput = {
   originalAmount?: number
 }
 
+type ClassOrderRow = Record<string, unknown>
+
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString('en-IN', {
     hour: 'numeric',
@@ -59,6 +61,275 @@ function buildBookingMessage(input: PendingClassOrderInput, paymentId: string) {
   ]
     .filter(Boolean)
     .join('\n')
+}
+
+function orderToInput(order: ClassOrderRow, studentName: string): PendingClassOrderInput {
+  const scheduledAt = order.scheduled_at as string
+  return {
+    studentId: order.student_id as string,
+    studentName,
+    teacherId: order.teacher_id as string,
+    teacherName: '',
+    threadId: (order.thread_id as string) ?? '',
+    classType: order.class_type as '1:1' | 'group',
+    duration: ((order.duration as 'week' | 'month') ?? 'month') as 'week' | 'month',
+    startDate: new Date(scheduledAt).toISOString().slice(0, 10),
+    scheduledAt,
+    notes: (order.notes as string) ?? '',
+    amount: Number(order.gross_amount ?? order.amount ?? 0),
+    couponId: (order.coupon_id as string | null) ?? undefined,
+    discountPercent: order.discount_percent ? Number(order.discount_percent) : undefined,
+  }
+}
+
+async function redeemCouponForOrder(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  order: ClassOrderRow,
+) {
+  const couponId = order.coupon_id as string | null
+  if (!couponId) return
+
+  const { data: delivery } = await supabase
+    .from('coupon_deliveries')
+    .select('id, used_at')
+    .eq('coupon_id', couponId)
+    .eq('student_id', order.student_id as string)
+    .maybeSingle()
+
+  if (!delivery || delivery.used_at) return
+
+  const { data: coupon } = await supabase
+    .from('teacher_coupons')
+    .select('max_uses, use_count')
+    .eq('id', couponId)
+    .maybeSingle()
+
+  if (!coupon) return
+  if (coupon.max_uses != null && Number(coupon.use_count) >= Number(coupon.max_uses)) return
+
+  await supabase
+    .from('coupon_deliveries')
+    .update({ used_at: new Date().toISOString(), order_id: order.id as string })
+    .eq('id', delivery.id)
+    .is('used_at', null)
+
+  await supabase
+    .from('teacher_coupons')
+    .update({ use_count: Number(coupon.use_count) + 1 })
+    .eq('id', couponId)
+}
+
+async function upsertBookingForOrder(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  order: ClassOrderRow,
+  gross: number,
+) {
+  const startDate = new Date(order.scheduled_at as string).toISOString().slice(0, 10)
+  const { data: existingBooking } = await supabase
+    .from('bookings')
+    .select('id, status')
+    .eq('student_id', order.student_id as string)
+    .eq('teacher_id', order.teacher_id as string)
+    .in('status', ['pending', 'active'])
+    .limit(1)
+    .maybeSingle()
+
+  if (existingBooking) {
+    await supabase
+      .from('bookings')
+      .update({
+        status: 'active',
+        payment_status: 'paid',
+        monthly_fee: gross,
+        start_date: startDate,
+      })
+      .eq('id', existingBooking.id)
+    return
+  }
+
+  await supabase.from('bookings').insert({
+    student_id: order.student_id,
+    teacher_id: order.teacher_id,
+    status: 'active',
+    payment_status: 'paid',
+    monthly_fee: gross,
+    start_date: startDate,
+  })
+}
+
+async function enrollInAcademyBatchIfApplicable(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  order: ClassOrderRow,
+) {
+  if (order.class_type !== 'group') return null
+
+  const teacherId = order.teacher_id as string
+  const studentId = order.student_id as string
+
+  const { data: affiliation } = await supabase
+    .from('teacher_academies')
+    .select('academy_id')
+    .eq('teacher_id', teacherId)
+    .eq('status', 'active')
+    .limit(1)
+    .maybeSingle()
+
+  if (!affiliation?.academy_id) return null
+
+  let batchId: string | null = null
+
+  const { data: teacherBatch } = await supabase
+    .from('batches')
+    .select('id')
+    .eq('academy_id', affiliation.academy_id)
+    .eq('teacher_id', teacherId)
+    .eq('status', 'active')
+    .limit(1)
+    .maybeSingle()
+
+  batchId = (teacherBatch?.id as string | undefined) ?? null
+
+  if (!batchId) {
+    const { data: academyBatch } = await supabase
+      .from('batches')
+      .select('id')
+      .eq('academy_id', affiliation.academy_id)
+      .eq('status', 'active')
+      .limit(1)
+      .maybeSingle()
+    batchId = (academyBatch?.id as string | undefined) ?? null
+  }
+
+  if (!batchId) return { academyId: affiliation.academy_id as string, batchId: null }
+
+  const { data: existing } = await supabase
+    .from('batch_students')
+    .select('id')
+    .eq('batch_id', batchId)
+    .eq('student_id', studentId)
+    .neq('status', 'removed')
+    .maybeSingle()
+
+  if (!existing) {
+    await supabase.from('batch_students').insert({
+      batch_id: batchId,
+      student_id: studentId,
+      enrollment_type: 'paid',
+      status: 'active',
+    })
+  }
+
+  return { academyId: affiliation.academy_id as string, batchId }
+}
+
+async function insertEnrollmentNotification(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  params: {
+    userId: string
+    orderId: string
+    role: 'student' | 'teacher' | 'academy' | 'admin'
+    title: string
+    body: string
+    href?: string
+  },
+) {
+  const { error } = await supabase.from('enrollment_notifications').insert({
+    user_id: params.userId,
+    order_id: params.orderId,
+    role: params.role,
+    title: params.title,
+    body: params.body,
+    href: params.href ?? null,
+  })
+
+  if (error?.code === '23505') return
+  if (error?.code === 'PGRST205' || error?.code === '42P01') return
+  if (error) throw error
+}
+
+async function notifyEnrollmentParties(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  order: ClassOrderRow,
+  studentName: string,
+  teacherName: string,
+  gross: number,
+  teacherAmount: number,
+  academyLink: { academyId: string; batchId: string | null } | null,
+) {
+  const orderId = order.id as string
+  const studentId = order.student_id as string
+  const teacherId = order.teacher_id as string
+
+  const { data: existingTeacherNotif } = await supabase
+    .from('teacher_notifications')
+    .select('id')
+    .eq('order_id', orderId)
+    .maybeSingle()
+
+  if (!existingTeacherNotif) {
+    await supabase.from('teacher_notifications').insert({
+      teacher_id: teacherId,
+      student_id: studentId,
+      order_id: orderId,
+      type: 'class_booking',
+      title: 'New student enrolled',
+      body: `${studentName} enrolled · ₹${gross.toLocaleString('en-IN')} (your share ₹${teacherAmount.toLocaleString('en-IN')})`,
+    })
+  }
+
+  await insertEnrollmentNotification(supabase, {
+    userId: studentId,
+    orderId,
+    role: 'student',
+    title: 'Enrollment successful',
+    body: `You're enrolled with ${teacherName}. Your first session is scheduled.`,
+    href: '/dashboard/student',
+  })
+
+  await insertEnrollmentNotification(supabase, {
+    userId: teacherId,
+    orderId,
+    role: 'teacher',
+    title: 'New student enrolled',
+    body: `${studentName} completed enrollment and payment.`,
+    href: '/dashboard/teacher/students',
+  })
+
+  if (academyLink?.academyId) {
+    const { data: owners } = await supabase
+      .from('academy_members')
+      .select('user_id')
+      .eq('academy_id', academyLink.academyId)
+      .in('role', ['owner', 'manager'])
+      .eq('status', 'active')
+
+    for (const owner of owners ?? []) {
+      await insertEnrollmentNotification(supabase, {
+        userId: owner.user_id as string,
+        orderId,
+        role: 'academy',
+        title: 'Student joined academy',
+        body: `${studentName} enrolled in a program with ${teacherName}.`,
+        href: '/dashboard/academy/students',
+      })
+    }
+  }
+
+  const { data: admins } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('role', 'admin')
+
+  for (const admin of admins ?? []) {
+    await insertEnrollmentNotification(supabase, {
+      userId: admin.id as string,
+      orderId,
+      role: 'admin',
+      title: 'New paid enrollment',
+      body: `${studentName} paid ₹${gross.toLocaleString('en-IN')} for ${teacherName}.`,
+      href: '/dashboard/admin/bookings',
+    })
+  }
 }
 
 export async function createPendingClassOrder(
@@ -118,63 +389,90 @@ export async function fulfillPaidClassOrder(params: {
     return { orderId: order.id as string, alreadyFulfilled: true }
   }
 
-  const { data: schedule, error: scheduleError } = await supabase
-    .from('schedules')
-    .insert({
-      teacher_id: order.teacher_id,
-      student_id: order.student_id,
-      class_type: order.class_type,
-      scheduled_at: order.scheduled_at,
-      duration_minutes: 60,
-    })
-    .select('id')
-    .single()
-
-  if (scheduleError) throw scheduleError
-
   const transferStatus = params.transferId ? 'transferred' : 'not_applicable'
-  const payoutStatus = params.transferId ? 'paid' : 'pending'
 
-  const { error: updateError } = await supabase
+  const { data: claimed, error: claimError } = await supabase
     .from('class_orders')
     .update({
       payment_status: 'paid',
       razorpay_payment_id: params.razorpayPaymentId,
-      schedule_id: schedule.id,
       transfer_status: transferStatus,
     })
     .eq('id', order.id)
-
-  if (updateError) throw updateError
-
-  const gross = Number(order.gross_amount ?? order.amount ?? 0)
-  const platformFee = Number(order.platform_fee ?? 0)
-  const teacherAmount = Number(order.teacher_amount ?? gross - platformFee)
-
-  const { data: studentProfile } = await supabase
-    .from('profiles')
-    .select('full_name')
-    .eq('id', order.student_id)
+    .eq('payment_status', 'pending')
+    .select('*')
     .maybeSingle()
 
+  if (claimError) throw claimError
+
+  if (!claimed) {
+    const { data: refreshed } = await supabase
+      .from('class_orders')
+      .select('id, payment_status')
+      .eq('id', order.id)
+      .maybeSingle()
+
+    if (refreshed?.payment_status === 'paid') {
+      return { orderId: order.id as string, alreadyFulfilled: true }
+    }
+
+    throw new Error('Could not complete enrollment for this payment.')
+  }
+
+  let scheduleId = claimed.schedule_id as string | null
+
+  if (!scheduleId) {
+    const { data: schedule, error: scheduleError } = await supabase
+      .from('schedules')
+      .insert({
+        teacher_id: claimed.teacher_id,
+        student_id: claimed.student_id,
+        class_type: claimed.class_type,
+        scheduled_at: claimed.scheduled_at,
+        duration_minutes: 60,
+      })
+      .select('id')
+      .single()
+
+    if (scheduleError) throw scheduleError
+    scheduleId = schedule.id as string
+
+    await supabase
+      .from('class_orders')
+      .update({ schedule_id: scheduleId })
+      .eq('id', claimed.id)
+  }
+
+  const gross = Number(claimed.gross_amount ?? claimed.amount ?? 0)
+  const platformFee = Number(claimed.platform_fee ?? 0)
+  const teacherAmount = Number(claimed.teacher_amount ?? gross - platformFee)
+  const payoutStatus = params.transferId ? 'paid' : 'pending'
+
+  const [{ data: studentProfile }, { data: teacherProfile }] = await Promise.all([
+    supabase.from('profiles').select('full_name').eq('id', claimed.student_id).maybeSingle(),
+    supabase.from('profiles').select('full_name').eq('id', claimed.teacher_id).maybeSingle(),
+  ])
+
   const studentName = studentProfile?.full_name ?? 'Student'
-  const periodLabel = new Date(order.created_at as string).toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
+  const teacherName = teacherProfile?.full_name ?? 'Coach'
 
   const { data: existingPayout } = await supabase
     .from('payouts')
     .select('id')
-    .eq('class_order_id', order.id)
+    .eq('class_order_id', claimed.id)
     .maybeSingle()
 
   if (!existingPayout) {
+    const periodLabel = new Date(claimed.created_at as string).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    })
+
     const { error: payoutError } = await supabase.from('payouts').insert({
-      teacher_id: order.teacher_id,
-      class_order_id: order.id,
-      student_id: order.student_id,
+      teacher_id: claimed.teacher_id,
+      class_order_id: claimed.id,
+      student_id: claimed.student_id,
       gross_amount: gross,
       commission_amount: platformFee,
       teacher_amount: teacherAmount,
@@ -187,70 +485,40 @@ export async function fulfillPaidClassOrder(params: {
     if (payoutError) throw payoutError
   }
 
-  const startDate = new Date(order.scheduled_at as string).toISOString().slice(0, 10)
-  const { data: existingBooking } = await supabase
-    .from('bookings')
-    .select('id, status')
-    .eq('student_id', order.student_id)
-    .eq('teacher_id', order.teacher_id)
-    .in('status', ['pending', 'active'])
-    .limit(1)
-    .maybeSingle()
+  await redeemCouponForOrder(supabase, claimed)
+  await upsertBookingForOrder(supabase, claimed, gross)
 
-  if (existingBooking?.status === 'pending') {
-    await supabase
-      .from('bookings')
-      .update({
-        status: 'active',
-        payment_status: 'paid',
-        monthly_fee: gross,
-        start_date: startDate,
+  const academyLink = await enrollInAcademyBatchIfApplicable(supabase, claimed)
+
+  if (claimed.thread_id) {
+    const { data: existingMessage } = await supabase
+      .from('direct_messages')
+      .select('id')
+      .eq('thread_id', claimed.thread_id)
+      .ilike('content', `%${params.razorpayPaymentId.slice(0, 14)}%`)
+      .maybeSingle()
+
+    if (!existingMessage) {
+      const input = orderToInput(claimed, studentName)
+      await supabase.from('direct_messages').insert({
+        thread_id: claimed.thread_id,
+        sender_id: claimed.student_id,
+        content: buildBookingMessage(input, params.razorpayPaymentId),
       })
-      .eq('id', existingBooking.id)
-  } else if (!existingBooking) {
-    await supabase.from('bookings').insert({
-      student_id: order.student_id,
-      teacher_id: order.teacher_id,
-      status: 'active',
-      payment_status: 'paid',
-      monthly_fee: gross,
-      start_date: startDate,
-    })
-  }
-
-  if (order.thread_id) {
-    const input: PendingClassOrderInput = {
-      studentId: order.student_id as string,
-      studentName,
-      teacherId: order.teacher_id as string,
-      teacherName: '',
-      threadId: order.thread_id as string,
-      classType: order.class_type as '1:1' | 'group',
-      duration: (order.duration as 'week' | 'month') ?? 'month',
-      startDate,
-      scheduledAt: order.scheduled_at as string,
-      notes: (order.notes as string) ?? '',
-      amount: gross,
-      discountPercent: order.discount_percent ? Number(order.discount_percent) : undefined,
     }
-
-    await supabase.from('direct_messages').insert({
-      thread_id: order.thread_id,
-      sender_id: order.student_id,
-      content: buildBookingMessage(input, params.razorpayPaymentId),
-    })
   }
 
-  await supabase.from('teacher_notifications').insert({
-    teacher_id: order.teacher_id,
-    student_id: order.student_id,
-    order_id: order.id,
-    type: 'class_booking',
-    title: 'New class booking',
-    body: `${studentName} booked a class · ₹${gross.toLocaleString('en-IN')} (your share ₹${teacherAmount.toLocaleString('en-IN')})`,
-  })
+  await notifyEnrollmentParties(
+    supabase,
+    claimed,
+    studentName,
+    teacherName,
+    gross,
+    teacherAmount,
+    academyLink,
+  )
 
-  return { orderId: order.id as string, alreadyFulfilled: false }
+  return { orderId: claimed.id as string, alreadyFulfilled: false }
 }
 
 export async function getTeacherLinkedAccountId(teacherId: string) {

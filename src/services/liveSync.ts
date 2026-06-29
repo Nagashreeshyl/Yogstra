@@ -79,11 +79,12 @@ export const subscribeToPosts = createLiveChannel('live:posts', [
   { table: 'comments' },
 ])
 
-/** Schedules, paid class orders, and timing change requests. */
+/** Schedules, paid class orders, enrollment notifications, and timing change requests. */
 export const subscribeToSchedules = createLiveChannel('live:schedules', [
   { table: 'schedules' },
   { table: 'class_orders' },
   { table: 'schedule_change_requests' },
+  { table: 'enrollment_notifications' },
 ])
 
 /** Payout records for teacher earnings. */

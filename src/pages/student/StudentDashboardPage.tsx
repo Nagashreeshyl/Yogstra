@@ -1,6 +1,9 @@
+import { useEffect } from 'react'
 import { CalendarClock, Flame, Percent, Trophy } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
+import { useLiveDataRefresh } from '../../hooks/useLiveDataRefresh'
+import { onEnrollmentComplete } from '../../services/enrollmentEvents'
 import { fetchStudentDashboard } from '../../services/studentDashboard'
 import { PageContainer } from '../../components/shell/PageContainer'
 import { DashboardWorkspaceHeader } from '../../components/shell/DashboardWorkspaceHeader'
@@ -36,6 +39,17 @@ export function StudentDashboardPage() {
     [studentId],
     { enabled: Boolean(studentId) },
   )
+
+  useLiveDataRefresh(refetch, ['bookings', 'schedules'], Boolean(studentId))
+
+  useEffect(() => {
+    if (!studentId) return
+    return onEnrollmentComplete((detail) => {
+      if (detail.studentId === studentId) {
+        void refetch(true)
+      }
+    })
+  }, [studentId, refetch])
 
   if (!user || loading) {
     return <StudentDashboardSkeleton />

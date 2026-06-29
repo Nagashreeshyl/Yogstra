@@ -6,6 +6,7 @@ import { fetchStudentAcademyAssociation, fetchAcademyById } from './academyServi
 import { fetchStudentCoachingTeachers, type StudentCoachingTeacher } from './liveClasses'
 import { fetchStudentSessionCount } from './schedules'
 import { fetchStudentScheduleChangeRequests } from './scheduleChangeRequests'
+import { fetchEnrollmentNotifications } from './enrollmentNotifications'
 import { fetchMessagingUsers, fetchDirectMessages } from './directChat'
 import { fetchStudentMonthlyAttendance } from './attendanceService'
 
@@ -325,8 +326,17 @@ async function fetchLatestCoachMessage(
 
 function buildNotifications(
   changeRequests: Awaited<ReturnType<typeof fetchStudentScheduleChangeRequests>>,
+  enrollmentNotes: Awaited<ReturnType<typeof fetchEnrollmentNotifications>>,
 ): StudentDashboardNotification[] {
-  return changeRequests.slice(0, 5).map((req) => ({
+  const enrollmentItems = enrollmentNotes.map((note) => ({
+    id: note.id,
+    title: note.title,
+    body: note.body,
+    createdAt: note.createdAt,
+    href: note.href ?? '/dashboard/student',
+  }))
+
+  const scheduleItems = changeRequests.slice(0, 5).map((req) => ({
     id: req.id,
     title:
       req.status === 'pending'
@@ -338,6 +348,10 @@ function buildNotifications(
     createdAt: req.createdAt,
     href: '/dashboard/student/classes',
   }))
+
+  return [...enrollmentItems, ...scheduleItems]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 6)
 }
 
 export async function fetchStudentDashboard(studentId: string): Promise<StudentDashboardData> {
@@ -352,6 +366,7 @@ export async function fetchStudentDashboard(studentId: string): Promise<StudentD
     streakWeeks,
     competition,
     academyAssociation,
+    enrollmentNotes,
   ] = await Promise.all([
     fetchStudentActiveBooking(studentId),
     fetchStudentCoachingTeachers(studentId),
@@ -363,6 +378,7 @@ export async function fetchStudentDashboard(studentId: string): Promise<StudentD
     estimateStreakWeeks(studentId),
     pickNextCompetition(studentId),
     fetchStudentAcademyAssociation(studentId),
+    fetchEnrollmentNotifications(studentId, 5),
   ])
 
   const primaryCoach = coaches[0]
@@ -402,7 +418,7 @@ export async function fetchStudentDashboard(studentId: string): Promise<StudentD
       weeklySessionCounts,
     },
     coachFeedback: feedback,
-    notifications: buildNotifications(changeRequests),
+    notifications: buildNotifications(changeRequests, enrollmentNotes),
   }
 }
 

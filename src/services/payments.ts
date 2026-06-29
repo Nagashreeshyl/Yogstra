@@ -1,5 +1,6 @@
 import type { ClassOrderInput } from './classOrders'
 import { supabase } from '../lib/supabase'
+import { dispatchEnrollmentComplete } from './enrollmentEvents'
 
 declare global {
   interface Window {
@@ -133,10 +134,16 @@ async function fulfillVerifiedPayment(response: RazorpaySuccessResponse) {
     }),
   })
 
-  const body = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string }
+  const body = (await res.json().catch(() => ({}))) as {
+    ok?: boolean
+    error?: string
+    orderId?: string
+    alreadyFulfilled?: boolean
+  }
   if (!res.ok || !body.ok) {
     throw new Error(body.error ?? 'Payment succeeded but booking could not be completed.')
   }
+  return { orderId: body.orderId, alreadyFulfilled: body.alreadyFulfilled ?? false }
 }
 
 // VERIFIED: Razorpay checkout, order creation, payment fulfillment
@@ -202,9 +209,17 @@ export async function openRazorpayCheckout(params: {
       handler(response: RazorpaySuccessResponse) {
         void (async () => {
           try {
-            if (serverOrder?.orderId) {
-              await fulfillVerifiedPayment(response)
+            if (!serverOrder?.orderId) {
+              throw new Error(
+                'Payment service is unavailable. Your payment was not recorded — contact support if you were charged.',
+              )
             }
+            const result = await fulfillVerifiedPayment(response)
+            dispatchEnrollmentComplete({
+              studentId: params.orderInput.studentId,
+              teacherId: params.teacherId,
+              orderId: result.orderId,
+            })
             await params.onSuccess()
             finish(() => resolve())
           } catch (err) {

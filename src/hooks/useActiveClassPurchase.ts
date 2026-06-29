@@ -19,7 +19,7 @@ export function useActiveClassPurchase(
     { enabled: canCheck },
   )
 
-  useLiveDataRefresh(refetch, ['schedules'], canCheck)
+  useLiveDataRefresh(refetch, ['schedules', 'bookings'], canCheck)
 
   useEffect(() => {
     if (!activePurchase) return

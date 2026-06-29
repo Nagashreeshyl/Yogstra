@@ -21,6 +21,7 @@ interface BuyClassModalProps {
   teacherId: string
   teacherName: string
   threadId: string
+  onEnrollmentComplete?: () => void | Promise<void>
 }
 
 import {
@@ -44,6 +45,7 @@ export function BuyClassModal({
   teacherId,
   teacherName,
   threadId,
+  onEnrollmentComplete,
 }: BuyClassModalProps) {
   const { user } = useApp()
   const [classType, setClassType] = useState<ClassType>('1:1')
@@ -127,6 +129,7 @@ export function BuyClassModal({
   }
 
   const handleProceed = async () => {
+    if (submitting) return
     if (!startDate || !time) {
       setError('Please choose a start date and preferred time for your first session.')
       return
@@ -211,6 +214,7 @@ export function BuyClassModal({
         orderInput,
         receipt: receiptId,
         onSuccess: async () => {
+          await onEnrollmentComplete?.()
           setSubmitting(false)
           onClose()
         },

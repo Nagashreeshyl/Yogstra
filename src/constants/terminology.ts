@@ -2,7 +2,11 @@
 export const TERMS = {
   platformName: 'Yogstra',
   platformTagline: 'The Operating System for Yoga Academies, Teachers, Students and Competitions',
+  enrolled: 'Enrolled',
   enrollInProgram: 'Enroll in Program',
+  alreadyEnrolled: 'Already Enrolled',
+  continueTraining: 'Continue Training',
+  viewProgram: 'View Program',
   bookTrial: 'Book Trial',
   viewProfile: 'View Profile',
   messageCoach: 'Message Coach',

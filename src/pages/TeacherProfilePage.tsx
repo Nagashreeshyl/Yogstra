@@ -53,7 +53,12 @@ export function TeacherProfilePage() {
   useLiveDataRefresh(refetch, ['teachers'], Boolean(id))
 
   const isStudent = user?.role === 'student'
-  const { hasActivePurchase, refetchActivePurchase } = useActiveClassPurchase(user?.id, id, isStudent && Boolean(id))
+  const { hasActivePurchase, refetchActivePurchase } = useActiveClassPurchase(
+    user?.id,
+    id,
+    isStudent && Boolean(id),
+  )
+  useLiveDataRefresh(refetchActivePurchase, ['schedules', 'bookings'], isStudent && Boolean(id))
 
   if (loading) return <ProfilePageSkeleton />
 
@@ -337,8 +342,27 @@ export function TeacherProfilePage() {
               <h2 className="font-heading text-xl sm:text-2xl font-semibold text-foreground mb-3">Ready to start training?</h2>
               <p className="text-sm text-muted-foreground mb-6">Enroll in a program or message {teacher.name.split(' ')[0]} to discuss your goals.</p>
               <div className="flex flex-wrap justify-center gap-3">
-                <Button onClick={() => void handleEnroll()} disabled={openingBuy || hasActivePurchase}>{TERMS.enrollInProgram}</Button>
-                <Button variant="secondary" onClick={openChat} className="gap-1.5"><MessageCircle size={16} />{TERMS.messageCoach}</Button>
+                {hasActivePurchase ? (
+                  <>
+                    <Button variant="secondary" disabled>
+                      {TERMS.enrolled}
+                    </Button>
+                    <Button onClick={() => navigate('/dashboard/student')}>
+                      {TERMS.continueTraining}
+                    </Button>
+                    <Button variant="secondary" onClick={() => navigate('/dashboard/student/classes')}>
+                      {TERMS.viewProgram}
+                    </Button>
+                  </>
+                ) : (
+                  <Button onClick={() => void handleEnroll()} disabled={openingBuy}>
+                    {openingBuy ? 'Opening…' : TERMS.enrollInProgram}
+                  </Button>
+                )}
+                <Button variant="secondary" onClick={openChat} className="gap-1.5">
+                  <MessageCircle size={16} />
+                  {TERMS.messageCoach}
+                </Button>
               </div>
             </div>
           </section>
@@ -348,12 +372,16 @@ export function TeacherProfilePage() {
       {isStudent && user && buyThreadId && (
         <BuyClassModal
           isOpen={buyOpen}
-          onClose={() => { setBuyOpen(false); void refetchActivePurchase(true) }}
+          onClose={() => {
+            setBuyOpen(false)
+            void refetchActivePurchase(true)
+          }}
           studentId={user.id}
           studentName={user.name}
           teacherId={teacher.id}
           teacherName={teacher.name}
           threadId={buyThreadId}
+          onEnrollmentComplete={() => refetchActivePurchase(true)}
         />
       )}
     </>

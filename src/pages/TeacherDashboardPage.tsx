@@ -1,7 +1,10 @@
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Calendar, IndianRupee, Star, Users } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { useAsyncData } from '../hooks/useAsyncData'
+import { useLiveDataRefresh } from '../hooks/useLiveDataRefresh'
+import { onEnrollmentComplete } from '../services/enrollmentEvents'
 import { fetchTeacherDashboard } from '../services/teacherDashboard'
 import { PageContainer } from '../components/shell/PageContainer'
 import { DashboardWorkspaceHeader } from '../components/shell/DashboardWorkspaceHeader'
@@ -30,6 +33,17 @@ export function TeacherDashboardPage() {
     [teacherId],
     { enabled: Boolean(teacherId) },
   )
+
+  useLiveDataRefresh(refetch, ['bookings', 'schedules', 'payouts'], Boolean(teacherId))
+
+  useEffect(() => {
+    if (!teacherId) return
+    return onEnrollmentComplete((detail) => {
+      if (detail.teacherId === teacherId) {
+        void refetch(true)
+      }
+    })
+  }, [teacherId, refetch])
 
   if (!user || loading) {
     return <TeacherDashboardSkeleton />

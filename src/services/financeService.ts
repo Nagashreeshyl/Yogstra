@@ -39,11 +39,12 @@ export async function fetchStudentFinanceSummary(studentId: string): Promise<Stu
     .from('class_orders')
     .select(`
       id,
-      amount_inr,
+      amount,
+      gross_amount,
       payment_status,
       created_at,
       teacher:profiles!teacher_id(full_name),
-      coupon_delivery_id
+      coupon_id
     `)
     .eq('student_id', studentId)
     .order('created_at', { ascending: false })
@@ -57,11 +58,11 @@ export async function fetchStudentFinanceSummary(studentId: string): Promise<Stu
   let couponsApplied = 0
 
   const transactions: FinanceTransaction[] = rows.map((row) => {
-    const amount = Number(row.amount_inr ?? 0)
+    const amount = Number(row.gross_amount ?? row.amount ?? 0)
     const status = String(row.payment_status ?? 'pending')
     if (status === 'paid') totalPaid += amount
     else pendingPayments += amount
-    if (row.coupon_delivery_id) couponsApplied += 1
+    if (row.coupon_id) couponsApplied += 1
 
     const teacher = Array.isArray(row.teacher) ? row.teacher[0] : row.teacher
     return {
@@ -129,7 +130,7 @@ export async function fetchTeacherFinanceSummary(teacherId: string): Promise<Tea
 
   const { data: orders } = await supabase
     .from('class_orders')
-    .select('id, amount_inr, payment_status, created_at, teacher_amount_inr')
+    .select('id, amount, gross_amount, teacher_amount, payment_status, created_at')
     .eq('teacher_id', teacherId)
     .eq('payment_status', 'paid')
     .order('created_at', { ascending: false })
@@ -139,7 +140,7 @@ export async function fetchTeacherFinanceSummary(teacherId: string): Promise<Tea
     transactions.push({
       id: order.id as string,
       type: 'class_payment',
-      amountInr: Number(order.teacher_amount_inr ?? order.amount_inr ?? 0),
+      amountInr: Number(order.teacher_amount ?? order.gross_amount ?? order.amount ?? 0),
       status: 'paid',
       description: 'Class earnings',
       createdAt: order.created_at as string,
@@ -173,7 +174,7 @@ export async function fetchAcademyFinanceSummary(academyId: string): Promise<Aca
 
   const { data: orders, error: orderError } = await supabase
     .from('class_orders')
-    .select('id, amount_inr, payment_status, created_at, teacher_id, teacher:profiles!teacher_id(full_name)')
+    .select('id, amount, gross_amount, payment_status, created_at, teacher_id, teacher:profiles!teacher_id(full_name)')
     .in('teacher_id', teacherIds)
     .order('created_at', { ascending: false })
     .limit(100)
@@ -184,7 +185,7 @@ export async function fetchAcademyFinanceSummary(academyId: string): Promise<Aca
   let pendingCollections = 0
 
   const transactions: FinanceTransaction[] = (orders ?? []).map((row) => {
-    const amount = Number(row.amount_inr ?? 0)
+    const amount = Number(row.gross_amount ?? row.amount ?? 0)
     const status = String(row.payment_status ?? 'pending')
     if (status === 'paid') totalCollected += amount
     else pendingCollections += amount

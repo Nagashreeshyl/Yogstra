@@ -149,6 +149,30 @@ export async function validatePendingOrderRequest(params: {
     throw new Error('Order amount does not match the quoted class fee.')
   }
 
+  const { data: paidOrders, error: paidOrdersError } = await supabase
+    .from('class_orders')
+    .select('id, scheduled_at, duration, payment_status')
+    .eq('student_id', params.studentId)
+    .eq('teacher_id', params.teacherId)
+    .eq('payment_status', 'paid')
+
+  if (paidOrdersError) throw paidOrdersError
+
+  const now = Date.now()
+  for (const paidOrder of paidOrders ?? []) {
+    const duration = (paidOrder.duration as ClassDuration | null) ?? 'month'
+    const scheduledAt = paidOrder.scheduled_at as string
+    const expiry = new Date(scheduledAt)
+    if (duration === 'week') {
+      expiry.setDate(expiry.getDate() + 7)
+    } else {
+      expiry.setMonth(expiry.getMonth() + 1)
+    }
+    if (now < expiry.getTime()) {
+      throw new Error('You are already enrolled with this coach for the current period.')
+    }
+  }
+
   return expectedAmount
 }
 
