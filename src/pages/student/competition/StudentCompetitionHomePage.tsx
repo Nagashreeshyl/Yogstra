@@ -15,7 +15,7 @@ import { ErrorState } from '../../../components/shell/ErrorState'
 import { EmptyState } from '../../../components/shell/EmptyState'
 import { LoadingSkeleton } from '../../../components/shell/LoadingSkeleton'
 import { DashboardCard } from '../../../components/student/dashboard/DashboardCard'
-import { CompetitionCard } from '../../../components/student/competition/CompetitionCard'
+import { StudentCompetitionListCard } from '../../../components/student/competition/StudentCompetitionListCard'
 import { CompetitionFilters } from '../../../components/student/competition/CompetitionFilters'
 
 const PAGE_SIZE = 6
@@ -117,7 +117,7 @@ export const StudentCompetitionHomePage = memo(function StudentCompetitionHomePa
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {data.registered.map((c) => (
-              <CompetitionCard key={c.id} competition={c} />
+              <StudentCompetitionListCard key={c.id} competition={c} />
             ))}
           </div>
         </section>
@@ -131,7 +131,7 @@ export const StudentCompetitionHomePage = memo(function StudentCompetitionHomePa
           </h2>
           <div className="grid gap-4 sm:grid-cols-2">
             {data.featured.map((c) => (
-              <CompetitionCard key={c.id} competition={c} variant="featured" />
+              <StudentCompetitionListCard key={c.id} competition={c} variant="featured" />
             ))}
           </div>
         </section>
@@ -142,7 +142,7 @@ export const StudentCompetitionHomePage = memo(function StudentCompetitionHomePa
           <h2 id="recommended-heading" className="mb-4 font-heading text-lg font-semibold">Recommended</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {data.recommended.map((c) => (
-              <CompetitionCard key={c.id} competition={c} />
+              <StudentCompetitionListCard key={c.id} competition={c} />
             ))}
           </div>
         </section>
@@ -156,7 +156,7 @@ export const StudentCompetitionHomePage = memo(function StudentCompetitionHomePa
           <>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {visibleUpcoming.map((c) => (
-                <CompetitionCard key={c.id} competition={c} />
+                <StudentCompetitionListCard key={c.id} competition={c} />
               ))}
             </div>
             {visibleCount < (data.upcoming.length ?? 0) && (
@@ -177,7 +177,7 @@ export const StudentCompetitionHomePage = memo(function StudentCompetitionHomePa
           <h2 id="recent-heading" className="mb-4 font-heading text-lg font-semibold">Recently announced</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {data.recent.map((c) => (
-              <CompetitionCard key={c.id} competition={c} variant="compact" />
+              <StudentCompetitionListCard key={c.id} competition={c} variant="compact" />
             ))}
           </div>
         </section>
@@ -230,7 +230,7 @@ export function StudentMyCompetitionsPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {data.map(({ competition, registration }) => (
           <div key={competition.id} className="space-y-2">
-            <CompetitionCard competition={competition} />
+            <StudentCompetitionListCard competition={competition} />
             <div className="flex flex-wrap gap-2 px-1">
               <Link to={`/dashboard/student/competitions/${competition.id}/preparation`} className="text-xs font-medium text-primary hover:underline">
                 Prepare

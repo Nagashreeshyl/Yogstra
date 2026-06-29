@@ -331,12 +331,3 @@ export function StudentClassesPage(_props: StudentClassesPageProps) {
     </>
   )
 }
-
-export function StudentClassesGuard({ children }: { children: React.ReactNode }) {
-  const { user } = useApp()
-  const { hasAccess, loading } = useStudentCoachingAccess(user?.id)
-
-  if (loading) return <ProfilePageSkeleton />
-  if (!hasAccess) return <Navigate to="/dashboard/student/explore" replace />
-  return children
-}

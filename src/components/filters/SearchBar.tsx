@@ -40,10 +40,4 @@ export function SearchBar({ placeholder = 'Search teachers, styles, locations...
   )
 }
 
-export function useFilteredTeachers() {
-  const { searchQuery, filters, selectedCategory } = useApp()
-  // Import dynamically to avoid circular deps - we'll filter in pages
-  return { searchQuery, filters, selectedCategory }
-}
-
 export { defaultFilters }

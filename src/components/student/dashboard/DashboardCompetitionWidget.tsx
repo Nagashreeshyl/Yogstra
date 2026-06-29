@@ -5,7 +5,7 @@ import { QuickActionButton } from '../../shell/QuickActionButton'
 import { EmptyState } from '../../shell/EmptyState'
 import type { StudentDashboardCompetition } from '../../../services/studentDashboard'
 
-interface CompetitionCardProps {
+interface DashboardCompetitionWidgetProps {
   competition: StudentDashboardCompetition | null
 }
 
@@ -15,7 +15,7 @@ const registrationLabels = {
   pending: 'Registration pending',
 } as const
 
-export function CompetitionCard({ competition }: CompetitionCardProps) {
+export function DashboardCompetitionWidget({ competition }: DashboardCompetitionWidgetProps) {
   if (!competition) {
     return (
       <DashboardCard title="Competition">

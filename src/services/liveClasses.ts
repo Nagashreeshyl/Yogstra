@@ -273,8 +273,6 @@ export async function fetchStudentCoachingTeachers(
       existing.isNow = true
     } else if (new Date(scheduledAt) > new Date() && !existing.next) {
       existing.next = scheduledAt
-    } else if (!existing.current && !existing.next && new Date(scheduledAt) > new Date()) {
-      existing.next = scheduledAt
     }
 
     scheduleByTeacher.set(tid, existing)

@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
+import { memo } from 'react'
 import { Calendar, MapPin, Trophy } from 'lucide-react'
 import type { StudentCompetitionListItem } from '../../../services/studentCompetitionExperience'
 
-interface CompetitionCardProps {
+interface StudentCompetitionListCardProps {
   competition: StudentCompetitionListItem
   variant?: 'default' | 'featured' | 'compact'
 }
@@ -38,7 +39,10 @@ function statusBadge(competition: StudentCompetitionListItem) {
   )
 }
 
-export function CompetitionCard({ competition, variant = 'default' }: CompetitionCardProps) {
+export const StudentCompetitionListCard = memo(function StudentCompetitionListCard({
+  competition,
+  variant = 'default',
+}: StudentCompetitionListCardProps) {
   const href = `/dashboard/student/competitions/${competition.id}`
   const isFeatured = variant === 'featured'
 
@@ -106,4 +110,4 @@ export function CompetitionCard({ competition, variant = 'default' }: Competitio
       </div>
     </article>
   )
-}
+})

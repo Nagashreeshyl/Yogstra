@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
 import { MobileNavigation } from './MobileNavigation'
@@ -31,6 +30,12 @@ export function AppShell({
 
   return (
     <div className="flex h-full min-h-0 lg:flex-row flex-col bg-background">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-[12px] focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary"
+      >
+        Skip to main content
+      </a>
       <div className="hidden lg:flex shrink-0 h-full min-h-0">
         <Sidebar
           variant={variant}
@@ -52,6 +57,7 @@ export function AppShell({
         />
 
         <main
+          id="main-content"
           className={`flex-1 min-h-0 min-w-0 overflow-y-auto pb-16 lg:pb-0 ${mainClassName}`}
         >
           {fullBleed ? children : <div className="min-h-full">{children}</div>}
@@ -62,10 +68,3 @@ export function AppShell({
     </div>
   )
 }
-
-/** @deprecated Use AppShell — kept for backward compatibility during migration. */
-export function ResponsiveLayout(props: AppShellProps) {
-  return <AppShell {...props} />
-}
-
-export type ResponsiveLayoutProps = AppShellProps & { sidebar?: ReactNode }

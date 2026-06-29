@@ -74,47 +74,47 @@ const StudentCompetitionLayout = lazy(() =>
   })),
 )
 const StudentCompetitionHomePage = lazy(() =>
-  import('./pages/student/competition/studentCompetitionPages').then((m) => ({
+  import('./pages/student/competition/StudentCompetitionHomePage').then((m) => ({
     default: m.StudentCompetitionHomePage,
   })),
 )
 const StudentMyCompetitionsPage = lazy(() =>
-  import('./pages/student/competition/studentCompetitionPages').then((m) => ({
+  import('./pages/student/competition/StudentCompetitionHomePage').then((m) => ({
     default: m.StudentMyCompetitionsPage,
   })),
 )
 const StudentCompetitionDetailPage = lazy(() =>
-  import('./pages/student/competition/studentCompetitionPages').then((m) => ({
+  import('./pages/student/competition/StudentCompetitionDetailPage').then((m) => ({
     default: m.StudentCompetitionDetailPage,
   })),
 )
 const StudentRegistrationWizardPage = lazy(() =>
-  import('./pages/student/competition/studentCompetitionPages').then((m) => ({
+  import('./pages/student/competition/StudentRegistrationWizardPage').then((m) => ({
     default: m.StudentRegistrationWizardPage,
   })),
 )
 const StudentPreparationPage = lazy(() =>
-  import('./pages/student/competition/studentCompetitionPages').then((m) => ({
+  import('./pages/student/competition/StudentPreparationPage').then((m) => ({
     default: m.StudentPreparationPage,
   })),
 )
 const StudentLiveStatusPage = lazy(() =>
-  import('./pages/student/competition/studentCompetitionPages').then((m) => ({
+  import('./pages/student/competition/StudentLiveStatusPage').then((m) => ({
     default: m.StudentLiveStatusPage,
   })),
 )
 const StudentResultsHubPage = lazy(() =>
-  import('./pages/student/competition/studentCompetitionPages').then((m) => ({
+  import('./pages/student/competition/StudentResultsHubPage').then((m) => ({
     default: m.StudentResultsHubPage,
   })),
 )
 const StudentCertificatesPage = lazy(() =>
-  import('./pages/student/competition/studentCompetitionPages').then((m) => ({
+  import('./pages/student/competition/StudentCertificatesPage').then((m) => ({
     default: m.StudentCertificatesPage,
   })),
 )
 const StudentRankingsPage = lazy(() =>
-  import('./pages/student/competition/studentCompetitionPages').then((m) => ({
+  import('./pages/student/competition/StudentRankingsPage').then((m) => ({
     default: m.StudentRankingsPage,
   })),
 )

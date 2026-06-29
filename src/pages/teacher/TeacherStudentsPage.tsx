@@ -7,6 +7,8 @@ import { Avatar } from '../../components/ui/Avatar'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
+import { EmptyState } from '../../components/shell/EmptyState'
+import { ErrorState } from '../../components/shell/ErrorState'
 import { TeacherTableSkeleton } from '../../components/ui/Skeleton'
 import { buildChatNavigationState, messagesPathForRole } from '../../utils/chatNavigation'
 import { studentProfilePath } from '../../utils/chatRoutes'
@@ -14,7 +16,7 @@ import { studentProfilePath } from '../../utils/chatRoutes'
 export function TeacherStudentsPage() {
   const { user } = useApp()
   const navigate = useNavigate()
-  const { data: students, loading, refetch } = useAsyncData(
+  const { data: students, loading, error, refetch } = useAsyncData(
     () => (user ? fetchTeacherStudents(user.id) : Promise.resolve([])),
     [user?.id],
   )
@@ -27,8 +29,10 @@ export function TeacherStudentsPage() {
 
       {loading ? (
         <TeacherTableSkeleton rows={4} />
+      ) : error ? (
+        <ErrorState message={error} onRetry={() => void refetch()} />
       ) : (students ?? []).length === 0 ? (
-        <p className="text-charcoal/50 text-sm">No active students yet.</p>
+        <EmptyState title="No active students yet" description="Students appear here after they book classes with you." />
       ) : (
         <div className="space-y-3">
           {students!.map((s) => (

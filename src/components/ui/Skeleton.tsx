@@ -172,24 +172,6 @@ export function ScheduleCalendarSkeleton() {
   )
 }
 
-export function TeacherDashboardSkeleton() {
-  return (
-    <div className="p-8 space-y-8">
-      <PageHeaderSkeleton />
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-24" />
-        ))}
-      </div>
-      <Skeleton className="h-48 w-full" />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Skeleton className="h-40" />
-        <Skeleton className="h-40" />
-      </div>
-    </div>
-  )
-}
-
 export function TeacherTableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
     <div className="border border-border rounded-sm divide-y divide-border">

@@ -8,7 +8,7 @@ import { WelcomeSection } from '../../components/student/dashboard/WelcomeSectio
 import { QuickStats } from '../../components/student/dashboard/StatCard'
 import { TodaysPracticeCard } from '../../components/student/dashboard/TodaysPracticeCard'
 import { NextClassCard } from '../../components/student/dashboard/NextClassCard'
-import { CompetitionCard } from '../../components/student/dashboard/CompetitionCard'
+import { DashboardCompetitionWidget } from '../../components/student/dashboard/DashboardCompetitionWidget'
 import { ProgressCard } from '../../components/student/dashboard/ProgressCard'
 import { CoachFeedbackCard } from '../../components/student/dashboard/CoachFeedbackCard'
 import { AchievementsCard } from '../../components/student/dashboard/AchievementsCard'
@@ -95,7 +95,7 @@ export function StudentDashboardPage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
         <TodaysPracticeCard practice={data.todaysPractice} />
         <NextClassCard nextClass={data.nextClass} />
-        <CompetitionCard competition={data.competition} />
+        <DashboardCompetitionWidget competition={data.competition} />
         <ProgressCard attendance={data.attendance} progress={data.progress} />
         <CoachFeedbackCard feedback={data.coachFeedback} />
         <AchievementsCard />

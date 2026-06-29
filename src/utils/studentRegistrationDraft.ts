@@ -53,8 +53,3 @@ export function saveRegistrationDraft(
 export function clearRegistrationDraft(competitionId: string, userId: string) {
   localStorage.removeItem(draftKey(competitionId, userId))
 }
-
-export function getRegistrationProgress(draft: StudentRegistrationDraft | null): number {
-  if (!draft) return 0
-  return Math.round(((draft.step + 1) / 7) * 100)
-}

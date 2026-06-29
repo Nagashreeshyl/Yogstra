@@ -83,6 +83,12 @@ export default defineConfig(({ mode }) => {
             if (id.includes('node_modules/@livekit') || id.includes('node_modules/livekit-client')) {
               return 'livekit'
             }
+            if (id.includes('node_modules/@supabase')) {
+              return 'supabase'
+            }
+            if (id.includes('node_modules/qrcode')) {
+              return 'qrcode'
+            }
             if (id.includes('node_modules/react-dom') || id.includes('node_modules/react-router')) {
               return 'vendor'
             }

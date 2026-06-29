@@ -1,4 +1,4 @@
-export { AppShell, ResponsiveLayout } from './AppShell'
+export { AppShell } from './AppShell'
 export type { AppShellProps } from './types'
 export { Sidebar } from './Sidebar'
 export { TopBar } from './TopBar'

@@ -104,13 +104,13 @@ export function StudentAuthPage() {
         </div>
 
         {success && (
-          <p className="text-sm text-teal mb-4 border border-teal/30 bg-teal-soft px-3 py-2 rounded-sm">
+          <p role="status" aria-live="polite" className="text-sm text-teal mb-4 border border-teal/30 bg-teal-soft px-3 py-2 rounded-sm">
             {success}
           </p>
         )}
 
         {error && (
-          <p className="text-sm text-red-600 mb-4 border border-red-200 bg-red-50 px-3 py-2 rounded-sm">
+          <p role="alert" aria-live="assertive" className="text-sm text-red-600 mb-4 border border-red-200 bg-red-50 px-3 py-2 rounded-sm">
             {error}
           </p>
         )}
