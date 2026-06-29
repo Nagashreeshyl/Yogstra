@@ -1,5 +1,8 @@
 import type { AuthUser } from '../services/auth'
+import { WORKSPACE_LABELS } from '../constants/terminology'
+import { getDashboardViewsForAccess } from '../services/workspaceAccess'
 import { isPlatformAdmin } from './platformAdmin'
+import { isVerifiedTeacher } from './authRouting'
 
 export type DashboardView =
   | 'admin'
@@ -22,13 +25,21 @@ export function getDashboardViewsForUser(user: AuthUser): DashboardView[] {
   if (isPlatformAdmin(user)) {
     return ['admin', 'student', 'teacher', 'academy', 'organizer', 'judge']
   }
-  if (user.role === 'teacher') {
-    return ['teacher', 'academy', 'organizer', 'judge']
-  }
   if (user.role === 'student') {
     return ['student']
   }
+  if (user.role === 'teacher' && isVerifiedTeacher(user)) {
+    return ['teacher', 'academy', 'organizer']
+  }
   return []
+}
+
+/** Prefer {@link getDashboardViewsForAccess} when judge workspace visibility is needed. */
+export function getDashboardViewsWithAccess(
+  user: AuthUser,
+  access: Parameters<typeof getDashboardViewsForAccess>[1],
+): DashboardView[] {
+  return getDashboardViewsForAccess(user, access)
 }
 
 export function detectActiveDashboardView(pathname: string): DashboardView | null {
@@ -42,5 +53,5 @@ export function detectActiveDashboardView(pathname: string): DashboardView | nul
 }
 
 export function formatDashboardViewLabel(view: DashboardView): string {
-  return view.charAt(0).toUpperCase() + view.slice(1)
+  return WORKSPACE_LABELS[view]
 }

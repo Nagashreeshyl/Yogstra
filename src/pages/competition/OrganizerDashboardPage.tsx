@@ -135,7 +135,7 @@ export function OrganizerDashboardPage() {
   return (
     <div className="py-4 sm:py-6">
       <PageHeader
-        title="Organizer"
+        title="Competition workspace"
         description="Create, manage, and complete competitions from one place."
         actions={
           <Button size="sm" onClick={() => setWizardOpen(true)}>

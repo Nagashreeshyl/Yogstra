@@ -5,46 +5,55 @@ import {
   Check,
   GraduationCap,
   IndianRupee,
+  LayoutGrid,
   Trophy,
   Users,
 } from 'lucide-react'
 import { PublicSection } from '../../components/public/PublicSection'
 import { Button } from '../../components/ui/Button'
+import { TERMS } from '../../constants/terminology'
 
-const roles = [
+const accountTypes = [
   {
     icon: GraduationCap,
     title: 'Students',
     description:
-      'Discover coaches and academies, join structured programs, attend live classes, track progress, and compete — all in one place.',
-    cta: 'Get Started as Student',
+      'Discover coaches and academies, join structured programs, attend live classes, track progress, and compete.',
+    cta: TERMS.continueAsStudent,
     to: '/auth/student',
   },
   {
     icon: Users,
-    title: 'Coaches',
+    title: 'Teachers',
     description:
-      'Build a professional coaching profile, create training programs, manage students and batches, and grow your practice.',
-    cta: 'Apply as Coach',
+      'One account unlocks multiple workspaces — Coach, Academy, Competitions, and Judge (when assigned).',
+    cta: TERMS.applyAsTeacher,
     to: '/auth/teacher/register',
+  },
+] as const
+
+const workspaces = [
+  {
+    icon: LayoutGrid,
+    title: TERMS.coachWorkspace,
+    text: 'Build your profile, create programs, manage students and batches.',
   },
   {
     icon: Building2,
-    title: 'Academies',
-    description:
-      'Run your academy with tools for teachers, students, programs, schedules, attendance, and finance.',
-    cta: 'Register Academy',
-    to: '/auth/academy',
+    title: TERMS.academyWorkspace,
+    text: 'Run your academy with teachers, students, schedules, and finance.',
   },
   {
     icon: Trophy,
-    title: 'Competition Organizers',
-    description:
-      'Create competitions, manage registrations, assign judges, score performances, and publish results and certificates.',
-    cta: 'Register Organizer',
-    to: '/auth/organizer',
+    title: TERMS.competitionWorkspace,
+    text: 'Create competitions, manage registrations, assign judges, and publish results.',
   },
-]
+  {
+    icon: Check,
+    title: TERMS.judgeWorkspace,
+    text: 'Score performances when assigned — available only with active judge assignments.',
+  },
+] as const
 
 export function HowYogstraWorksPage() {
   return (
@@ -55,15 +64,15 @@ export function HowYogstraWorksPage() {
             How Yogstra Works
           </h1>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Yogstra is free to join. We earn a small platform commission only when a successful paid enrollment
-            or competition registration happens.
+            One platform for students and teachers. Teachers unlock workspaces as their involvement grows — no
+            separate account types.
           </p>
         </div>
       </section>
 
-      <PublicSection title="Built for every role" description="One platform — four powerful experiences.">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-          {roles.map(({ icon: Icon, title, description, cta, to }) => (
+      <PublicSection title="Two ways to begin" description="Simple signup. Powerful workspaces when you need them.">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          {accountTypes.map(({ icon: Icon, title, description, cta, to }) => (
             <div key={title} className="rounded-[24px] border border-border bg-elevated p-8 flex flex-col">
               <div className="inline-flex h-11 w-11 items-center justify-center rounded-[14px] bg-accent/10 text-accent mb-5">
                 <Icon size={22} />
@@ -82,9 +91,26 @@ export function HowYogstraWorksPage() {
       </PublicSection>
 
       <PublicSection
+        title="Teacher workspaces"
+        description="Verified teachers switch between workspaces from one dashboard."
+        className="bg-muted/20"
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          {workspaces.map(({ icon: Icon, title, text }) => (
+            <div key={title} className="rounded-[20px] border border-border bg-elevated p-6">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] bg-accent/10 text-accent mb-4">
+                <Icon size={20} />
+              </div>
+              <h3 className="font-heading text-base font-semibold text-foreground mb-2">{title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{text}</p>
+            </div>
+          ))}
+        </div>
+      </PublicSection>
+
+      <PublicSection
         title="Platform commission"
         description="Transparent, success-based pricing."
-        className="bg-muted/20"
         centered
       >
         <div className="max-w-2xl mx-auto rounded-[24px] border border-border bg-elevated p-8 sm:p-10 text-center">

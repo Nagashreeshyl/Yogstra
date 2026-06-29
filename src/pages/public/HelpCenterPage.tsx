@@ -4,6 +4,7 @@ import { Mail, Search } from 'lucide-react'
 import { PageContainer } from '../../components/shell/PageContainer'
 import { PageHeader } from '../../components/shell/PageHeader'
 import { Input } from '../../components/ui/Input'
+import { PUBLIC_FAQS } from '../../constants/publicFaqs'
 
 type HelpArticle = {
   id: string
@@ -17,8 +18,8 @@ const articles: HelpArticle[] = [
     title: 'Creating an account',
     content: (
       <>
-        <p>Visit the Yogstra homepage and click <strong>Get Started</strong>. Choose your journey — student, coach, academy, or competition organizer — and complete the registration form.</p>
-        <p className="mt-3">If email verification is required, check your inbox for a confirmation link before signing in. Once verified, you&apos;ll land on your dashboard.</p>
+        <p>Visit the Yogstra homepage and click <strong>Get Started</strong>. Choose student or teacher, then complete the registration form.</p>
+        <p className="mt-3">Teachers unlock Academy, Competition, and Judge workspaces after verification — no separate account types.</p>
         <p className="mt-3">
           <Link to="/auth/get-started" className="text-accent hover:underline font-medium">Get Started →</Link>
         </p>
@@ -44,7 +45,7 @@ const articles: HelpArticle[] = [
     content: (
       <>
         <p>Academies on Yogstra manage batches, teachers, and student enrollments. Browse active academies on the Discover page or visit an academy profile to learn about their programs.</p>
-        <p className="mt-3">To register your own academy, choose <strong>Register an Academy</strong> during signup. Academy owners get a dedicated dashboard for operations, finance, and member management.</p>
+        <p className="mt-3">To create an academy, sign up as a teacher and enable your <strong>Academy workspace</strong> from the dashboard after verification.</p>
         <p className="mt-3">
           <Link to="/academies" className="text-accent hover:underline font-medium">Browse Academies →</Link>
         </p>
@@ -67,7 +68,7 @@ const articles: HelpArticle[] = [
     content: (
       <>
         <p>Yogstra hosts yoga competitions with registration, judging, scoring, and certificate generation. Browse upcoming competitions on the Discover page or your student dashboard.</p>
-        <p className="mt-3">Students can register for competitions through their dashboard. Organizers can apply during signup to create and manage events.</p>
+        <p className="mt-3">Students can register for competitions through their dashboard. Teachers create competitions from the Competition workspace.</p>
         <p className="mt-3">
           <Link to="/competitions" className="text-accent hover:underline font-medium">View Competitions →</Link>
         </p>
@@ -153,20 +154,7 @@ const articles: HelpArticle[] = [
   },
 ]
 
-const faqs = [
-  {
-    q: 'Can I be both a coach and organizer?',
-    a: 'Yes. After login, use the workspace picker to switch between dashboards for each role you hold.',
-  },
-  {
-    q: 'How does coach verification work?',
-    a: 'Submit your profile and certificates during registration. Our team reviews applications and typically approves within 48 hours. Only verified coaches appear in public listings.',
-  },
-  {
-    q: 'How do I switch between student and coach views?',
-    a: 'If your account has multiple roles, the workspace picker appears after login. You can also switch workspaces from your dashboard menu at any time.',
-  },
-]
+const faqs = [...PUBLIC_FAQS]
 
 export function HelpCenterPage() {
   const [query, setQuery] = useState('')

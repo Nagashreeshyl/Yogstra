@@ -10,6 +10,7 @@ import {
   Trophy,
   Settings,
 } from 'lucide-react'
+import { TERMS } from '../../../constants/terminology'
 import type { ShellNavItem } from '../types'
 
 export const academyNavItems: ShellNavItem[] = [
@@ -34,7 +35,7 @@ export const academyNavItems: ShellNavItem[] = [
   },
   {
     to: '/dashboard/academy/batches',
-    label: 'Batches',
+    label: TERMS.trainingBatches,
     icon: Layers,
     placement: ['sidebar', 'tab'],
   },
@@ -52,7 +53,7 @@ export const academyNavItems: ShellNavItem[] = [
   },
   {
     to: '/dashboard/academy/competitions',
-    label: 'Competitions',
+    label: TERMS.competitions,
     icon: Trophy,
     placement: ['sidebar', 'more'],
   },

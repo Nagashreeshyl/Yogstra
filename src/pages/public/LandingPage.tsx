@@ -23,28 +23,9 @@ const LandingLiveSections = lazy(() =>
   })),
 )
 
-const faqs = [
-  {
-    q: 'What is Yogstra?',
-    a: 'Yogstra is the operating system for yoga academies, coaches, students, and competitions — connecting every stakeholder on one premium platform.',
-  },
-  {
-    q: 'Is Yogstra a marketplace?',
-    a: 'No. Yogstra is a professional training platform where students join programs, coaches run their practice, and academies manage operations.',
-  },
-  {
-    q: 'How does Yogstra make money?',
-    a: 'Yogstra earns a small platform commission on successful paid enrollments and competition registrations. There are no monthly subscription fees.',
-  },
-  {
-    q: 'Can I attend live online classes?',
-    a: 'Yes. Built-in live online classes and instant messaging connect you directly with your coach.',
-  },
-  {
-    q: 'Can one account access multiple workspaces?',
-    a: 'Yes. A coach can also run an academy or serve as a competition judge. After login, you go directly to your primary workspace.',
-  },
-]
+import { PUBLIC_FAQS } from '../../constants/publicFaqs'
+
+const faqs = PUBLIC_FAQS.slice(0, 6)
 
 export function LandingPage() {
   const { data, loading, error } = useAsyncData(() => fetchLandingPageData(), [])
@@ -107,7 +88,7 @@ export function LandingPage() {
           {[
             { icon: Shield, title: 'Verified ecosystem', text: 'Coaches, academies, and competitions go through structured verification.' },
             { icon: Sparkles, title: 'Premium experience', text: 'Programs, live classes, secure payments, and community — unified under one design.' },
-            { icon: Trophy, title: 'Competition-ready', text: 'Organizers, judges, registrations, rankings, and certificates built in.' },
+            { icon: Trophy, title: 'Competition-ready', text: 'Competitions, judge assignments, registrations, rankings, and certificates built in.' },
           ].map(({ icon: Icon, title, text }) => (
             <div key={title} className="rounded-[20px] border border-border bg-elevated p-6">
               <Icon size={22} className="text-accent mb-4" />

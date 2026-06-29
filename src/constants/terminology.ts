@@ -1,4 +1,4 @@
-/** User-facing product language — Yogstra V2 Operating System positioning */
+/** User-facing product language — Yogstra V2 */
 export const TERMS = {
   platformName: 'Yogstra',
   platformTagline: 'The Operating System for Yoga Academies, Teachers, Students and Competitions',
@@ -8,17 +8,38 @@ export const TERMS = {
   messageCoach: 'Message Coach',
   personalCoaching: 'Personal Coaching',
   trainingBatch: 'Training Batch',
+  trainingBatches: 'Training Batches',
   competitionCoaching: 'Competition Coaching',
   discoverCoaches: 'Discover Coaches',
   myPrograms: 'My Programs',
+  programs: 'Programs',
   enrollments: 'Enrollments',
   confirmEnrollment: 'Confirm Enrollment',
   getStarted: 'Get Started',
-  applyAsCoach: 'Apply as Coach',
-  registerAcademy: 'Register Academy',
-  registerOrganizer: 'Register Organizer',
   learnYoga: 'Learn Yoga',
-  becomeCoach: 'Become a Coach',
-  runAcademy: 'Run a Yoga Academy',
-  hostCompetitions: 'Host Yoga Competitions',
+  becomeTeacher: 'Become a Teacher',
+  continueAsStudent: 'Continue as Student',
+  applyAsTeacher: 'Apply as Teacher',
+  createAcademy: 'Create an Academy',
+  createCompetitions: 'Create Competitions',
+  myJudgeAssignments: 'My Judge Assignments',
+  coachWorkspace: 'Coach',
+  academyWorkspace: 'Academy',
+  competitionWorkspace: 'Competitions',
+  judgeWorkspace: 'Judge',
+  community: 'Community',
+  messages: 'Messages',
+  certificates: 'Certificates',
+  competitions: 'Competitions',
+  academy: 'Academy',
+} as const
+
+/** Workspace switcher labels keyed by internal dashboard view id */
+export const WORKSPACE_LABELS = {
+  student: 'Student',
+  teacher: TERMS.coachWorkspace,
+  academy: TERMS.academyWorkspace,
+  organizer: TERMS.competitionWorkspace,
+  judge: TERMS.judgeWorkspace,
+  admin: 'Platform Admin',
 } as const

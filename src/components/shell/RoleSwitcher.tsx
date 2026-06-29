@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ChevronDown, Shield } from 'lucide-react'
+import { ChevronDown, LayoutGrid } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import {
   DASHBOARD_VIEW_PATHS,
@@ -11,6 +11,7 @@ import {
 } from '../../utils/dashboardRoutes'
 import { formatRoleLabel } from '../../utils/authRouting'
 import { isPlatformAdmin } from '../../utils/platformAdmin'
+import { useWorkspaceAccess } from '../../hooks/useWorkspaceAccess'
 
 export function RoleSwitcher() {
   const { user, isLoggedIn } = useApp()
@@ -18,6 +19,7 @@ export function RoleSwitcher() {
   const location = useLocation()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const { views: workspaceViews } = useWorkspaceAccess()
 
   useEffect(() => {
     if (!open) return
@@ -30,9 +32,9 @@ export function RoleSwitcher() {
 
   if (!isLoggedIn || !user) return null
 
-  const availableViews = getDashboardViewsForUser(user)
-  const activeView = detectActiveDashboardView(location.pathname)
   const isAdmin = isPlatformAdmin(user)
+  const availableViews = workspaceViews.length > 0 ? workspaceViews : getDashboardViewsForUser(user)
+  const activeView = detectActiveDashboardView(location.pathname)
   const label = activeView
     ? formatDashboardViewLabel(activeView)
     : formatRoleLabel(user)
@@ -50,11 +52,11 @@ export function RoleSwitcher() {
         type="button"
         onClick={() => setOpen((value) => !value)}
         className="inline-flex items-center gap-1.5 h-9 px-2.5 sm:px-3 rounded-[12px] border border-border bg-elevated text-sm text-foreground hover:bg-muted transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-        aria-label="Switch dashboard view"
+        aria-label="Switch workspace"
         aria-expanded={open}
         aria-haspopup="listbox"
       >
-        <Shield size={14} className="text-accent shrink-0" />
+        <LayoutGrid size={14} className="text-accent shrink-0" />
         <span className="max-w-[5.5rem] sm:max-w-none truncate">{label}</span>
         <ChevronDown size={14} className="text-muted-foreground shrink-0" />
       </button>
@@ -62,11 +64,11 @@ export function RoleSwitcher() {
       {open && (
         <div
           role="listbox"
-          aria-label="Dashboard views"
+          aria-label="Workspaces"
           className="absolute right-0 top-full mt-2 w-56 rounded-[16px] border border-border bg-elevated shadow-md py-2 z-[80]"
         >
           <p className="px-3 py-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            {isAdmin ? 'Admin — switch dashboard' : 'Dashboards'}
+            {isAdmin ? 'Admin — switch workspace' : 'Workspaces'}
           </p>
           {availableViews.map((view) => {
             const isActive = activeView === view
@@ -92,7 +94,7 @@ export function RoleSwitcher() {
           })}
           {isAdmin && (
             <p className="px-3 pt-2 pb-1 text-[11px] text-muted-foreground border-t border-border mt-1">
-              Preview any role dashboard without changing your admin account.
+              Preview any workspace without changing your admin account.
             </p>
           )}
         </div>

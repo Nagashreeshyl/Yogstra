@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Building2, GraduationCap, Trophy, Users } from 'lucide-react'
+import { GraduationCap, Users } from 'lucide-react'
 import { AuthLayout } from '../../components/public/AuthLayout'
 import { JourneyCard, JourneyGrid } from '../../components/public/JourneyCard'
 import { TERMS } from '../../constants/terminology'
@@ -8,30 +8,18 @@ const journeys = [
   {
     icon: GraduationCap,
     title: TERMS.learnYoga,
-    description: 'Discover expert coaches, join structured programs, and track your progress on Yogstra.',
+    description:
+      'Discover verified coaches, join structured programs, compete, and track your progress — all in one place.',
     to: '/auth/student',
-    cta: 'Continue as Student',
+    cta: TERMS.continueAsStudent,
   },
   {
     icon: Users,
-    title: TERMS.becomeCoach,
-    description: 'Build a professional coaching practice with programs, batches, and student management.',
+    title: TERMS.becomeTeacher,
+    description:
+      'Start as a coach and unlock Academy, Competition, and Judge workspaces as your practice grows. One account, one login.',
     to: '/auth/teacher/register',
-    cta: TERMS.applyAsCoach,
-  },
-  {
-    icon: Building2,
-    title: 'Register an Academy',
-    description: 'Run your academy like a professional institution with teachers, students, and operations in one place.',
-    to: '/auth/academy',
-    cta: TERMS.registerAcademy,
-  },
-  {
-    icon: Trophy,
-    title: 'Organize Competitions',
-    description: 'Create competitions, manage registrations, assign judges, and publish results and certificates.',
-    to: '/auth/organizer',
-    cta: 'Apply as Organizer',
+    cta: TERMS.applyAsTeacher,
   },
 ] as const
 
@@ -40,7 +28,7 @@ export function GetStartedPage() {
     <AuthLayout
       variant="wide"
       title="Join Yogstra"
-      description="Choose how you want to use Yogstra."
+      description="Choose how you want to begin. Teachers unlock additional workspaces after verification."
     >
       <JourneyGrid>
         {journeys.map((journey) => (

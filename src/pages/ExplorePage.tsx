@@ -19,6 +19,7 @@ import { fetchPublicCompetitionTeaser } from '../services/publicCompetitionServi
 import { PublicSection } from '../components/public/PublicSection'
 import { Building2 } from 'lucide-react'
 import { Button } from '../components/ui/Button'
+import { TERMS } from '../constants/terminology'
 
 export function ExplorePage() {
   const { searchQuery, filters, selectedCategory } = useApp()
@@ -79,7 +80,7 @@ export function ExplorePage() {
             {[1, 2, 3].map((i) => <div key={i} className="h-24 animate-pulse rounded-[20px] bg-muted/80" />)}
           </div>
         ) : (academies ?? []).length === 0 ? (
-          <EmptyState title="No academies yet" description="Academies register through Yogstra to manage their operations." action={<Link to="/auth/get-started"><Button>Register Academy</Button></Link>} />
+          <EmptyState title="No academies yet" description="Teachers can create an academy from their Academy workspace after verification." action={<Link to="/auth/get-started"><Button>{TERMS.createAcademy}</Button></Link>} />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {(academies ?? []).slice(0, 6).map((a) => (

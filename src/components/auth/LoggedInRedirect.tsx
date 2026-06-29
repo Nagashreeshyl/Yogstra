@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
+import type { AuthUser } from '../../services/auth'
 import { getPostLoginPath } from '../../utils/authRouting'
 import { isPlatformAdmin } from '../../utils/platformAdmin'
 import { AuthLoadingSkeleton } from './AuthLoadingSkeleton'
@@ -24,6 +25,35 @@ const AUTH_PATHS = [
   '/auth/teacher/register',
   '/auth/login',
 ]
+
+const PUBLIC_BROWSABLE_EXACT = new Set([
+  '/',
+  '/discover',
+  '/explore',
+  '/teachers',
+  '/academies',
+  '/competitions',
+  '/community',
+  '/help',
+  '/about',
+  '/how-it-works',
+  '/privacy-policy',
+  '/terms-of-service',
+  '/refund-policy',
+])
+
+function isPublicBrowsablePath(path: string): boolean {
+  if (PUBLIC_BROWSABLE_EXACT.has(path)) return true
+  if (path.startsWith('/teachers/')) return true
+  if (path.startsWith('/academies/')) return true
+  if (path.startsWith('/competitions/')) return true
+  if (path.startsWith('/students/')) return true
+  return false
+}
+
+function isUnverifiedTeacher(user: AuthUser): boolean {
+  return user.role === 'teacher' && user.teacherStatus !== 'verified'
+}
 
 /** Sends returning logged-in users to their dashboard instead of public/auth pages */
 export function LoggedInRedirect({ children }: { children: React.ReactNode }) {
@@ -56,6 +86,10 @@ export function LoggedInRedirect({ children }: { children: React.ReactNode }) {
   }
 
   if (user.role === 'teacher') {
+    // Pending teachers can browse the public site (Browse Yogstra)
+    if (isUnverifiedTeacher(user) && isPublicBrowsablePath(path)) {
+      return children
+    }
     if (path === '/' || path.startsWith('/teachers') || path === '/community' || path === '/discover') {
       return <Navigate to={dashboard} replace />
     }

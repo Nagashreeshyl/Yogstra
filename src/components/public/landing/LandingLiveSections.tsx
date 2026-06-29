@@ -13,6 +13,7 @@ import { Button } from '../../ui/Button'
 import { Badge } from '../../ui/Badge'
 import { Avatar } from '../../ui/Avatar'
 import { EmptyState } from '../../shell/EmptyState'
+import { TERMS } from '../../../constants/terminology'
 import { TeacherCard } from '../../teachers/TeacherCard'
 
 type LandingLiveSectionsProps = {
@@ -76,8 +77,8 @@ export function LandingLiveSections({ data }: LandingLiveSectionsProps) {
             icon={<Building2 size={24} />}
             title="No academies have been verified yet."
             action={
-              <Link to="/auth/academy">
-                <Button>Register Academy</Button>
+              <Link to="/auth/teacher/register">
+                <Button>{TERMS.createAcademy}</Button>
               </Link>
             }
           />

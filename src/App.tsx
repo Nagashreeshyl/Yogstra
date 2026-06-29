@@ -20,8 +20,16 @@ const GetStartedPage = lazy(() => import('./pages/public/GetStartedPage').then((
 const LoginPage = lazy(() => import('./pages/public/LoginPage').then((m) => ({ default: m.LoginPage })))
 const WorkspacePickerPage = lazy(() => import('./pages/public/WorkspacePickerPage').then((m) => ({ default: m.WorkspacePickerPage })))
 const HowYogstraWorksPage = lazy(() => import('./pages/public/HowYogstraWorksPage').then((m) => ({ default: m.HowYogstraWorksPage })))
-const AcademySignupPage = lazy(() => import('./pages/public/AcademySignupPage').then((m) => ({ default: m.AcademySignupPage })))
-const OrganizerSignupPage = lazy(() => import('./pages/public/OrganizerSignupPage').then((m) => ({ default: m.OrganizerSignupPage })))
+const AcademySignupPage = lazy(() =>
+  import('./pages/public/TeacherWorkspaceRedirectPage').then((m) => ({
+    default: m.TeacherWorkspaceRedirectPage,
+  })),
+)
+const OrganizerSignupPage = lazy(() =>
+  import('./pages/public/TeacherWorkspaceRedirectPage').then((m) => ({
+    default: m.TeacherWorkspaceRedirectPage,
+  })),
+)
 const AboutPage = lazy(() => import('./pages/public/AboutPage').then((m) => ({ default: m.AboutPage })))
 const HelpCenterPage = lazy(() => import('./pages/public/HelpCenterPage').then((m) => ({ default: m.HelpCenterPage })))
 const AcademiesPage = lazy(() => import('./pages/public/AcademiesPage').then((m) => ({ default: m.AcademiesPage })))
@@ -208,8 +216,8 @@ export default function App() {
 
               <Route element={<RequireGuest />}>
                 <Route path="auth/student" element={<StudentAuthPage />} />
-                <Route path="auth/academy" element={<AcademySignupPage />} />
-                <Route path="auth/organizer" element={<OrganizerSignupPage />} />
+                <Route path="auth/academy" element={<AcademySignupPage intent="academy" />} />
+                <Route path="auth/organizer" element={<OrganizerSignupPage intent="competition" />} />
                 <Route path="auth/teacher" element={<Navigate to="/auth/login" replace />} />
                 <Route path="auth/teacher/register" element={<TeacherRegistrationPage />} />
               </Route>

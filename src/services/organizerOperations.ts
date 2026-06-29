@@ -14,7 +14,7 @@ import { createCertificateDraft, issueCertificate } from './certificateService'
 import { recordRankingEntry } from './rankingService'
 import { aggregateResultsFromScores } from './resultsAggregationService'
 import { mapCompetitionAnnouncement } from '../utils/competitionMappers'
-import { defaultCompetitionSettings } from '../utils/defaultScoringCriteria'
+import { formatUserFacingError } from '../utils/format'
 
 export async function updateCompetitionStatus(competitionId: string, status: CompetitionStatus) {
   const { error } = await supabase
@@ -382,47 +382,73 @@ export async function createAndPublishCompetition(
     openRegistration: boolean
   },
 ) {
-  const competition = await createCompetition(input, createdBy)
+  if (
+    input.startDate &&
+    input.endDate &&
+    new Date(input.endDate) < new Date(input.startDate)
+  ) {
+    throw new Error('End date must be on or after the start date.')
+  }
 
-  await supabase
-    .from('competitions')
-    .update({ settings: defaultCompetitionSettings() })
-    .eq('id', competition.id)
+  let competition
+  try {
+    competition = await createCompetition(input, createdBy)
+  } catch (err) {
+    throw new Error(formatUserFacingError(err, 'Could not create competition.'))
+  }
 
   const categoryIds: string[] = []
 
-  for (const [index, category] of extras.categories.entries()) {
-    const created = await createCompetitionCategory({
-      ...category,
-      competitionId: competition.id,
-      sortOrder: index,
-    })
-    categoryIds.push(created.id)
+  try {
+    for (const [index, category] of extras.categories.entries()) {
+      const created = await createCompetitionCategory({
+        ...category,
+        competitionId: competition.id,
+        sortOrder: index,
+      })
+      categoryIds.push(created.id)
+    }
+  } catch (err) {
+    throw new Error(formatUserFacingError(err, 'Could not save competition categories.'))
   }
 
-  for (const division of extras.divisions) {
-    const categoryId = categoryIds[division.categoryIndex]
-    if (!categoryId) continue
-    await createCompetitionDivision({
-      categoryId,
-      name: division.name,
-      code: division.code,
-    })
+  try {
+    for (const division of extras.divisions) {
+      const categoryId = categoryIds[division.categoryIndex]
+      if (!categoryId) continue
+      await createCompetitionDivision({
+        categoryId,
+        name: division.name,
+        code: division.code,
+      })
+    }
+  } catch (err) {
+    throw new Error(formatUserFacingError(err, 'Could not save competition divisions.'))
   }
 
-  for (const [index, event] of extras.events.entries()) {
-    await createCompetitionEvent({
-      competitionId: competition.id,
-      name: event.name,
-      startsAt: event.startsAt,
-      endsAt: event.endsAt,
-      venue: event.venue ?? input.venue,
-      stage: event.stage,
-      sortOrder: index,
-    })
+  try {
+    for (const [index, event] of extras.events.entries()) {
+      if (!event.name.trim() || !event.startsAt.trim()) continue
+      await createCompetitionEvent({
+        competitionId: competition.id,
+        name: event.name.trim(),
+        startsAt: event.startsAt,
+        endsAt: event.endsAt,
+        venue: event.venue ?? input.venue,
+        stage: event.stage,
+        sortOrder: index,
+      })
+    }
+  } catch (err) {
+    throw new Error(formatUserFacingError(err, 'Could not save competition schedule.'))
   }
 
-  await publishCompetition(competition.id, extras.openRegistration)
+  try {
+    await publishCompetition(competition.id, extras.openRegistration)
+  } catch (err) {
+    throw new Error(formatUserFacingError(err, 'Competition was created but could not be published.'))
+  }
+
   return competition
 }
 

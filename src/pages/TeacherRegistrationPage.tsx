@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { signUpTeacher } from '../services/auth'
 import { indianStates } from '../lib/constants'
@@ -11,6 +11,8 @@ import { Select } from '../components/ui/Select'
 import { Button } from '../components/ui/Button'
 import { formatAuthError } from '../utils/format'
 import { TERMS } from '../constants/terminology'
+import { InstructionPanel } from '../components/ui/InstructionPanel'
+import { HelpTooltip } from '../components/ui/HelpTooltip'
 import type { TeacherRegistrationData } from '../types'
 
 const emptyForm: TeacherRegistrationData = {
@@ -22,6 +24,8 @@ const emptyForm: TeacherRegistrationData = {
 }
 
 export function TeacherRegistrationPage() {
+  const location = useLocation()
+  const workspaceMessage = (location.state as { message?: string } | null)?.message
   const [step, setStep] = useState(1)
   const [form, setForm] = useState<TeacherRegistrationData>(emptyForm)
   const [submitted, setSubmitted] = useState(false)
@@ -84,9 +88,25 @@ export function TeacherRegistrationPage() {
 
   return (
     <AuthLayout
-      title={TERMS.applyAsCoach}
-      description="Apply to teach on Yogstra and build your professional coaching practice."
+      title={TERMS.applyAsTeacher}
+      description="One teacher account unlocks Coach, Academy, Competition, and Judge workspaces after verification."
     >
+      {workspaceMessage && (
+        <p className="mb-4 text-sm text-muted-foreground rounded-[12px] border border-border bg-muted/30 px-4 py-3">
+          {workspaceMessage}
+        </p>
+      )}
+
+      <InstructionPanel
+        storageKey="teacher-registration"
+        title="Getting started as a teacher"
+        steps={[
+          { label: 'Apply and get verified' },
+          { label: 'Set up your Coach workspace' },
+          { label: 'Create an Academy or Competition when ready' },
+        ]}
+        className="mb-6"
+      />
       <div className="flex gap-2 mb-6 justify-center">
         {[1, 2, 3].map((s) => (
           <div
@@ -148,7 +168,25 @@ export function TeacherRegistrationPage() {
               </div>
             </div>
 
-            <Textarea label="Bio" placeholder="Tell students about your teaching philosophy and experience" value={form.bio} onChange={(e) => update({ bio: e.target.value })} />
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center gap-1.5">
+                <label htmlFor="teacher-bio" className="text-sm font-medium text-foreground">
+                  Bio
+                </label>
+                <HelpTooltip
+                  label="Professional bio"
+                  description="A short introduction shown on your public coach profile."
+                  example="Certified Hatha instructor with 10 years of experience."
+                  bestPractice="Highlight your style, experience, and who you teach best."
+                />
+              </div>
+              <Textarea
+                id="teacher-bio"
+                placeholder="Tell students about your teaching philosophy and experience"
+                value={form.bio}
+                onChange={(e) => update({ bio: e.target.value })}
+              />
+            </div>
 
             <div className="flex gap-3">
               <Button variant="secondary" className="flex-1" onClick={() => setStep(1)}>Back</Button>

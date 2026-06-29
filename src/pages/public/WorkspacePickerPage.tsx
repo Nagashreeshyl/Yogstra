@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Building2, GraduationCap, Gavel, Scale, Shield } from 'lucide-react'
+import { Building2, GraduationCap, Gavel, LayoutGrid, Scale } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { AuthLayout } from '../../components/public/AuthLayout'
 import { Button } from '../../components/ui/Button'
@@ -12,14 +12,15 @@ import {
 } from '../../utils/dashboardRoutes'
 import { rememberWorkspace } from '../../utils/workspacePreference'
 import { getPostLoginPath } from '../../utils/authRouting'
+import { useWorkspaceAccess } from '../../hooks/useWorkspaceAccess'
 
 const viewIcons: Record<DashboardView, typeof GraduationCap> = {
   student: GraduationCap,
-  teacher: Shield,
+  teacher: LayoutGrid,
   academy: Building2,
   organizer: Gavel,
   judge: Scale,
-  admin: Shield,
+  admin: LayoutGrid,
 }
 
 export function WorkspacePickerPage() {
@@ -27,15 +28,16 @@ export function WorkspacePickerPage() {
   const navigate = useNavigate()
   const [selected, setSelected] = useState<DashboardView | null>(null)
   const [remember, setRemember] = useState(true)
+  const { views: workspaceViews, loading } = useWorkspaceAccess()
 
   if (!user) {
     navigate('/auth/login', { replace: true })
     return null
   }
 
-  const views = getDashboardViewsForUser(user)
+  const views = workspaceViews.length > 0 ? workspaceViews : getDashboardViewsForUser(user)
 
-  if (views.length <= 1) {
+  if (!loading && views.length <= 1) {
     navigate(getPostLoginPath(user), { replace: true })
     return null
   }
@@ -47,7 +49,10 @@ export function WorkspacePickerPage() {
   }
 
   return (
-    <AuthLayout title="Choose workspace" description="Select where you want to go today.">
+    <AuthLayout
+      title="Choose a workspace"
+      description="One account — switch between your coaching, academy, competition, and judge workspaces."
+    >
       <div className="space-y-3">
         {views.map((view) => {
           const Icon = viewIcons[view]

@@ -9,6 +9,17 @@ import {
   mapCompetitionCategory,
   mapCompetitionEvent,
 } from '../utils/competitionMappers'
+import { defaultCompetitionSettings } from '../utils/defaultScoringCriteria'
+
+function nullableText(value: string | undefined | null): string | null {
+  const trimmed = value?.trim()
+  return trimmed ? trimmed : null
+}
+
+function nullableDate(value: string | undefined | null): string | null {
+  const trimmed = value?.trim()
+  return trimmed ? trimmed : null
+}
 
 const competitionSelect = `
   id,
@@ -122,23 +133,25 @@ export const competitionRepository = {
     const { data, error } = await supabase
       .from('competitions')
       .insert({
-        name: input.name,
+        name: input.name.trim(),
         slug: input.slug,
-        description: input.description ?? null,
+        description: nullableText(input.description),
         organizer_id: input.organizerId ?? input.createdBy,
         academy_id: input.academyId ?? null,
-        venue: input.venue ?? null,
-        city: input.city ?? null,
-        state: input.state ?? null,
+        venue: nullableText(input.venue),
+        city: nullableText(input.city),
+        state: nullableText(input.state),
         country: input.country ?? 'IN',
-        start_date: input.startDate ?? null,
-        end_date: input.endDate ?? null,
-        registration_deadline: input.registrationDeadline ?? null,
+        start_date: nullableDate(input.startDate),
+        end_date: nullableDate(input.endDate),
+        registration_deadline: nullableDate(input.registrationDeadline),
         entry_fee: input.entryFee ?? 0,
         format: input.format ?? 'individual',
         scope: input.scope ?? 'friendly',
-        max_participants: input.maxParticipants ?? null,
-        rules: input.rules ?? null,
+        max_participants:
+          input.maxParticipants && input.maxParticipants > 0 ? input.maxParticipants : null,
+        rules: nullableText(input.rules),
+        settings: defaultCompetitionSettings(),
         created_by: input.createdBy,
       })
       .select(competitionSelect)

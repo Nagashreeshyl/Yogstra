@@ -6,26 +6,27 @@ import {
   Award,
   FileText,
 } from 'lucide-react'
+import { TERMS } from '../../../constants/terminology'
 import type { ShellNavItem } from '../types'
 
-/** Competition foundation routes — organizer, judge, results */
+/** Competition workspace navigation */
 export const competitionNavItems: ShellNavItem[] = [
   {
     to: '/dashboard/organizer',
-    label: 'Organizer',
+    label: 'Dashboard',
     icon: LayoutDashboard,
     end: true,
     placement: ['sidebar', 'tab'],
   },
   {
     to: '/dashboard/competitions',
-    label: 'Competitions',
+    label: TERMS.competitions,
     icon: Trophy,
     placement: ['sidebar', 'tab'],
   },
   {
     to: '/dashboard/judge',
-    label: 'Judge',
+    label: TERMS.judgeWorkspace,
     icon: Gavel,
     placement: ['sidebar', 'tab'],
   },
@@ -43,7 +44,7 @@ export const competitionNavItems: ShellNavItem[] = [
   },
   {
     to: '/dashboard/certificates',
-    label: 'Certificates',
+    label: TERMS.certificates,
     icon: FileText,
     placement: ['sidebar', 'more'],
   },

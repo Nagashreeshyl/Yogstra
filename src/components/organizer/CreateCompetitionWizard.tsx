@@ -13,6 +13,8 @@ import { Input } from '../ui/Input'
 import { Select } from '../ui/Select'
 import { Textarea } from '../ui/Textarea'
 import { createAndPublishCompetition } from '../../services/organizerOperations'
+import { InstructionPanel } from '../ui/InstructionPanel'
+import { LabelWithHelp } from '../ui/HelpTooltip'
 
 const STEPS = [
   'Details',
@@ -96,21 +98,36 @@ export function CreateCompetitionWizard({
       setError('Competition name is required.')
       return
     }
+    if (
+      details.startDate &&
+      details.endDate &&
+      new Date(details.endDate) < new Date(details.startDate)
+    ) {
+      setError('End date must be on or after the start date.')
+      return
+    }
+    if (maxParticipants !== '' && Number(maxParticipants) <= 0) {
+      setError('Maximum participants must be greater than zero.')
+      return
+    }
     setBusy(true)
     setError(null)
     try {
       const competition = await createAndPublishCompetition(
         {
           ...details,
+          name: details.name.trim(),
           maxParticipants: maxParticipants === '' ? undefined : Number(maxParticipants),
           registrationDeadline: registrationDeadline || undefined,
           rules: rules || undefined,
+          startDate: details.startDate || undefined,
+          endDate: details.endDate || undefined,
         },
         createdBy,
         {
           categories: categories.map((c) => ({ ...c, competitionId: '' })),
           divisions,
-          events: events.filter((e) => e.name && e.startsAt),
+          events: events.filter((e) => e.name.trim() && e.startsAt.trim()),
           openRegistration,
         },
       )
@@ -151,6 +168,19 @@ export function CreateCompetitionWizard({
         </div>
 
         <div className="px-5 py-4">
+          <InstructionPanel
+            storageKey="competition-creation-wizard"
+            title="Competition creation"
+            steps={[
+              { label: 'Create competition' },
+              { label: 'Configure categories' },
+              { label: 'Assign judges' },
+              { label: 'Publish registrations' },
+              { label: 'Publish results' },
+            ]}
+            className="mb-6"
+          />
+
           <div className="mb-6 flex gap-1">
             {STEPS.map((label, index) => (
               <div
@@ -163,12 +193,27 @@ export function CreateCompetitionWizard({
 
           {step === 0 && (
             <div className="space-y-4">
-              <Input
-                label="Competition name"
-                value={details.name}
-                onChange={(e) => setDetails({ ...details, name: e.target.value })}
-                required
-              />
+              <div className="flex flex-col gap-1.5">
+                <LabelWithHelp
+                  htmlFor="competition-name"
+                  help={{
+                    label: 'Competition name',
+                    description: 'Public name shown to participants on listings and certificates.',
+                    example: 'National Yoga Championship 2026',
+                    bestPractice: 'Use a clear, memorable name with the year or season.',
+                    validationHint: 'Required before publishing.',
+                  }}
+                >
+                  Competition name
+                </LabelWithHelp>
+                <input
+                  id="competition-name"
+                  className="h-11 w-full rounded-[12px] border border-border bg-elevated px-4 text-base text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 sm:text-sm"
+                  value={details.name}
+                  onChange={(e) => setDetails({ ...details, name: e.target.value })}
+                  required
+                />
+              </div>
               <Textarea
                 label="Description"
                 value={details.description ?? ''}

@@ -12,6 +12,7 @@ import { QuickStats } from '../../components/student/dashboard/StatCard'
 import { DashboardCard } from '../../components/student/dashboard/DashboardCard'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
+import { InstructionPanel } from '../../components/ui/InstructionPanel'
 import { AcademyCreateSection } from './AcademyCreateSection'
 
 export function AcademyHomePage() {
@@ -91,6 +92,19 @@ export function AcademyHomePage() {
         actions={
           <Badge variant="primary">{data.academy.status}</Badge>
         }
+      />
+
+      <InstructionPanel
+        storageKey="academy-dashboard"
+        title="Academy workspace"
+        steps={[
+          { label: 'Create academy' },
+          { label: 'Invite teachers' },
+          { label: 'Create batches' },
+          { label: 'Enroll students' },
+          { label: 'Track progress' },
+        ]}
+        className="mb-6"
       />
 
       <div className="mb-6 lg:mb-8">
