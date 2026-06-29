@@ -10,6 +10,7 @@ import {
   type DashboardView,
 } from '../../utils/dashboardRoutes'
 import { formatRoleLabel } from '../../utils/authRouting'
+import { isPlatformAdmin } from '../../utils/platformAdmin'
 
 export function RoleSwitcher() {
   const { user, isLoggedIn } = useApp()
@@ -31,7 +32,7 @@ export function RoleSwitcher() {
 
   const availableViews = getDashboardViewsForUser(user)
   const activeView = detectActiveDashboardView(location.pathname)
-  const isAdmin = user.role === 'admin'
+  const isAdmin = isPlatformAdmin(user)
   const label = activeView
     ? formatDashboardViewLabel(activeView)
     : formatRoleLabel(user)

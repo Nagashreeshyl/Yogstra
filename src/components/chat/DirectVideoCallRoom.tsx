@@ -47,6 +47,7 @@ import {
   type DirectVideoCall,
   type DirectVideoCallStatus,
 } from '../../services/directVideoCalls'
+import { Button } from '../ui/Button'
 
 const TERMINAL_STATUSES = TERMINAL_DIRECT_VIDEO_CALL_STATUSES
 
@@ -212,7 +213,8 @@ function DirectCallRemoteWatcher({
     const onParticipantDisconnected = () => {
       if (room.remoteParticipants.size > 0) return
       void fetchDirectVideoCall(callId).then((call) => {
-        if (call) endForRemote(call.status)
+        if (!call || call.status === 'ringing') return
+        endForRemote(call.status)
       })
     }
 
@@ -659,18 +661,26 @@ export function DirectVideoCallRoom({
     [finishLeave, onRemoteEnd],
   )
 
+  if (!call.roomName?.trim()) {
+    return (
+      <div className="fixed inset-0 z-[200] bg-sidebar flex items-center justify-center p-6">
+        <div className="max-w-md text-center space-y-4">
+          <p className="text-destructive">
+            This call is missing a video room. Apply migration 010_direct_video_calls_room_name.sql
+            and start a new call.
+          </p>
+          <Button onClick={onLeave}>Go back</Button>
+        </div>
+      </div>
+    )
+  }
+
   if (error) {
     return (
       <div className="fixed inset-0 z-[200] bg-sidebar flex items-center justify-center p-6">
-        <div className="max-w-md text-center">
-          <p className="text-red-300 mb-4">{error}</p>
-          <button
-            type="button"
-            onClick={onLeave}
-            className="px-4 py-2 bg-elevated text-foreground rounded-sm font-medium cursor-pointer"
-          >
-            Go back
-          </button>
+        <div className="max-w-md text-center space-y-4">
+          <p className="text-destructive">{error}</p>
+          <Button onClick={onLeave}>Go back</Button>
         </div>
       </div>
     )
@@ -679,8 +689,8 @@ export function DirectVideoCallRoom({
   if (!connectInfo) {
     return (
       <div className="fixed inset-0 z-[200] bg-sidebar flex flex-col items-center justify-center gap-3">
-        <Loader2 className="animate-spin text-primary" size={40} />
-        <p className="text-primary-foreground/60 text-sm">Joining video call…</p>
+        <Loader2 className="animate-spin text-accent" size={40} />
+        <p className="text-primary-foreground/70 text-sm">Joining video call…</p>
       </div>
     )
   }

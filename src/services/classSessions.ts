@@ -56,6 +56,10 @@ export async function fetchLiveKitToken(params: {
   const token = session.session?.access_token
   if (!token) throw new Error('Please sign in again to join video.')
 
+  if (!params.roomName?.trim() || !params.participantName?.trim() || !params.participantId?.trim()) {
+    throw new Error('Missing video call details. Refresh and try again.')
+  }
+
   const response = await fetch('/api/livekit-token', {
     method: 'POST',
     headers: {
@@ -65,6 +69,7 @@ export async function fetchLiveKitToken(params: {
     body: JSON.stringify({
       roomName: params.roomName,
       participantName: params.participantName,
+      participantId: params.participantId,
     }),
   })
 

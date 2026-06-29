@@ -102,7 +102,7 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
     setIncomingCall(incoming)
 
     const active = await fetchUserActiveDirectCall(user.id)
-    if (active?.status === 'active') {
+    if (active?.status === 'active' && active.roomName) {
       setActiveCall(active)
       setIncomingCall(null)
     }

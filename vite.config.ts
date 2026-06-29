@@ -3,6 +3,8 @@ import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { createLiveKitToken } from './server/livekitToken.js'
+import { assertAuthenticatedUser } from './server/supabaseAdmin.js'
+import { assertLiveKitRoomAccess } from './server/orderValidation.js'
 
 function readJsonBody(req: IncomingMessage): Promise<Record<string, unknown>> {
   return new Promise((resolve, reject) => {
@@ -42,18 +44,42 @@ function livekitTokenDevMiddleware() {
 
         void (async () => {
           try {
+            const authHeader = req.headers.authorization
+            const bearer =
+              typeof authHeader === 'string' && authHeader.startsWith('Bearer ')
+                ? authHeader.slice(7)
+                : ''
+            const user = await assertAuthenticatedUser(bearer)
             const body = await readJsonBody(req)
+            const roomName = String(body.roomName ?? '').trim()
+            if (!roomName) {
+              res.statusCode = 400
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ error: 'roomName is required.' }))
+              return
+            }
+
+            await assertLiveKitRoomAccess(roomName, bearer)
+
+            const participantName = String(body.participantName ?? '').trim() || 'Participant'
             const result = await createLiveKitToken({
-              roomName: String(body.roomName ?? ''),
-              participantName: String(body.participantName ?? ''),
-              participantId: String(body.participantId ?? ''),
+              roomName,
+              participantName,
+              participantId: user.userId,
             })
             res.statusCode = 200
             res.setHeader('Content-Type', 'application/json')
             res.end(JSON.stringify(result))
           } catch (err) {
             const message = err instanceof Error ? err.message : 'Could not create video token.'
-            const status = message.includes('required') ? 400 : 500
+            const status =
+              message.includes('Authentication') ||
+              message.includes('Invalid session') ||
+              message.includes('access to this video room')
+                ? 401
+                : message.includes('required')
+                  ? 400
+                  : 500
             res.statusCode = status
             res.setHeader('Content-Type', 'application/json')
             res.end(JSON.stringify({ error: message }))

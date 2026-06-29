@@ -11,7 +11,7 @@ interface UserMenuProps {
 }
 
 export function UserMenu({ showAuthActions = false }: UserMenuProps) {
-  const { isLoggedIn, user, logout, setShowRoleModal, authLoading } = useApp()
+  const { isLoggedIn, user, logout, authLoading } = useApp()
   const { resolved, toggle } = useTheme()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -33,22 +33,20 @@ export function UserMenu({ showAuthActions = false }: UserMenuProps) {
     if (!showAuthActions) return null
     return (
       <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setShowRoleModal(true)}
-          className="inline-flex items-center gap-1.5 h-9 px-3 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+        <Link
+          to="/auth/login"
+          className="inline-flex items-center gap-1.5 h-9 px-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <LogIn size={16} />
           <span className="hidden sm:inline">Login</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowRoleModal(true)}
-          className="inline-flex items-center gap-1.5 h-9 px-3 text-sm font-medium rounded-[12px] bg-primary text-primary-foreground hover:bg-primary-hover transition-colors cursor-pointer"
+        </Link>
+        <Link
+          to="/auth/get-started"
+          className="inline-flex items-center gap-1.5 h-9 px-3 text-sm font-medium rounded-[12px] bg-primary text-primary-foreground hover:bg-primary-hover transition-colors"
         >
           <UserPlus size={16} />
           <span className="hidden sm:inline">Sign up</span>
-        </button>
+        </Link>
       </div>
     )
   }

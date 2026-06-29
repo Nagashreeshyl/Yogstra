@@ -138,15 +138,9 @@ export function LiveClassRoom({
   if (error && callPhase !== 'confirm_end') {
     return (
       <div className="fixed inset-0 z-[100] bg-sidebar flex items-center justify-center p-6">
-        <div className="max-w-md text-center">
-          <p className="text-red-300 mb-4">{error}</p>
-          <button
-            type="button"
-            onClick={onLeave}
-            className="px-4 py-2 bg-elevated text-foreground rounded-sm font-medium cursor-pointer"
-          >
-            Go back
-          </button>
+        <div className="max-w-md text-center space-y-4">
+          <p className="text-destructive">{error}</p>
+          <Button onClick={onLeave}>Go back</Button>
         </div>
       </div>
     )
@@ -159,8 +153,9 @@ export function LiveClassRoom({
       )}
 
       {callPhase === 'loading' && (
-        <div className="flex h-full items-center justify-center">
-          <Loader2 className="animate-spin text-primary" size={40} />
+        <div className="flex h-full flex-col items-center justify-center gap-3">
+          <Loader2 className="animate-spin text-accent" size={40} />
+          <p className="text-primary-foreground/70 text-sm">Joining live class…</p>
         </div>
       )}
 

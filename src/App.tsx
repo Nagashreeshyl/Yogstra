@@ -15,6 +15,16 @@ import { RouteAwareInstallBanner } from './components/pwa/RouteAwareInstallBanne
 import { DirectVideoCallProvider } from './components/chat/DirectVideoCallProvider'
 import { PageLoadingFallback } from './components/ui/PageLoadingFallback'
 
+const LandingPage = lazy(() => import('./pages/public/LandingPage').then((m) => ({ default: m.LandingPage })))
+const GetStartedPage = lazy(() => import('./pages/public/GetStartedPage').then((m) => ({ default: m.GetStartedPage })))
+const LoginPage = lazy(() => import('./pages/public/LoginPage').then((m) => ({ default: m.LoginPage })))
+const WorkspacePickerPage = lazy(() => import('./pages/public/WorkspacePickerPage').then((m) => ({ default: m.WorkspacePickerPage })))
+const PricingPage = lazy(() => import('./pages/public/PricingPage').then((m) => ({ default: m.PricingPage })))
+const ContactPage = lazy(() => import('./pages/public/ContactPage').then((m) => ({ default: m.ContactPage })))
+const AboutPage = lazy(() => import('./pages/public/AboutPage').then((m) => ({ default: m.AboutPage })))
+const HelpCenterPage = lazy(() => import('./pages/public/HelpCenterPage').then((m) => ({ default: m.HelpCenterPage })))
+const AcademiesPage = lazy(() => import('./pages/public/AcademiesPage').then((m) => ({ default: m.AcademiesPage })))
+const AcademyProfilePage = lazy(() => import('./pages/public/AcademyProfilePage').then((m) => ({ default: m.AcademyProfilePage })))
 const ExplorePage = lazy(() => import('./pages/ExplorePage').then((m) => ({ default: m.ExplorePage })))
 const FindTeachersPage = lazy(() => import('./pages/FindTeachersPage').then((m) => ({ default: m.FindTeachersPage })))
 const TeacherProfilePage = lazy(() => import('./pages/TeacherProfilePage').then((m) => ({ default: m.TeacherProfilePage })))
@@ -25,7 +35,6 @@ const PublicCompetitionDetailPage = lazy(() =>
   import('./pages/CompetitionsPage').then((m) => ({ default: m.PublicCompetitionDetailPage })),
 )
 const ShopPage = lazy(() => import('./pages/ShopPage').then((m) => ({ default: m.ShopPage })))
-const RoleSelectionPage = lazy(() => import('./pages/RoleSelectionPage').then((m) => ({ default: m.RoleSelectionPage })))
 const StudentAuthPage = lazy(() => import('./pages/StudentAuthPage').then((m) => ({ default: m.StudentAuthPage })))
 const TeacherLoginPage = lazy(() => import('./pages/TeacherLoginPage').then((m) => ({ default: m.TeacherLoginPage })))
 const TeacherRegistrationPage = lazy(() => import('./pages/TeacherRegistrationPage').then((m) => ({ default: m.TeacherRegistrationPage })))
@@ -149,13 +158,20 @@ export default function App() {
                   </LoggedInRedirect>
                 }
               >
-                <Route index element={<ExplorePage />} />
+                <Route index element={<LandingPage />} />
+                <Route path="explore" element={<ExplorePage />} />
                 <Route path="teachers" element={<FindTeachersPage />} />
                 <Route path="teachers/:id" element={<TeacherProfilePage />} />
+                <Route path="academies" element={<AcademiesPage />} />
+                <Route path="academies/:slug" element={<AcademyProfilePage />} />
                 <Route path="students/:id" element={<StudentProfilePage />} />
                 <Route path="community" element={<CommunityPage />} />
                 <Route path="competitions" element={<CompetitionsPage />} />
                 <Route path="competitions/:slug" element={<PublicCompetitionDetailPage />} />
+                <Route path="pricing" element={<PricingPage />} />
+                <Route path="about" element={<AboutPage />} />
+                <Route path="contact" element={<ContactPage />} />
+                <Route path="help" element={<HelpCenterPage />} />
                 <Route path="shop" element={<ShopPage />} />
                 <Route path="privacy-policy" element={<PrivacyPolicyPage />} />
                 <Route path="terms-of-service" element={<TermsOfServicePage />} />
@@ -165,12 +181,28 @@ export default function App() {
 
               <Route
                 path="auth/role"
+                element={<Navigate to="/auth/get-started" replace />}
+              />
+
+              <Route
+                path="auth/get-started"
                 element={
                   <LoggedInRedirect>
-                    <RoleSelectionPage />
+                    <GetStartedPage />
                   </LoggedInRedirect>
                 }
               />
+
+              <Route
+                path="auth/login"
+                element={
+                  <LoggedInRedirect>
+                    <LoginPage />
+                  </LoggedInRedirect>
+                }
+              />
+
+              <Route path="auth/workspace" element={<WorkspacePickerPage />} />
 
               <Route element={<RequireGuest />}>
                 <Route path="auth/student" element={<StudentAuthPage />} />

@@ -112,6 +112,28 @@ body {
   padding-right: env(safe-area-inset-right);
 }
 
+/* Public marketing site — forest green premium palette */
+.public-site {
+  --y-bg: #0f1f17;
+  --y-fg: #f6f1e6;
+  --y-muted: #16281d;
+  --y-muted-fg: rgba(246, 241, 230, 0.65);
+  --y-border: rgba(246, 241, 230, 0.12);
+  --y-elevated: #1a2e22;
+  --y-surface: #16281d;
+  --y-primary: #2d5a3d;
+  --y-primary-hover: #3d7a52;
+  --y-primary-fg: #f6f1e6;
+  --y-accent: #d4af37;
+  --y-accent-fg: #0f1f17;
+  --y-sidebar: #0f1f17;
+  --y-sidebar-secondary: #16281d;
+  --y-sidebar-fg: #f6f1e6;
+  --y-sidebar-muted: rgba(246, 241, 230, 0.62);
+  --y-sidebar-border: rgba(246, 241, 230, 0.1);
+  color-scheme: dark;
+}
+
 h1,
 h2,
 h3,
@@ -166,7 +188,7 @@ h6 {
   position: absolute;
   inset: 0;
   padding-bottom: var(--dm-control-bar-height);
-  background: #1a1a1a;
+  background: #0f1f17;
 }
 
 .dm-call-remote-tile {

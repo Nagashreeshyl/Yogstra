@@ -1,4 +1,5 @@
 import type { AuthUser } from '../services/auth'
+import { isPlatformAdmin } from './platformAdmin'
 
 export type DashboardView =
   | 'admin'
@@ -18,7 +19,7 @@ export const DASHBOARD_VIEW_PATHS: Record<DashboardView, string> = {
 }
 
 export function getDashboardViewsForUser(user: AuthUser): DashboardView[] {
-  if (user.role === 'admin') {
+  if (isPlatformAdmin(user)) {
     return ['admin', 'student', 'teacher', 'academy', 'organizer', 'judge']
   }
   if (user.role === 'teacher') {

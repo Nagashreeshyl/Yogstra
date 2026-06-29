@@ -5,6 +5,7 @@ import { fetchPosts } from '../services/posts'
 import { fetchTeachers } from '../services/teachers'
 import { filterTeachers } from '../utils/filterTeachers'
 import { PageContainer } from '../components/shell/PageContainer'
+import { PageHeader } from '../components/shell/PageHeader'
 import { ErrorState } from '../components/shell/ErrorState'
 import { EmptyState } from '../components/shell/EmptyState'
 import { SearchBar } from '../components/filters/SearchBar'
@@ -57,7 +58,12 @@ export function ExplorePage() {
   )
 
   return (
-    <PageContainer className="pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-8 !py-5 sm:!py-8">
+    <PageContainer className="py-10 sm:py-14 pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-14">
+      <PageHeader
+        title="Explore"
+        description="Discover teachers, academies, competitions, and community highlights."
+        className="mb-8"
+      />
       <div className="flex flex-col lg:flex-row lg:items-start gap-6 lg:gap-10">
           <div className="flex-1 min-w-0 space-y-5 lg:space-y-8">
             {!teachersLoading && featuredList.length > 0 && (

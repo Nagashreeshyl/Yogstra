@@ -10,7 +10,8 @@ import {
 import { useApp } from '../context/AppContext'
 import { useAsyncData } from './useAsyncData'
 import type { Academy, AcademyMemberRole } from '../domain/academy/models'
-import { fetchAcademiesForUser } from '../services/academyService'
+import { fetchAcademiesForUser, fetchAllAcademies } from '../services/academyService'
+import { isPlatformAdmin } from '../utils/platformAdmin'
 import { getUserAcademyRole } from '../services/academyMemberService'
 
 const STORAGE_KEY = 'yogstra_academy_id'
@@ -32,14 +33,20 @@ export function AcademyContextProvider({ children }: { children: ReactNode }) {
   const { user } = useApp()
   const userId = user?.id ?? ''
 
+  const platformAdmin = isPlatformAdmin(user)
+
   const {
     data: academies,
     loading: academiesLoading,
     error: academiesError,
     refetch: refetchAcademies,
   } = useAsyncData(
-    () => (userId ? fetchAcademiesForUser(userId) : Promise.resolve([])),
-    [userId],
+    () => {
+      if (!userId) return Promise.resolve([])
+      if (platformAdmin) return fetchAllAcademies()
+      return fetchAcademiesForUser(userId)
+    },
+    [userId, platformAdmin],
     { enabled: Boolean(userId) },
   )
 
@@ -48,7 +55,13 @@ export function AcademyContextProvider({ children }: { children: ReactNode }) {
   )
 
   useEffect(() => {
-    if (!academies?.length) return
+    if (academiesLoading) return
+
+    if (!academies?.length) {
+      setAcademyIdState(null)
+      localStorage.removeItem(STORAGE_KEY)
+      return
+    }
 
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored && academies.some((a) => a.id === stored)) {
@@ -59,7 +72,7 @@ export function AcademyContextProvider({ children }: { children: ReactNode }) {
     const firstId = academies[0].id
     setAcademyIdState(firstId)
     localStorage.setItem(STORAGE_KEY, firstId)
-  }, [academies])
+  }, [academies, academiesLoading])
 
   const academy = useMemo(
     () => academies?.find((a) => a.id === academyId) ?? null,

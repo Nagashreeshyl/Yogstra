@@ -1,17 +1,21 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 import { getPostLoginPath } from '../../utils/authRouting'
+import { isPlatformAdmin } from '../../utils/platformAdmin'
 import { AuthLoadingSkeleton } from './AuthLoadingSkeleton'
 
 const STUDENT_PUBLIC: Record<string, string> = {
-  '/': '/dashboard/student/explore',
+  '/': '/dashboard/student',
+  '/explore': '/dashboard/student/explore',
   '/community': '/dashboard/student/community',
   '/teachers': '/dashboard/student/teachers',
+  '/academies': '/dashboard/student/explore',
   '/competitions': '/dashboard/student/competitions',
   '/shop': '/dashboard/student/shop',
+  '/pricing': '/dashboard/student/explore',
 }
 
-const AUTH_PATHS = ['/auth/role', '/auth/student', '/auth/teacher', '/auth/teacher/register']
+const AUTH_PATHS = ['/auth/role', '/auth/get-started', '/auth/student', '/auth/teacher', '/auth/teacher/register', '/auth/login']
 
 /** Sends returning logged-in users to their dashboard instead of public/auth pages */
 export function LoggedInRedirect({ children }: { children: React.ReactNode }) {
@@ -53,7 +57,7 @@ export function LoggedInRedirect({ children }: { children: React.ReactNode }) {
     }
   }
 
-  if (user.role === 'admin') {
+  if (isPlatformAdmin(user)) {
     if (path === '/' || AUTH_PATHS.includes(path)) {
       return <Navigate to="/admin" replace />
     }

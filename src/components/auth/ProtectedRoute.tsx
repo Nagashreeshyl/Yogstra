@@ -2,6 +2,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 import type { AuthUser } from '../../services/auth'
 import { getPostLoginPath } from '../../utils/authRouting'
+import { isPlatformAdmin } from '../../utils/platformAdmin'
 
 import { AuthLoadingSkeleton } from './AuthLoadingSkeleton'
 
@@ -10,13 +11,21 @@ function AuthLoading() {
   return <AuthLoadingSkeleton />
 }
 
+function hasRouteRoleAccess(user: AuthUser, roles: AuthUser['role'][]): boolean {
+  if (roles.includes(user.role)) {
+    if (user.role === 'admin' && !isPlatformAdmin(user)) return false
+    return true
+  }
+  return isPlatformAdmin(user) && roles.includes('admin')
+}
+
 export function RequireRole({ roles }: { roles: AuthUser['role'][] }) {
   const { user, authLoading } = useApp()
   const location = useLocation()
 
   if (authLoading) return <AuthLoading />
   if (!user) return <Navigate to="/auth/role" state={{ from: location.pathname }} replace />
-  if (!roles.includes(user.role)) {
+  if (!hasRouteRoleAccess(user, roles)) {
     return <Navigate to={getPostLoginPath(user)} replace />
   }
 
@@ -29,7 +38,7 @@ export function RequireVerifiedTeacher() {
 
   if (authLoading) return <AuthLoading />
   if (!user) return <Navigate to="/auth/teacher" state={{ from: location.pathname }} replace />
-  if (user.role === 'admin') return <Outlet />
+  if (isPlatformAdmin(user)) return <Outlet />
   if (user.role !== 'teacher') {
     return <Navigate to={getPostLoginPath(user)} replace />
   }

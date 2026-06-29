@@ -37,7 +37,7 @@ export function FindTeachersPage() {
   return (
     <PageContainer>
       <div className="space-y-8">
-        <PageHeader title="Find Teachers" description="Browse verified yoga teachers across India." />
+        <PageHeader title="Teachers" description="Browse verified yoga teachers across India." className="mb-8" />
 
         <SearchBar />
         <CategoryFlashCards onSelect={() => setPage(1)} />

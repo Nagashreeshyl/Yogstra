@@ -1,14 +1,13 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
-import { PageContainer } from '../components/shell/PageContainer'
-import { PageHeader } from '../components/shell/PageHeader'
+import { AuthLayout } from '../components/public/AuthLayout'
 import { Input } from '../components/ui/Input'
 import { PasswordInput } from '../components/ui/PasswordInput'
 import { Button } from '../components/ui/Button'
 import { formatAuthError } from '../utils/format'
-import { getPostLoginPath } from '../utils/authRouting'
 import { requestPasswordReset } from '../services/auth'
+import { resolvePostLoginPath } from '../utils/workspacePreference'
 
 export function StudentAuthPage() {
   const [mode, setMode] = useState<'login' | 'signup'>('login')
@@ -50,12 +49,12 @@ export function StudentAuthPage() {
           return
         }
 
-        navigate(getPostLoginPath(result.profile))
+        navigate(resolvePostLoginPath(result.profile))
         return
       }
 
       const profile = await signIn(form.email, form.password)
-      navigate(getPostLoginPath(profile))
+      navigate(resolvePostLoginPath(profile))
     } catch (err) {
       setError(formatAuthError(err))
     } finally {
@@ -82,11 +81,11 @@ export function StudentAuthPage() {
   }
 
   return (
-    <div className="min-h-full flex flex-col items-center justify-center bg-background">
-      <PageContainer width="narrow" className="!py-8">
-        <PageHeader title="Yogstra" className="justify-center text-center [&_h1]:text-center [&_p]:mx-auto" />
-
-        <div className="flex rounded-[16px] border border-border mb-6 overflow-hidden rounded-[16px] p-1 bg-elevated">
+    <AuthLayout
+      title={mode === 'login' ? 'Student login' : 'Create student account'}
+      description="Learn yoga, join academies, and compete on Yogstra."
+    >
+      <div className="flex rounded-[16px] border border-border mb-6 overflow-hidden p-1 bg-elevated">
           {(['login', 'signup'] as const).map((m) => (
             <button
               key={m}
@@ -174,12 +173,11 @@ export function StudentAuthPage() {
         </form>
 
         <Link
-          to="/auth/role"
+          to="/auth/get-started"
           className="block text-center text-sm text-muted-foreground hover:text-foreground mt-6"
         >
-          ← Back
+          ← Back to journeys
         </Link>
-      </PageContainer>
-    </div>
+    </AuthLayout>
   )
 }

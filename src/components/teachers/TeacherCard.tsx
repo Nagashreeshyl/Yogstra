@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { MapPin, Star } from 'lucide-react'
+import { Award, MapPin, Star, Users } from 'lucide-react'
 import type { Teacher } from '../../types'
 import { Avatar } from '../ui/Avatar'
 import { Badge } from '../ui/Badge'
@@ -13,6 +13,7 @@ interface TeacherCardProps {
 export function TeacherCard({ teacher, compact = false }: TeacherCardProps) {
   const navigate = useNavigate()
   const cardImage = teacher.coverPhoto || teacher.photo
+  const primarySpec = teacher.specializations[0]
 
   if (compact) {
     return (
@@ -34,46 +35,82 @@ export function TeacherCard({ teacher, compact = false }: TeacherCardProps) {
   }
 
   return (
-    <section className="rounded-[16px] border border-border bg-elevated p-5 shadow-sm">
-      <h3 className="font-heading text-lg font-semibold text-foreground mb-4">{teacher.name}</h3>
-      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[12px] bg-sidebar">
+    <article className="rounded-[20px] border border-border bg-elevated overflow-hidden shadow-sm transition-shadow hover:shadow-md hover:border-accent/20">
+      <div className="relative aspect-[4/5] w-full bg-sidebar-secondary">
         {cardImage ? (
           <img
             src={cardImage}
             alt={teacher.name}
+            loading="lazy"
             className="absolute inset-0 h-full w-full object-cover object-center"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-sidebar-secondary text-5xl font-medium text-sidebar-foreground">
+          <div className="absolute inset-0 flex items-center justify-center text-5xl font-medium text-sidebar-foreground">
             {teacher.name.charAt(0).toUpperCase()}
           </div>
         )}
+        {teacher.verified && (
+          <Badge variant="primary" className="absolute top-3 left-3 text-xs">
+            Verified
+          </Badge>
+        )}
       </div>
 
-      <div className="mt-4 space-y-3">
+      <div className="p-5 space-y-3">
+        <div>
+          <h3 className="font-heading text-lg font-semibold text-foreground">{teacher.name}</h3>
+          {primarySpec && (
+            <p className="text-sm text-accent mt-0.5">{primarySpec}</p>
+          )}
+        </div>
+
         <div className="flex flex-wrap gap-1.5">
           {teacher.specializations.slice(0, 2).map((s) => (
-            <Badge key={s} variant="primary" className="text-xs">
+            <Badge key={s} variant="default" className="text-xs">
               {s}
             </Badge>
           ))}
         </div>
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
+
+        <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
-            <Star size={14} className="fill-accent text-accent" />
-            {teacher.rating.toFixed(1)}
+            <Star size={14} className="fill-accent text-accent shrink-0" />
+            {teacher.rating.toFixed(1)} rating
           </span>
-          <span>₹{teacher.monthlyFee.toLocaleString('en-IN')}/mo</span>
+          <span className="inline-flex items-center gap-1">
+            <Award size={14} className="text-accent shrink-0" />
+            {teacher.experienceYears}y exp
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Users size={14} className="text-accent shrink-0" />
+            {teacher.totalStudents} students
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <MapPin size={14} className="text-accent shrink-0" />
+            {teacher.city}
+          </span>
         </div>
-        <p className="flex items-center gap-1 text-sm text-muted-foreground">
-          <MapPin size={14} className="text-accent" />
-          {teacher.city}
+
+        <p className="text-sm font-medium text-foreground">
+          ₹{teacher.monthlyFee.toLocaleString('en-IN')}
+          <span className="text-muted-foreground font-normal">/month</span>
         </p>
-        <Button size="sm" className="w-full" onClick={() => navigate(`/teachers/${teacher.id}`)}>
-          View Profile
-        </Button>
+
+        <div className="flex gap-2 pt-1">
+          <Button size="sm" className="flex-1" onClick={() => navigate(`/teachers/${teacher.id}`)}>
+            View Profile
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="flex-1"
+            onClick={() => navigate(`/teachers/${teacher.id}`)}
+          >
+            Book Session
+          </Button>
+        </div>
       </div>
-    </section>
+    </article>
   )
 }
 
