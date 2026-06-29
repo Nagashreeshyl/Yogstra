@@ -23,35 +23,33 @@ export function StudentRankingsPage() {
   if (!user || loading) return <LoadingSkeleton variant="page" />
 
   if (error || !data) {
-    return (
-      <ErrorState
-        title="Could not load rankings"
-        message={error ?? 'Please try again.'}
-        onRetry={() => void refetch()}
-      />
-    )
+    return <ErrorState title="Could not load rankings" message={error ?? 'Please try again.'} onRetry={() => void refetch()} />
   }
 
   return (
-    <>
+    <div className="student-competition py-4 sm:py-6">
       <PageHeader title="Rankings" description="Track your standing across levels." />
 
+      <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <RankingCard label="Current ranking" rank={data.currentRank} scope="Your latest standing" />
+        <RankingCard label="Best ranking" rank={data.bestRank} scope="Personal best" trend="up" />
+        <RankingCard label="Overall" rank={data.studentRank} scope="Student leaderboard" />
+      </div>
+
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <RankingCard label="Student rank" rank={data.studentRank} scope="Your personal standing" />
-        <RankingCard label="Category rank" rank={null} scope="Within your category" />
-        <RankingCard label="State rank" rank={data.stateRank} scope="State level" trend="flat" />
-        <RankingCard label="National rank" rank={data.nationalRank} scope="National level" trend="up" />
+        <RankingCard label="Category" rank={data.categoryRank} scope="Within category" />
+        <RankingCard label="Academy" rank={data.academyRank} scope="Academy level" />
+        <RankingCard label="State" rank={data.stateRank} scope="State level" trend="flat" />
+        <RankingCard label="National" rank={data.nationalRank} scope="National level" trend="up" />
       </div>
 
       {data.history.length > 0 && (
         <DashboardCard title="Ranking history" className="mb-8">
-          <ul className="divide-y divide-border">
+          <ul className="divide-y divide-border" role="list">
             {data.history.map((entry) => (
               <li key={entry.id} className="flex items-center justify-between py-3 text-sm">
-                <span>
-                  {entry.season ?? 'Season'} · {entry.scope}
-                </span>
-                <span className="font-semibold">#{entry.rank}</span>
+                <span>{entry.season ?? 'Season'} · {entry.scope}</span>
+                <span className="font-semibold">#{entry.rank} · {entry.points} pts</span>
               </li>
             ))}
           </ul>
@@ -64,9 +62,7 @@ export function StudentRankingsPage() {
             {data.leaderboard.map((entry) => (
               <li
                 key={entry.id}
-                className={`flex items-center justify-between py-3 text-sm ${
-                  entry.subjectId === userId ? 'font-semibold text-primary' : ''
-                }`}
+                className={`flex items-center justify-between py-3 text-sm ${entry.subjectId === userId ? 'font-semibold text-primary' : ''}`}
               >
                 <span>#{entry.rank}</span>
                 <span>{entry.points} pts</span>
@@ -75,6 +71,6 @@ export function StudentRankingsPage() {
           </ol>
         </DashboardCard>
       )}
-    </>
+    </div>
   )
 }

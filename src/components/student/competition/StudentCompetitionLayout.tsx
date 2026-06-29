@@ -1,11 +1,9 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { Award, Home, List, Trophy } from 'lucide-react'
+import { Home, List } from 'lucide-react'
 
 const tabs = [
   { to: '/dashboard/student/competitions', label: 'Discover', icon: Home, end: true },
-  { to: '/dashboard/student/competitions/my', label: 'My events', icon: List, end: false },
-  { to: '/dashboard/student/competitions/rankings', label: 'Rankings', icon: Trophy, end: false },
-  { to: '/dashboard/student/competitions/certificates', label: 'Certificates', icon: Award, end: false },
+  { to: '/dashboard/student/competitions/my', label: 'My competitions', icon: List, end: false },
 ]
 
 export function StudentCompetitionLayout() {

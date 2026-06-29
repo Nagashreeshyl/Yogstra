@@ -1,41 +1,50 @@
 import { Link, useParams } from 'react-router-dom'
-import {
-  Calendar,
-  Download,
-  MapPin,
-  MessageCircle,
-  Share2,
-  Users,
-} from 'lucide-react'
+import { Download, Heart, MessageCircle, Share2 } from 'lucide-react'
+import { memo, useState } from 'react'
 import { useApp } from '../../../context/AppContext'
 import { useAsyncData } from '../../../hooks/useAsyncData'
-import { fetchStudentCompetitionDetail, formatCategoryLabel } from '../../../services/studentCompetitionExperience'
+import { isCompetitionSaved, toggleSavedCompetition } from '../../../utils/savedCompetitions'
 import { ErrorState } from '../../../components/shell/ErrorState'
 import { LoadingSkeleton } from '../../../components/shell/LoadingSkeleton'
 import { DashboardCard } from '../../../components/student/dashboard/DashboardCard'
+import { CompetitionHero } from '../../../components/student/competition/CompetitionHero'
+import { fetchStudentCompetitionDetail, formatCategoryLabel } from '../../../services/studentCompetitionExperience'
 
-function formatDate(date: string | null) {
-  if (!date) return 'TBA'
-  return new Date(date).toLocaleDateString(undefined, {
-    weekday: 'short',
-    month: 'long',
+type TabId = 'overview' | 'rules' | 'schedule' | 'judges' | 'participants' | 'faqs' | 'gallery'
+
+const TABS: { id: TabId; label: string }[] = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'rules', label: 'Rules' },
+  { id: 'schedule', label: 'Schedule' },
+  { id: 'judges', label: 'Judges' },
+  { id: 'participants', label: 'Participants' },
+  { id: 'faqs', label: 'FAQs' },
+  { id: 'gallery', label: 'Gallery' },
+]
+
+function formatDateTime(iso: string) {
+  return new Date(iso).toLocaleString(undefined, {
+    month: 'short',
     day: 'numeric',
-    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
   })
 }
 
-export function StudentCompetitionDetailPage() {
-  const { id = '' } = useParams()
+export const StudentCompetitionDetailPage = memo(function StudentCompetitionDetailPage() {
+  const { competitionId = '' } = useParams()
   const { user } = useApp()
   const userId = user?.id ?? ''
+  const [tab, setTab] = useState<TabId>('overview')
+  const [saved, setSaved] = useState(() => isCompetitionSaved(userId, competitionId))
 
   const { data, loading, error, refetch } = useAsyncData(
     () =>
-      userId && id
-        ? fetchStudentCompetitionDetail(id, userId)
+      userId && competitionId
+        ? fetchStudentCompetitionDetail(competitionId, userId)
         : Promise.reject(new Error('Not signed in')),
-    [userId, id],
-    { enabled: Boolean(userId && id) },
+    [userId, competitionId],
+    { enabled: Boolean(userId && competitionId) },
   )
 
   if (!user || loading) return <LoadingSkeleton variant="page" />
@@ -50,64 +59,51 @@ export function StudentCompetitionDetailPage() {
     )
   }
 
-  const { competition, categories, events, registration, judges } = data
-  const isRegistered = Boolean(registration)
-  const canRegister = data.registrationOpen && !isRegistered
+  const { competition, categories, events, registration, judges, participantCount, faqs, gallery } =
+    data
+  const canRegister = data.registrationOpen && !registration
 
   const share = async () => {
     const url = window.location.href
-    if (navigator.share) {
-      await navigator.share({ title: competition.name, url })
-    } else {
-      await navigator.clipboard.writeText(url)
-    }
+    if (navigator.share) await navigator.share({ title: competition.name, url })
+    else await navigator.clipboard.writeText(url)
+  }
+
+  const toggleSave = () => {
+    const next = toggleSavedCompetition(userId, competitionId)
+    setSaved(next)
   }
 
   return (
     <>
-      <div
-        className="mb-6 overflow-hidden rounded-[16px] bg-gradient-to-br from-primary to-primary/80 p-6 text-primary-foreground sm:p-8"
-        role="banner"
-      >
-        <p className="text-xs font-medium uppercase tracking-widest opacity-80">
-          {competition.scope} · {competition.format}
-        </p>
-        <h1 className="mt-2 font-heading text-2xl font-bold sm:text-3xl">{competition.name}</h1>
-        {competition.description && (
-          <p className="mt-2 max-w-2xl text-sm opacity-90">{competition.description}</p>
-        )}
-        <div className="mt-4 flex flex-wrap gap-4 text-sm">
-          <span className="inline-flex items-center gap-1.5">
-            <Calendar className="h-4 w-4" aria-hidden />
-            {formatDate(competition.startDate)}
-            {competition.endDate && ` – ${formatDate(competition.endDate)}`}
-          </span>
-          {(competition.city || competition.venue) && (
-            <span className="inline-flex items-center gap-1.5">
-              <MapPin className="h-4 w-4" aria-hidden />
-              {[competition.venue, competition.city, competition.state].filter(Boolean).join(', ')}
-            </span>
-          )}
-        </div>
-      </div>
+      <CompetitionHero
+        competition={competition}
+        daysUntil={data.daysUntil}
+        registrationStatus={registration?.status ?? null}
+        registrationOpen={data.registrationOpen}
+      />
 
       <div className="mb-6 flex flex-wrap gap-3">
         {canRegister && (
           <Link
-            to={`/dashboard/student/competitions/${id}/register`}
-            className="inline-flex min-h-[44px] items-center rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          >
-            Register now
-          </Link>
-        )}
-        {isRegistered && (
-          <Link
-            to={`/dashboard/student/competitions/${id}/prepare`}
+            to={`/dashboard/student/competitions/register/${competitionId}`}
             className="inline-flex min-h-[44px] items-center rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-hover"
           >
-            Preparation dashboard
+            Register
           </Link>
         )}
+        {registration && (
+          <Link
+            to={`/dashboard/student/competitions/${competitionId}/preparation`}
+            className="inline-flex min-h-[44px] items-center rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
+          >
+            Preparation
+          </Link>
+        )}
+        <button type="button" onClick={() => void share()} className="action-btn">
+          <Share2 className="h-4 w-4" aria-hidden />
+          Share
+        </button>
         {competition.rules && (
           <button
             type="button"
@@ -120,131 +116,161 @@ export function StudentCompetitionDetailPage() {
               a.click()
               URL.revokeObjectURL(url)
             }}
-            className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-border bg-elevated px-4 py-2 text-sm font-medium hover:bg-muted"
+            className="action-btn"
           >
             <Download className="h-4 w-4" aria-hidden />
             Rulebook
           </button>
         )}
-        <Link
-          to={`/dashboard/student/messages`}
-          className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-border bg-elevated px-4 py-2 text-sm font-medium hover:bg-muted"
-        >
+        <Link to="/dashboard/student/messages" className="action-btn">
           <MessageCircle className="h-4 w-4" aria-hidden />
           Message organizer
         </Link>
         <button
           type="button"
-          onClick={() => void share()}
-          className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-border bg-elevated px-4 py-2 text-sm font-medium hover:bg-muted"
+          onClick={toggleSave}
+          className={`action-btn ${saved ? 'border-primary text-primary' : ''}`}
+          aria-pressed={saved}
         >
-          <Share2 className="h-4 w-4" aria-hidden />
-          Share
+          <Heart className={`h-4 w-4 ${saved ? 'fill-current' : ''}`} aria-hidden />
+          {saved ? 'Saved' : 'Save'}
         </button>
       </div>
 
-      {registration && (
-        <div className="mb-6 rounded-[12px] border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
-          Registration status:{' '}
-          <strong className="capitalize">{registration.status.replace(/_/g, ' ')}</strong>
-          {' · '}
-          Payment:{' '}
-          <strong className="capitalize">{registration.paymentStatus.replace(/_/g, ' ')}</strong>
+      <nav
+        className="mb-6 flex gap-1 overflow-x-auto border-b border-border"
+        role="tablist"
+        aria-label="Competition sections"
+      >
+        {TABS.map(({ id, label }) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={tab === id}
+            onClick={() => setTab(id)}
+            className={`min-h-[44px] shrink-0 border-b-2 px-4 py-2 text-sm font-medium transition ${
+              tab === id
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
+
+      {tab === 'overview' && (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <DashboardCard title="About">
+            <p className="text-sm text-muted-foreground">{competition.description ?? 'Details coming soon.'}</p>
+            <dl className="mt-4 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Entry fee</dt>
+                <dd className="font-medium">
+                  {competition.entryFee > 0
+                    ? `₹${competition.entryFee.toLocaleString('en-IN')}`
+                    : 'Free'}
+                </dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Deadline</dt>
+                <dd>{competition.registrationDeadline ?? 'TBA'}</dd>
+              </div>
+            </dl>
+          </DashboardCard>
+          <DashboardCard title="Categories">
+            <ul className="space-y-2">
+              {categories.map((cat) => (
+                <li key={cat.id} className="rounded-lg border border-border px-3 py-2 text-sm">
+                  {formatCategoryLabel(cat)}
+                </li>
+              ))}
+            </ul>
+          </DashboardCard>
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <DashboardCard title="Event details">
-          <dl className="space-y-3 text-sm">
-            <div>
-              <dt className="text-muted-foreground">Organizer</dt>
-              <dd className="font-medium">{competition.organizerName ?? 'Yogstra organizer'}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Registration deadline</dt>
-              <dd className="font-medium">{formatDate(competition.registrationDeadline)}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Entry fee</dt>
-              <dd className="font-medium">
-                {competition.entryFee > 0
-                  ? `₹${competition.entryFee.toLocaleString('en-IN')}`
-                  : 'Free'}
-              </dd>
-            </div>
-            {competition.maxParticipants && (
-              <div>
-                <dt className="text-muted-foreground">Capacity</dt>
-                <dd className="font-medium">{competition.maxParticipants} participants</dd>
-              </div>
-            )}
-          </dl>
+      {tab === 'rules' && (
+        <DashboardCard title="Rules">
+          <div className="whitespace-pre-wrap text-sm text-muted-foreground">
+            {competition.rules ?? 'Rules will be published by the organizer.'}
+          </div>
         </DashboardCard>
+      )}
 
-        <DashboardCard title="Age categories & styles">
-          {categories.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Categories coming soon.</p>
+      {tab === 'schedule' && (
+        <DashboardCard title="Schedule">
+          {events.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Schedule not published yet.</p>
           ) : (
             <ul className="space-y-2">
-              {categories.map((cat) => (
-                <li
-                  key={cat.id}
-                  className="rounded-lg border border-border px-3 py-2 text-sm font-medium"
-                >
-                  {formatCategoryLabel(cat)}
+              {events.map((ev) => (
+                <li key={ev.id} className="text-sm">
+                  <span className="font-medium">{ev.name}</span>
+                  <span className="text-muted-foreground"> · {formatDateTime(ev.startsAt)}</span>
                 </li>
               ))}
             </ul>
           )}
         </DashboardCard>
+      )}
 
-        {competition.rules && (
-          <DashboardCard title="Rules" className="lg:col-span-2">
-            <div className="prose prose-sm max-w-none whitespace-pre-wrap text-sm text-muted-foreground">
-              {competition.rules}
-            </div>
-          </DashboardCard>
-        )}
-
+      {tab === 'judges' && (
         <DashboardCard title="Judges">
           {judges.length === 0 ? (
             <p className="text-sm text-muted-foreground">Judges will be announced.</p>
           ) : (
             <ul className="space-y-2">
               {judges.map((j) => (
-                <li key={j.id} className="flex items-center gap-2 text-sm">
-                  <Users className="h-4 w-4 text-muted-foreground" aria-hidden />
-                  <span className="font-medium">{j.userName ?? 'Judge'}</span>
-                  <span className="text-muted-foreground capitalize">· {j.role.replace(/_/g, ' ')}</span>
+                <li key={j.id} className="text-sm font-medium">
+                  {j.userName ?? 'Judge'} · <span className="capitalize text-muted-foreground">{j.role.replace(/_/g, ' ')}</span>
                 </li>
               ))}
             </ul>
           )}
         </DashboardCard>
+      )}
 
-        <DashboardCard title="Schedule preview">
-          {events.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Schedule not published yet.</p>
+      {tab === 'participants' && (
+        <DashboardCard title="Participants">
+          <p className="text-sm">
+            <strong>{participantCount}</strong> registered
+            {competition.maxParticipants && ` · ${competition.maxParticipants} capacity`}
+          </p>
+        </DashboardCard>
+      )}
+
+      {tab === 'faqs' && (
+        <DashboardCard title="FAQs">
+          {faqs.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No FAQs yet.</p>
           ) : (
-            <ul className="space-y-2">
-              {events.slice(0, 5).map((ev) => (
-                <li key={ev.id} className="text-sm">
-                  <span className="font-medium">{ev.name}</span>
-                  <span className="text-muted-foreground">
-                    {' '}
-                    · {new Date(ev.startsAt).toLocaleString(undefined, {
-                      month: 'short',
-                      day: 'numeric',
-                      hour: 'numeric',
-                      minute: '2-digit',
-                    })}
-                  </span>
-                </li>
+            <dl className="space-y-4">
+              {faqs.map((f) => (
+                <div key={f.q}>
+                  <dt className="font-medium">{f.q}</dt>
+                  <dd className="mt-1 text-sm text-muted-foreground">{f.a}</dd>
+                </div>
               ))}
-            </ul>
+            </dl>
           )}
         </DashboardCard>
-      </div>
+      )}
+
+      {tab === 'gallery' && (
+        <DashboardCard title="Gallery">
+          {gallery.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Gallery coming soon.</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {gallery.map((url) => (
+                <img key={url} src={url} alt="" className="aspect-video rounded-lg object-cover" loading="lazy" />
+              ))}
+            </div>
+          )}
+        </DashboardCard>
+      )}
     </>
   )
-}
+})

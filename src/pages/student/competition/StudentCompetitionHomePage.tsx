@@ -1,12 +1,14 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback, memo } from 'react'
 import { Link } from 'react-router-dom'
 import { Bell, Search, Sparkles } from 'lucide-react'
 import { useApp } from '../../../context/AppContext'
 import { useAsyncData } from '../../../hooks/useAsyncData'
 import {
   buildStudentCompetitionNotifications,
+  DEFAULT_COMPETITION_FILTERS,
   fetchStudentCompetitionHome,
   fetchStudentMyCompetitions,
+  type CompetitionListFilters,
 } from '../../../services/studentCompetitionExperience'
 import { PageHeader } from '../../../components/shell/PageHeader'
 import { ErrorState } from '../../../components/shell/ErrorState'
@@ -14,21 +16,22 @@ import { EmptyState } from '../../../components/shell/EmptyState'
 import { LoadingSkeleton } from '../../../components/shell/LoadingSkeleton'
 import { DashboardCard } from '../../../components/student/dashboard/DashboardCard'
 import { CompetitionCard } from '../../../components/student/competition/CompetitionCard'
+import { CompetitionFilters } from '../../../components/student/competition/CompetitionFilters'
 
-const SCOPES = ['', 'friendly', 'state', 'national', 'international'] as const
+const PAGE_SIZE = 6
 
-export function StudentCompetitionHomePage() {
+export const StudentCompetitionHomePage = memo(function StudentCompetitionHomePage() {
   const { user } = useApp()
   const userId = user?.id ?? ''
-  const [search, setSearch] = useState('')
-  const [scopeFilter, setScopeFilter] = useState('')
+  const [filters, setFilters] = useState<CompetitionListFilters>(DEFAULT_COMPETITION_FILTERS)
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
   const { data, loading, error, refetch } = useAsyncData(
     () =>
       userId
-        ? fetchStudentCompetitionHome(userId, search, scopeFilter)
+        ? fetchStudentCompetitionHome(userId, filters)
         : Promise.reject(new Error('Not signed in')),
-    [userId, search, scopeFilter],
+    [userId, filters],
     { enabled: Boolean(userId) },
   )
 
@@ -36,6 +39,13 @@ export function StudentCompetitionHomePage() {
     if (!data) return []
     return buildStudentCompetitionNotifications(data.all, data.registrations)
   }, [data])
+
+  const visibleUpcoming = useMemo(
+    () => data?.upcoming.slice(0, visibleCount) ?? [],
+    [data, visibleCount],
+  )
+
+  const loadMore = useCallback(() => setVisibleCount((n) => n + PAGE_SIZE), [])
 
   if (!user || loading) return <LoadingSkeleton variant="page" />
 
@@ -56,53 +66,43 @@ export function StudentCompetitionHomePage() {
         description="Discover events, register, and track your journey from warm-up to podium."
       />
 
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <label className="relative flex-1">
-          <span className="sr-only">Search competitions</span>
-          <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden
-          />
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name or location…"
-            className="min-h-[44px] w-full rounded-lg border border-border bg-elevated py-2 pl-10 pr-3 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          />
-        </label>
+      <label className="relative mb-4 block">
+        <span className="sr-only">Search competitions</span>
+        <Search
+          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+          aria-hidden
+        />
+        <input
+          type="search"
+          value={filters.search}
+          onChange={(e) => {
+            setVisibleCount(PAGE_SIZE)
+            setFilters({ ...filters, search: e.target.value })
+          }}
+          placeholder="Search by name, city, or organizer…"
+          className="min-h-[44px] w-full rounded-lg border border-border bg-elevated py-2 pl-10 pr-3 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        />
+      </label>
 
-        <select
-          value={scopeFilter}
-          onChange={(e) => setScopeFilter(e.target.value)}
-          aria-label="Filter by scope"
-          className="min-h-[44px] rounded-lg border border-border bg-elevated px-3 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-        >
-          <option value="">All scopes</option>
-          {SCOPES.filter(Boolean).map((s) => (
-            <option key={s} value={s}>
-              {s.charAt(0).toUpperCase() + s.slice(1)}
-            </option>
-          ))}
-        </select>
-      </div>
+      <CompetitionFilters
+        filters={filters}
+        onChange={(next) => {
+          setVisibleCount(PAGE_SIZE)
+          setFilters(next)
+        }}
+        states={data.filterOptions.states}
+        countries={data.filterOptions.countries}
+        organizers={data.filterOptions.organizers}
+      />
 
       {notifications.length > 0 && (
-        <DashboardCard
-          title="Updates"
-          description="Stay on top of your competition journey."
-          className="mb-6"
-          action={<Bell className="h-4 w-4 text-muted-foreground" aria-hidden />}
-        >
+        <DashboardCard title="Notifications" className="mb-6" action={<Bell className="h-4 w-4 text-muted-foreground" aria-hidden />}>
           <ul className="divide-y divide-border">
-            {notifications.slice(0, 5).map((n) => (
+            {notifications.slice(0, 6).map((n) => (
               <li key={n.id}>
-                <Link
-                  to={n.href}
-                  className="flex flex-col gap-0.5 py-3 text-sm hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                >
+                <Link to={n.href} className="block py-3 text-sm hover:text-primary">
                   <span className="font-medium">{n.title}</span>
-                  <span className="text-muted-foreground">{n.body}</span>
+                  <span className="mt-0.5 block text-muted-foreground">{n.body}</span>
                 </Link>
               </li>
             ))}
@@ -111,8 +111,10 @@ export function StudentCompetitionHomePage() {
       )}
 
       {data.registered.length > 0 && (
-        <section className="mb-8">
-          <h2 className="mb-4 font-heading text-lg font-semibold">My registered competitions</h2>
+        <section className="mb-8" aria-labelledby="my-competitions-heading">
+          <h2 id="my-competitions-heading" className="mb-4 font-heading text-lg font-semibold">
+            My competitions
+          </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {data.registered.map((c) => (
               <CompetitionCard key={c.id} competition={c} />
@@ -122,8 +124,8 @@ export function StudentCompetitionHomePage() {
       )}
 
       {data.featured.length > 0 && (
-        <section className="mb-8">
-          <h2 className="mb-4 flex items-center gap-2 font-heading text-lg font-semibold">
+        <section className="mb-8" aria-labelledby="featured-heading">
+          <h2 id="featured-heading" className="mb-4 flex items-center gap-2 font-heading text-lg font-semibold">
             <Sparkles className="h-5 w-5 text-accent" aria-hidden />
             Featured
           </h2>
@@ -135,22 +137,9 @@ export function StudentCompetitionHomePage() {
         </section>
       )}
 
-      <section className="mb-8">
-        <h2 className="mb-4 font-heading text-lg font-semibold">Upcoming</h2>
-        {data.upcoming.length === 0 ? (
-          <EmptyState title="No upcoming competitions" description="Check back soon for new events." />
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {data.upcoming.map((c) => (
-              <CompetitionCard key={c.id} competition={c} />
-            ))}
-          </div>
-        )}
-      </section>
-
       {data.recommended.length > 0 && (
-        <section className="mb-8">
-          <h2 className="mb-4 font-heading text-lg font-semibold">Recommended for you</h2>
+        <section className="mb-8" aria-labelledby="recommended-heading">
+          <h2 id="recommended-heading" className="mb-4 font-heading text-lg font-semibold">Recommended</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {data.recommended.map((c) => (
               <CompetitionCard key={c.id} competition={c} />
@@ -159,9 +148,33 @@ export function StudentCompetitionHomePage() {
         </section>
       )}
 
+      <section className="mb-8" aria-labelledby="upcoming-heading">
+        <h2 id="upcoming-heading" className="mb-4 font-heading text-lg font-semibold">Upcoming</h2>
+        {visibleUpcoming.length === 0 ? (
+          <EmptyState title="No upcoming competitions" description="Try adjusting your filters." />
+        ) : (
+          <>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {visibleUpcoming.map((c) => (
+                <CompetitionCard key={c.id} competition={c} />
+              ))}
+            </div>
+            {visibleCount < (data.upcoming.length ?? 0) && (
+              <button
+                type="button"
+                onClick={loadMore}
+                className="mt-4 min-h-[44px] w-full rounded-lg border border-border text-sm font-medium hover:bg-muted sm:w-auto sm:px-6"
+              >
+                Load more
+              </button>
+            )}
+          </>
+        )}
+      </section>
+
       {data.recent.length > 0 && (
-        <section>
-          <h2 className="mb-4 font-heading text-lg font-semibold">Recently announced</h2>
+        <section aria-labelledby="recent-heading">
+          <h2 id="recent-heading" className="mb-4 font-heading text-lg font-semibold">Recently announced</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {data.recent.map((c) => (
               <CompetitionCard key={c.id} competition={c} variant="compact" />
@@ -171,7 +184,7 @@ export function StudentCompetitionHomePage() {
       )}
     </>
   )
-}
+})
 
 export function StudentMyCompetitionsPage() {
   const { user } = useApp()
@@ -190,11 +203,7 @@ export function StudentMyCompetitionsPage() {
 
   if (error) {
     return (
-      <ErrorState
-        title="Could not load your competitions"
-        message={error}
-        onRetry={() => void refetch()}
-      />
+      <ErrorState title="Could not load your competitions" message={error} onRetry={() => void refetch()} />
     )
   }
 
@@ -206,7 +215,7 @@ export function StudentMyCompetitionsPage() {
         action={
           <Link
             to="/dashboard/student/competitions"
-            className="inline-flex min-h-[44px] items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
+            className="inline-flex min-h-[44px] items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
           >
             Discover competitions
           </Link>
@@ -223,24 +232,15 @@ export function StudentMyCompetitionsPage() {
           <div key={competition.id} className="space-y-2">
             <CompetitionCard competition={competition} />
             <div className="flex flex-wrap gap-2 px-1">
-              <Link
-                to={`/dashboard/student/competitions/${competition.id}/prepare`}
-                className="text-xs font-medium text-primary hover:underline"
-              >
+              <Link to={`/dashboard/student/competitions/${competition.id}/preparation`} className="text-xs font-medium text-primary hover:underline">
                 Prepare
               </Link>
-              <Link
-                to={`/dashboard/student/competitions/${competition.id}/timeline`}
-                className="text-xs font-medium text-primary hover:underline"
-              >
-                Timeline
+              <Link to={`/dashboard/student/competitions/${competition.id}/live`} className="text-xs font-medium text-primary hover:underline">
+                Live
               </Link>
               {registration.status === 'confirmed' && (
-                <Link
-                  to={`/dashboard/student/competitions/${competition.id}/live`}
-                  className="text-xs font-medium text-primary hover:underline"
-                >
-                  Live status
+                <Link to="/dashboard/student/results" className="text-xs font-medium text-primary hover:underline">
+                  Results
                 </Link>
               )}
             </div>

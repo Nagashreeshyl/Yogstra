@@ -1,50 +1,37 @@
 import {
   Home,
-  Compass,
-  Users,
-  MessageSquare,
-  MessageCircle,
-  Video,
+  Dumbbell,
   Trophy,
-  ShoppingBag,
+  MessageCircle,
+  MessageSquare,
+  CreditCard,
+  User,
   Settings,
+  Video,
 } from 'lucide-react'
 import type { ShellNavItem } from '../types'
 
 export function getStudentNavItems(hasClasses: boolean): ShellNavItem[] {
-  const classesItem: ShellNavItem = {
-    to: '/dashboard/student/classes',
-    label: 'Classes',
-    icon: Video,
-    placement: ['sidebar', 'tab'],
-  }
-
-  const core: ShellNavItem[] = [
+  const items: ShellNavItem[] = [
     {
       to: '/dashboard/student',
-      label: 'Home',
+      label: 'Dashboard',
       icon: Home,
       end: true,
       placement: ['sidebar', 'tab'],
     },
-    { to: '/dashboard/student/teachers', label: 'Teachers', icon: Users, placement: ['sidebar', 'tab'] },
     {
-      to: '/dashboard/student/explore',
-      label: 'Explore',
-      icon: Compass,
-      placement: ['sidebar', 'more'],
+      to: hasClasses ? '/dashboard/student/classes' : '/dashboard/student/teachers',
+      label: 'Training',
+      icon: hasClasses ? Video : Dumbbell,
+      placement: ['sidebar', 'tab'],
     },
     {
-      to: '/dashboard/student/community',
-      label: 'Community',
-      icon: MessageSquare,
-      placement: ['sidebar', hasClasses ? 'more' : 'tab'],
+      to: '/dashboard/student/competitions',
+      label: 'Competitions',
+      icon: Trophy,
+      placement: ['sidebar', 'tab'],
     },
-  ]
-
-  if (hasClasses) core.push(classesItem)
-
-  core.push(
     {
       to: '/dashboard/student/messages',
       label: 'Messages',
@@ -53,25 +40,31 @@ export function getStudentNavItems(hasClasses: boolean): ShellNavItem[] {
       placement: ['sidebar', 'tab'],
     },
     {
-      to: '/dashboard/student/competitions',
-      label: 'Competitions',
-      icon: Trophy,
+      to: '/dashboard/student/community',
+      label: 'Community',
+      icon: MessageSquare,
       placement: ['sidebar', 'more'],
     },
     {
       to: '/dashboard/student/shop',
-      label: 'Shop',
-      icon: ShoppingBag,
+      label: 'Payments',
+      icon: CreditCard,
       badge: 'Soon',
       placement: ['sidebar', 'more'],
     },
     {
       to: '/dashboard/student/settings',
       label: 'Profile',
+      icon: User,
+      placement: ['sidebar', 'more'],
+    },
+    {
+      to: '/dashboard/student/settings',
+      label: 'Settings',
       icon: Settings,
       placement: ['sidebar', 'more'],
     },
-  )
+  ]
 
-  return core
+  return items
 }

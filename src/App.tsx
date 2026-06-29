@@ -98,19 +98,14 @@ const StudentPreparationPage = lazy(() =>
     default: m.StudentPreparationPage,
   })),
 )
-const StudentTimelinePage = lazy(() =>
-  import('./pages/student/competition/studentCompetitionPages').then((m) => ({
-    default: m.StudentTimelinePage,
-  })),
-)
 const StudentLiveStatusPage = lazy(() =>
   import('./pages/student/competition/studentCompetitionPages').then((m) => ({
     default: m.StudentLiveStatusPage,
   })),
 )
-const StudentResultsPage = lazy(() =>
+const StudentResultsHubPage = lazy(() =>
   import('./pages/student/competition/studentCompetitionPages').then((m) => ({
-    default: m.StudentResultsPage,
+    default: m.StudentResultsHubPage,
   })),
 )
 const StudentCertificatesPage = lazy(() =>
@@ -178,15 +173,14 @@ export default function App() {
                   <Route path="competitions" element={<StudentCompetitionLayout />}>
                     <Route index element={<StudentCompetitionHomePage />} />
                     <Route path="my" element={<StudentMyCompetitionsPage />} />
-                    <Route path="certificates" element={<StudentCertificatesPage />} />
-                    <Route path="rankings" element={<StudentRankingsPage />} />
-                    <Route path=":id" element={<StudentCompetitionDetailPage />} />
-                    <Route path=":id/register" element={<StudentRegistrationWizardPage />} />
-                    <Route path=":id/prepare" element={<StudentPreparationPage />} />
-                    <Route path=":id/timeline" element={<StudentTimelinePage />} />
-                    <Route path=":id/live" element={<StudentLiveStatusPage />} />
-                    <Route path=":id/results" element={<StudentResultsPage />} />
+                    <Route path="register/:competitionId" element={<StudentRegistrationWizardPage />} />
+                    <Route path=":competitionId/preparation" element={<StudentPreparationPage />} />
+                    <Route path=":competitionId/live" element={<StudentLiveStatusPage />} />
+                    <Route path=":competitionId" element={<StudentCompetitionDetailPage />} />
                   </Route>
+                  <Route path="results" element={<StudentResultsHubPage />} />
+                  <Route path="certificates" element={<StudentCertificatesPage />} />
+                  <Route path="rankings" element={<StudentRankingsPage />} />
                   <Route path="shop" element={<ShopPage />} />
                   <Route path="messages" element={<StudentMessagesPage />} />
                   <Route path="students/:id" element={<StudentProfilePage />} />

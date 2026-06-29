@@ -5,8 +5,8 @@ interface RegistrationProgressProps {
 }
 
 const DEFAULT_LABELS = [
-  'Category',
   'Eligibility',
+  'Category',
   'Documents',
   'Emergency',
   'Review',

@@ -27,10 +27,17 @@ export function CertificateCard({ certificate, competitionName, onShare }: Certi
           {certificate.certificateType.replace(/_/g, ' ')}
         </p>
         <h3 className="mt-1 font-heading text-lg font-semibold">{certificate.title}</h3>
-        {competitionName && (
-          <p className="mt-0.5 text-sm text-muted-foreground">{competitionName}</p>
+        {(competitionName ?? certificate.competitionName) && (
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            {competitionName ?? certificate.competitionName}
+          </p>
         )}
         {issued && <p className="mt-1 text-xs text-muted-foreground">Issued {issued}</p>}
+        {certificate.signatureData?.signedBy && (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Signed by {certificate.signatureData.signedBy}
+          </p>
+        )}
 
         <div className="mt-4 flex flex-wrap gap-2">
           {certificate.pdfUrl && (

@@ -51,7 +51,7 @@ export function StudentCertificatesPage() {
   }
 
   return (
-    <>
+    <div className="student-competition py-4 sm:py-6">
       <PageHeader
         title="Certificates"
         description="Your earned certificates with QR verification."
@@ -65,6 +65,6 @@ export function StudentCertificatesPage() {
           />
         ))}
       </div>
-    </>
+    </div>
   )
 }
