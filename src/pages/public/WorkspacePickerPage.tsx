@@ -10,7 +10,7 @@ import {
   getDashboardViewsForUser,
   type DashboardView,
 } from '../../utils/dashboardRoutes'
-import { rememberWorkspace } from '../../utils/workspacePreference'
+import { rememberWorkspace, persistWorkspaceChoice } from '../../utils/workspacePreference'
 import { getPostLoginPath } from '../../utils/authRouting'
 import { useWorkspaceAccess } from '../../hooks/useWorkspaceAccess'
 
@@ -43,8 +43,11 @@ export function WorkspacePickerPage() {
   }
 
   const handleContinue = () => {
-    if (!selected) return
-    if (remember) rememberWorkspace(selected)
+    if (!selected || !user) return
+    if (remember) {
+      rememberWorkspace(selected)
+      void persistWorkspaceChoice(user.id, selected)
+    }
     navigate(DASHBOARD_VIEW_PATHS[selected])
   }
 

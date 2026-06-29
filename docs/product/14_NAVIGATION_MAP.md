@@ -1,7 +1,6 @@
 # Navigation Map — Yogstra V2
 
-**Sprint 12 · Terminology Audit**  
-**Date:** June 30, 2026
+**Sprint 12 · Terminology Audit · Updated Sprint 13**
 
 ---
 
@@ -110,4 +109,26 @@ Source: `WORKSPACE_LABELS` in `src/constants/terminology.ts`
 
 ---
 
-*Nav definitions: `src/components/shell/nav/*.ts`*
+## Admin Console
+
+| Label | Route | Sprint 13 |
+|-------|-------|-----------|
+| Dashboard | `/admin` | Unified header, stat tooltips |
+| Teachers | `/admin/teachers` | Approval queue |
+| Students | `/admin/students` | User management |
+| Academies | `/admin/academies` | Suspend, archive, restore |
+| Competitions | `/admin/competitions` | Archive, restore, status filter |
+| Settings | `/admin/settings` | Commission with HelpTooltip |
+
+---
+
+## Post-login routing (Sprint 13)
+
+Verified teachers route automatically based on:
+1. Saved workspace preference (database)
+2. Owned academy → Academy workspace
+3. Owned competitions → Competition workspace
+4. Judge assignments → Judge workspace
+5. Default → Coach workspace
+
+---

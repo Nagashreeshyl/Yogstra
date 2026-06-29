@@ -3,8 +3,9 @@ import { Calendar, ClipboardList, Megaphone, Scale } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useJudgeOfflineSync } from '../../hooks/useJudgeOfflineSync'
-import { fetchJudgeDashboard, getJudgeGreeting } from '../../services/judgeDashboard'
-import { PageHeader } from '../../components/shell/PageHeader'
+import { fetchJudgeDashboard } from '../../services/judgeDashboard'
+import { DashboardWorkspaceHeader } from '../../components/shell/DashboardWorkspaceHeader'
+import { TERMS } from '../../constants/terminology'
 import { ErrorState } from '../../components/shell/ErrorState'
 import { EmptyState } from '../../components/shell/EmptyState'
 import { LoadingSkeleton } from '../../components/shell/LoadingSkeleton'
@@ -72,16 +73,12 @@ export function JudgeDashboardPage() {
 
   return (
     <div className="judge-portal py-4 sm:py-6" data-high-contrast="true">
-      <PageHeader
-        title="Judge Portal"
-        description="Score participants during live competitions."
-        actions={<OfflineIndicator status={syncStatus} pendingCount={pendingCount} />}
+      <DashboardWorkspaceHeader
+        workspaceTitle={TERMS.judgeWorkspace}
+        description="Score participants and submit results during live competitions."
+        userName={user.name}
+        primaryAction={<OfflineIndicator status={syncStatus} pendingCount={pendingCount} />}
       />
-
-      <section className="mb-6">
-        <h1 className="font-heading text-2xl font-semibold">{getJudgeGreeting(user.name)}</h1>
-        <p className="text-sm text-muted-foreground mt-1">Your assignments and scoring tools</p>
-      </section>
 
       <div className="mb-6 lg:mb-8">
         <QuickStats stats={stats} />
@@ -90,7 +87,8 @@ export function JudgeDashboardPage() {
       {data.assignments.length === 0 ? (
         <EmptyState
           title="No assignments yet"
-          description="When an organizer assigns you to a competition category, it will appear here."
+          description="Competition organizers assign you to categories when they need judging."
+          outcome="When assigned, you can score performances and submit results from this workspace."
           className="mt-8"
         />
       ) : (

@@ -25,6 +25,10 @@ export async function updateCompetitionStatus(competitionId: string, status: Com
   if (error) throw error
 }
 
+export async function archiveCompetition(competitionId: string) {
+  return updateCompetitionStatus(competitionId, 'archived')
+}
+
 export async function updateCompetitionDetails(
   competitionId: string,
   patch: Partial<{

@@ -1,4 +1,4 @@
-import type { AcademyMemberRole, AcademySettings } from '../domain/academy/models'
+import type { AcademyMemberRole, AcademySettings, AcademyStatus } from '../domain/academy/models'
 import { supabase } from '../lib/supabase'
 import { academyRepository } from '../repositories/academyRepository'
 import { academyMemberRepository } from '../repositories/academyMemberRepository'
@@ -59,6 +59,35 @@ export async function updateAcademySettings(
   partial: Partial<Pick<AcademySettings, 'timezone' | 'currency' | 'settings'>>,
 ) {
   return academyRepository.updateSettings(academyId, partial)
+}
+
+export async function updateAcademyDetails(
+  academyId: string,
+  partial: Partial<{
+    name: string
+    description: string | null
+    city: string | null
+    state: string | null
+  }>,
+) {
+  return academyRepository.update(academyId, partial)
+}
+
+export async function archiveAcademy(academyId: string) {
+  return academyRepository.updateStatus(academyId, 'archived')
+}
+
+export async function suspendAcademy(academyId: string) {
+  return academyRepository.updateStatus(academyId, 'inactive')
+}
+
+export async function restoreAcademy(academyId: string) {
+  return academyRepository.updateStatus(academyId, 'active')
+}
+
+/** Soft delete — archives academy data; members retain read-only history. */
+export async function deleteAcademy(academyId: string) {
+  return archiveAcademy(academyId)
 }
 
 export async function inviteMemberByEmail(input: {
@@ -144,4 +173,8 @@ export async function acceptAcademyInvite(memberId: string, userId: string) {
       teacherId: userId,
     })
   }
+}
+
+export async function adminUpdateAcademyStatus(academyId: string, status: AcademyStatus) {
+  return academyRepository.updateStatus(academyId, status)
 }

@@ -6,13 +6,14 @@ import { fetchOrganizerDashboard } from '../../services/organizerDashboard'
 import { publishAllApprovedResults, publishEventSchedule } from '../../services/organizerOperations'
 import { issueCertificate } from '../../services/certificateService'
 import { fetchCompetitionParticipants } from '../../services/registrationService'
-import { PageHeader } from '../../components/shell/PageHeader'
+import { DashboardWorkspaceHeader } from '../../components/shell/DashboardWorkspaceHeader'
 import { ErrorState } from '../../components/shell/ErrorState'
 import { EmptyState } from '../../components/shell/EmptyState'
 import { QuickStats } from '../../components/student/dashboard/StatCard'
 import { Button } from '../../components/ui/Button'
 import { Select } from '../../components/ui/Select'
-import { OrganizerWelcomeSection } from '../../components/organizer/dashboard/OrganizerWelcomeSection'
+import { TERMS } from '../../constants/terminology'
+import { CompetitionStatusBanner } from '../../components/organizer/dashboard/CompetitionStatusBanner'
 import { CompetitionSummaryCard } from '../../components/organizer/dashboard/CompetitionSummaryCard'
 import { RegistrationTable } from '../../components/organizer/dashboard/RegistrationTable'
 import { JudgeAssignmentBoard } from '../../components/organizer/dashboard/JudgeAssignmentBoard'
@@ -134,23 +135,31 @@ export function OrganizerDashboardPage() {
 
   return (
     <div className="py-4 sm:py-6">
-      <PageHeader
-        title="Competition workspace"
+      <DashboardWorkspaceHeader
+        workspaceTitle={TERMS.competitionWorkspace}
         description="Create, manage, and complete competitions from one place."
-        actions={
+        userName={user.name}
+        primaryAction={
           <Button size="sm" onClick={() => setWizardOpen(true)}>
             Create competition
           </Button>
         }
+        meta={
+          competition ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-sm font-medium text-foreground">{competition.name}</span>
+              <CompetitionStatusBanner status={competition.status} />
+            </div>
+          ) : undefined
+        }
       />
-
-      <OrganizerWelcomeSection organizerName={user.name} selectedCompetition={competition} />
 
       {!hasCompetitions ? (
         <EmptyState
           icon={<Trophy size={24} />}
           title="No competitions yet"
-          description="Create your first competition to manage registrations, judges, schedules, and results — no spreadsheets needed."
+          description="Create your first competition to manage registrations, judges, schedules, and results."
+          outcome="After publishing, participants can register and you can assign judges from this dashboard."
           action={
             <Button onClick={() => setWizardOpen(true)}>Create competition</Button>
           }

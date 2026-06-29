@@ -61,12 +61,16 @@ export const academyRepository = {
 
     for (const row of memberRows ?? []) {
       const academy = Array.isArray(row.academies) ? row.academies[0] : row.academies
-      if (academy) academies.set(academy.id as string, mapAcademy(academy))
+      if (academy && academy.status !== 'archived') {
+        academies.set(academy.id as string, mapAcademy(academy))
+      }
     }
 
     for (const row of teacherRows ?? []) {
       const academy = Array.isArray(row.academies) ? row.academies[0] : row.academies
-      if (academy) academies.set(academy.id as string, mapAcademy(academy))
+      if (academy && academy.status !== 'archived') {
+        academies.set(academy.id as string, mapAcademy(academy))
+      }
     }
 
     return [...academies.values()]
@@ -167,5 +171,39 @@ export const academyRepository = {
 
     if (error) throw error
     return mapAcademySettings(data)
+  },
+
+  async update(
+    academyId: string,
+    partial: Partial<{
+      name: string
+      description: string | null
+      city: string | null
+      state: string | null
+      logoUrl: string | null
+      status: import('../domain/academy/models').AcademyStatus
+    }>,
+  ) {
+    const payload: Record<string, unknown> = { updated_at: new Date().toISOString() }
+    if (partial.name !== undefined) payload.name = partial.name
+    if (partial.description !== undefined) payload.description = partial.description
+    if (partial.city !== undefined) payload.city = partial.city
+    if (partial.state !== undefined) payload.state = partial.state
+    if (partial.logoUrl !== undefined) payload.logo_url = partial.logoUrl
+    if (partial.status !== undefined) payload.status = partial.status
+
+    const { data, error } = await supabase
+      .from('academies')
+      .update(payload)
+      .eq('id', academyId)
+      .select(academySelect)
+      .single()
+
+    if (error) throw error
+    return mapAcademy(data)
+  },
+
+  async updateStatus(academyId: string, status: import('../domain/academy/models').AcademyStatus) {
+    return this.update(academyId, { status })
   },
 }

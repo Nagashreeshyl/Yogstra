@@ -4,6 +4,8 @@ interface EmptyStateProps {
   icon?: ReactNode
   title: string
   description?: string
+  /** What happens after the user completes the first action */
+  outcome?: string
   action?: ReactNode
   className?: string
 }
@@ -12,6 +14,7 @@ export function EmptyState({
   icon,
   title,
   description,
+  outcome,
   action,
   className = '',
 }: EmptyStateProps) {
@@ -27,7 +30,10 @@ export function EmptyState({
       )}
       <h2 className="font-heading text-xl font-semibold text-foreground">{title}</h2>
       {description && (
-        <p className="mt-2 text-sm text-muted-foreground max-w-md">{description}</p>
+        <p className="mt-2 text-sm text-muted-foreground max-w-md leading-relaxed">{description}</p>
+      )}
+      {outcome && (
+        <p className="mt-3 text-xs text-muted-foreground max-w-md leading-relaxed">{outcome}</p>
       )}
       {action && <div className="mt-6">{action}</div>}
     </div>

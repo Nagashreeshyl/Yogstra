@@ -4,9 +4,10 @@ import { useApp } from '../context/AppContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { fetchTeacherDashboard } from '../services/teacherDashboard'
 import { PageContainer } from '../components/shell/PageContainer'
+import { DashboardWorkspaceHeader } from '../components/shell/DashboardWorkspaceHeader'
 import { ErrorState } from '../components/shell/ErrorState'
+import { TERMS } from '../constants/terminology'
 import { QuickStats } from '../components/student/dashboard/StatCard'
-import { TeacherWelcomeSection } from '../components/teacher/dashboard/TeacherWelcomeSection'
 import { TodaysClassesCard } from '../components/teacher/dashboard/TodaysClassesCard'
 import { AttendanceWidget } from '../components/teacher/dashboard/AttendanceWidget'
 import { StudentAlertsCard } from '../components/teacher/dashboard/StudentAlertsCard'
@@ -75,7 +76,11 @@ export function TeacherDashboardPage() {
 
   return (
     <PageContainer width="wide">
-      <TeacherWelcomeSection teacherName={user.name} academyName={data.academyName} />
+      <DashboardWorkspaceHeader
+        workspaceTitle={TERMS.coachWorkspace}
+        description="Manage students, classes, programs, and your coaching practice."
+        userName={user.name}
+      />
 
       {data.profileIncomplete && (
         <div className="mb-6 rounded-[16px] border border-amber-200 bg-amber-50 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 dark:border-amber-900/40 dark:bg-amber-950/30">

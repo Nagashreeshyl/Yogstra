@@ -61,7 +61,7 @@ export function StudentAuthPage() {
         return
       }
 
-      navigate(resolvePostLoginPath(result.profile))
+      navigate(await resolvePostLoginPath(result.profile))
     } catch (err) {
       setError(formatAuthError(err))
     } finally {

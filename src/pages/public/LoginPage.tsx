@@ -30,7 +30,7 @@ export function LoginPage() {
         navigate('/auth/teacher/pending')
         return
       }
-      navigate(resolvePostLoginPath(profile))
+      navigate(await resolvePostLoginPath(profile))
     } catch (err) {
       setError(formatAuthError(err))
     } finally {

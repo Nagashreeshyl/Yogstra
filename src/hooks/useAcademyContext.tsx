@@ -12,6 +12,7 @@ import { useAsyncData } from './useAsyncData'
 import type { Academy, AcademyMemberRole } from '../domain/academy/models'
 import { fetchAcademiesForUser, fetchAllAcademies } from '../services/academyService'
 import { isPlatformAdmin } from '../utils/platformAdmin'
+import { saveProfilePreferences } from '../services/profilePreferencesService'
 import { getUserAcademyRole } from '../services/academyMemberService'
 
 const STORAGE_KEY = 'yogstra_academy_id'
@@ -95,7 +96,10 @@ export function AcademyContextProvider({ children }: { children: ReactNode }) {
   const setAcademyId = useCallback((id: string) => {
     setAcademyIdState(id)
     localStorage.setItem(STORAGE_KEY, id)
-  }, [])
+    if (userId) {
+      void saveProfilePreferences(userId, { preferredAcademyId: id }).catch(() => {})
+    }
+  }, [userId])
 
   const refetch = useCallback(async () => {
     await refetchAcademies()

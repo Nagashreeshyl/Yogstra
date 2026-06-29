@@ -12,6 +12,7 @@ import {
 import { formatRoleLabel } from '../../utils/authRouting'
 import { isPlatformAdmin } from '../../utils/platformAdmin'
 import { useWorkspaceAccess } from '../../hooks/useWorkspaceAccess'
+import { persistWorkspaceChoice } from '../../utils/workspacePreference'
 
 export function RoleSwitcher() {
   const { user, isLoggedIn } = useApp()
@@ -41,6 +42,7 @@ export function RoleSwitcher() {
 
   const handleSelect = (view: DashboardView) => {
     setOpen(false)
+    if (user) void persistWorkspaceChoice(user.id, view)
     navigate(DASHBOARD_VIEW_PATHS[view])
   }
 

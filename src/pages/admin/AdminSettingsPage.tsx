@@ -5,6 +5,7 @@ import { PageHeader } from '../../components/shell/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Toast } from '../../components/ui/Toast'
+import { LabelWithHelp } from '../../components/ui/HelpTooltip'
 
 export function AdminSettingsPage() {
   const { data: commission, loading, refetch } = useAsyncData(() => fetchCommissionPercent())
@@ -49,12 +50,23 @@ export function AdminSettingsPage() {
           <h2 className="font-heading text-lg font-medium mb-2">Marketplace Commission</h2>
           <p className="text-sm text-foreground/55 mb-4">
             When a student pays, this percentage stays with Yogstra and the rest is routed to the
-            teacher via Razorpay Route.
+            coach through our integrated payment partner.
           </p>
           <div className="flex gap-3 items-end">
             <div className="flex-1">
+              <LabelWithHelp
+                htmlFor="commission"
+                help={{
+                  label: 'Marketplace commission',
+                  description: 'Percentage retained by Yogstra on successful paid enrollments.',
+                  example: '10% on a ₹10,000 enrollment → ₹1,000 platform, ₹9,000 to coach.',
+                  validationHint: 'Must be between 0 and 100.',
+                }}
+              >
+                Commission (%)
+              </LabelWithHelp>
               <Input
-                label="Commission (%)"
+                id="commission"
                 type="number"
                 min={0}
                 max={100}

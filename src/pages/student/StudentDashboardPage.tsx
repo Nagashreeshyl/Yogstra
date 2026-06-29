@@ -3,8 +3,8 @@ import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { fetchStudentDashboard } from '../../services/studentDashboard'
 import { PageContainer } from '../../components/shell/PageContainer'
+import { DashboardWorkspaceHeader } from '../../components/shell/DashboardWorkspaceHeader'
 import { ErrorState } from '../../components/shell/ErrorState'
-import { WelcomeSection } from '../../components/student/dashboard/WelcomeSection'
 import { QuickStats } from '../../components/student/dashboard/StatCard'
 import { TodaysPracticeCard } from '../../components/student/dashboard/TodaysPracticeCard'
 import { NextClassCard } from '../../components/student/dashboard/NextClassCard'
@@ -82,10 +82,10 @@ export function StudentDashboardPage() {
 
   return (
     <PageContainer width="wide">
-      <WelcomeSection
-        studentName={user.name}
-        coach={data.coach}
-        academyName={data.academyName}
+      <DashboardWorkspaceHeader
+        workspaceTitle="Student"
+        description="Track your programs, classes, competitions, and progress."
+        userName={user.name}
       />
 
       <div className="mb-6 lg:mb-8">

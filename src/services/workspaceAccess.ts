@@ -1,5 +1,7 @@
 import { supabase } from '../lib/supabase'
 import type { AuthUser } from './auth'
+import { fetchAcademiesForUser } from './academyService'
+import { fetchOrganizerCompetitions } from './competitionService'
 import type { DashboardView } from '../utils/dashboardRoutes'
 import { isPlatformAdmin } from '../utils/platformAdmin'
 import { isVerifiedTeacher } from '../utils/authRouting'
@@ -9,6 +11,10 @@ export type WorkspaceAccess = {
   academy: boolean
   competitions: boolean
   judge: boolean
+  ownsAcademy: boolean
+  ownsCompetitions: boolean
+  academyCount: number
+  competitionCount: number
 }
 
 export async function fetchJudgeAssignmentCount(userId: string): Promise<number> {
@@ -23,12 +29,24 @@ export async function fetchJudgeAssignmentCount(userId: string): Promise<number>
 }
 
 export async function fetchWorkspaceAccess(userId: string): Promise<WorkspaceAccess> {
-  const judgeCount = await fetchJudgeAssignmentCount(userId)
+  const [judgeCount, academies, competitions] = await Promise.all([
+    fetchJudgeAssignmentCount(userId),
+    fetchAcademiesForUser(userId).catch(() => []),
+    fetchOrganizerCompetitions(userId).catch(() => []),
+  ])
+
+  const activeAcademies = academies.filter((a) => a.status === 'active')
+  const activeCompetitions = competitions.filter((c) => c.status !== 'archived')
+
   return {
     coach: true,
     academy: true,
     competitions: true,
     judge: judgeCount > 0,
+    ownsAcademy: activeAcademies.length > 0,
+    ownsCompetitions: activeCompetitions.length > 0,
+    academyCount: activeAcademies.length,
+    competitionCount: activeCompetitions.length,
   }
 }
 
@@ -50,4 +68,12 @@ export function getDashboardViewsForAccess(user: AuthUser, access: WorkspaceAcce
     return views
   }
   return []
+}
+
+/** Preferred workspace when no saved preference exists. */
+export function inferDefaultWorkspace(access: WorkspaceAccess): DashboardView {
+  if (access.ownsAcademy) return 'academy'
+  if (access.ownsCompetitions) return 'organizer'
+  if (access.judge) return 'judge'
+  return 'teacher'
 }

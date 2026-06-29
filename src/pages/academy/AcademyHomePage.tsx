@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom'
+import { useApp } from '../../context/AppContext'
 import { Layers, IndianRupee, Users, GraduationCap } from 'lucide-react'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useAcademyContext } from '../../hooks/useAcademyContext'
 import { fetchAcademyDashboard } from '../../services/academyDashboard'
 import { PageContainer } from '../../components/shell/PageContainer'
-import { PageHeader } from '../../components/shell/PageHeader'
+import { DashboardWorkspaceHeader } from '../../components/shell/DashboardWorkspaceHeader'
 import { ErrorState } from '../../components/shell/ErrorState'
 import { EmptyState } from '../../components/shell/EmptyState'
 import { LoadingSkeleton } from '../../components/shell/LoadingSkeleton'
@@ -16,6 +17,7 @@ import { InstructionPanel } from '../../components/ui/InstructionPanel'
 import { AcademyCreateSection } from './AcademyCreateSection'
 
 export function AcademyHomePage() {
+  const { user } = useApp()
   const { academyId, academy, academies, loading: contextLoading, error: contextError, refetch: refetchContext } =
     useAcademyContext()
 
@@ -86,12 +88,11 @@ export function AcademyHomePage() {
 
   return (
     <PageContainer width="wide">
-      <PageHeader
-        title={academy?.name ?? data.academy.name}
-        description={data.academy.description ?? 'Daily command center for academy owners and managers.'}
-        actions={
-          <Badge variant="primary">{data.academy.status}</Badge>
-        }
+      <DashboardWorkspaceHeader
+        workspaceTitle={academy?.name ?? data.academy.name}
+        description="Manage teachers, training batches, students, and academy operations."
+        userName={user?.name ?? 'Teacher'}
+        primaryAction={<Badge variant="primary">{data.academy.status}</Badge>}
       />
 
       <InstructionPanel
