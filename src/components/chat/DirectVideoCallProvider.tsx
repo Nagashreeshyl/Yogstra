@@ -270,8 +270,13 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
           calleeId: params.calleeId,
         })
         setOutgoingCall(call)
-      } catch {
-        setCallNotice('Could not start call. Check your connection and try again.')
+      } catch (err) {
+        const message = err instanceof Error ? err.message : ''
+        setCallNotice(
+          message.includes('room_name') || message.includes('Video calls')
+            ? message
+            : 'Could not start call. Check your connection and try again.',
+        )
       }
     },
     [user],

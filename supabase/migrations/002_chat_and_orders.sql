@@ -112,6 +112,7 @@ create table if not exists public.direct_video_calls (
   thread_id uuid not null references public.chat_threads(id) on delete cascade,
   caller_id uuid not null references public.profiles(id) on delete cascade,
   callee_id uuid not null references public.profiles(id) on delete cascade,
+  room_name text not null unique,
   status text not null default 'ringing'
     check (status in ('ringing', 'active', 'ended', 'declined', 'missed')),
   started_at timestamptz,

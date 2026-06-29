@@ -180,7 +180,7 @@ export default function App() {
 
               <Route path="auth/teacher/pending" element={<TeacherPendingPage />} />
 
-              <Route element={<RequireRole roles={['student']} />}>
+              <Route element={<RequireRole roles={['student', 'admin']} />}>
                 <Route path="dashboard/student" element={<StudentDashboardLayout />}>
                   <Route index element={<StudentDashboardPage />} />
                   <Route path="explore" element={<ExplorePage />} />

@@ -235,3 +235,37 @@ npm run lint    # oxlint
 All user-facing routes now share the V2 forest/cream/gold design language through updated primitives, shell layouts, and page-level `PageHeader` / `PageContainer` / `DashboardCard` patterns. Legacy sidebars and legacy Tailwind color classes have been removed from application code. The application should present as a single cohesive product across student, teacher, academy, admin, organizer, judge, and public surfaces.
 
 **Recommended next step:** Manual visual QA on the eight screens listed above, especially competition routes with the new App Shell wrapper.
+
+---
+
+## Sprint 6.1 — UI Polish & Consistency (June 30, 2026)
+
+### Mobile navigation
+
+| Fix | Detail |
+|-----|--------|
+| **Hamburger drawer** | `MobileSidebarDrawer` — full sidebar nav on mobile via ☰ in top bar |
+| **Bottom tab bar** | Raised to `z-[70]`, gold active state, safe-area padding |
+| **Messages chat overlay** | Chat no longer covers bottom nav (`bottom-[calc(4rem+safe-area)]`) |
+| **Public student Messages** | Added to mobile tab bar for logged-in students |
+
+### Admin dashboard switching
+
+| Fix | Detail |
+|-----|--------|
+| **RoleSwitcher** | Admin can switch to Student, Teacher, Academy, Organizer, Judge, Admin views |
+| **Route access** | Admin allowed on `/dashboard/student/*` and `/dashboard/teacher/*` (preview mode) |
+| **Academy / competition** | Already permitted for admin via foundation guards |
+
+### Design token alignment (Sprint 6.1 palette)
+
+- Sidebar: `#0F1F17` with gold active highlight
+- Surface/background: `#F6F1E6`
+- Accent/gold: `#D4AF37`
+- Teacher cards rebuilt with V2 elevated surfaces (no cream overlay)
+
+### Footer
+
+- App shell uses `min-h-screen` + flex column so `PublicFooter` sticks to bottom on short pages
+
+**Commit:** `fix(ui): ensure full UI consistency and footer fix`

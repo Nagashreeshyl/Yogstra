@@ -69,8 +69,8 @@ export function FindTeachersPage() {
                 key={p}
                 type="button"
                 onClick={() => setPage(p)}
-                className={`w-8 h-8 text-sm rounded-[12px] cursor-pointer ${
-                  p === page ? 'bg-primary text-foreground font-medium' : 'text-muted-foreground hover:bg-elevated'
+                className={`h-9 w-9 text-sm rounded-[12px] cursor-pointer ${
+                  p === page ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted'
                 }`}
               >
                 {p}

@@ -21,5 +21,5 @@ export const publicStudentNavItem: ShellNavItem = {
   label: 'Messages',
   icon: MessageCircle,
   badgeKey: 'messages',
-  placement: ['sidebar'],
+  placement: ['sidebar', 'tab'],
 }

@@ -19,13 +19,13 @@ export function TeacherCard({ teacher, compact = false }: TeacherCardProps) {
       <button
         type="button"
         onClick={() => navigate(`/teachers/${teacher.id}`)}
-        className="flex items-center gap-3 w-full text-left p-3 rounded-sm hover:bg-muted transition-colors cursor-pointer"
+        className="flex w-full items-center gap-3 rounded-[12px] p-3 text-left transition-colors hover:bg-muted cursor-pointer"
       >
         <Avatar src={teacher.photo} name={teacher.name} size={48} />
         <div className="min-w-0 flex-1">
-          <p className="font-medium text-sm truncate">{teacher.name}</p>
+          <p className="truncate text-sm font-medium text-foreground">{teacher.name}</p>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Star size={12} className="text-primary fill-teal" />
+            <Star size={12} className="fill-accent text-accent" />
             {teacher.rating.toFixed(1)}
           </div>
         </div>
@@ -34,79 +34,46 @@ export function TeacherCard({ teacher, compact = false }: TeacherCardProps) {
   }
 
   return (
-    <div
-      className="relative w-full h-[300px] sm:h-[380px] lg:h-[440px] rounded-xl overflow-hidden bg-primary"
-    >
-      {cardImage ? (
-        <img
-          src={cardImage}
-          alt={teacher.name}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            objectPosition: 'center center',
-          }}
-        />
-      ) : (
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            fontSize: '64px',
-            fontWeight: 500,
-          }}
-        >
-          {teacher.name.charAt(0).toUpperCase()}
-        </div>
-      )}
+    <section className="rounded-[16px] border border-border bg-elevated p-5 shadow-sm">
+      <h3 className="font-heading text-lg font-semibold text-foreground mb-4">{teacher.name}</h3>
+      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[12px] bg-sidebar">
+        {cardImage ? (
+          <img
+            src={cardImage}
+            alt={teacher.name}
+            className="absolute inset-0 h-full w-full object-cover object-center"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center bg-sidebar-secondary text-5xl font-medium text-sidebar-foreground">
+            {teacher.name.charAt(0).toUpperCase()}
+          </div>
+        )}
+      </div>
 
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          background: 'rgba(245, 236, 215, 0.85)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
-          padding: '12px',
-        }}
-      >
-        <h3 className="font-heading font-medium text-sm mb-1 truncate">{teacher.name}</h3>
-        <div className="flex flex-wrap gap-1 mb-2">
+      <div className="mt-4 space-y-3">
+        <div className="flex flex-wrap gap-1.5">
           {teacher.specializations.slice(0, 2).map((s) => (
-            <Badge key={s} className="text-xs">
+            <Badge key={s} variant="primary" className="text-xs">
               {s}
             </Badge>
           ))}
         </div>
-        <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
-          <span className="flex items-center gap-1">
-            <Star size={12} className="text-primary fill-teal" />
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span className="inline-flex items-center gap-1">
+            <Star size={14} className="fill-accent text-accent" />
             {teacher.rating.toFixed(1)}
           </span>
           <span>₹{teacher.monthlyFee.toLocaleString('en-IN')}/mo</span>
         </div>
-        <p className="text-xs text-muted-foreground flex items-center gap-1 mb-3">
-          <MapPin size={12} />
+        <p className="flex items-center gap-1 text-sm text-muted-foreground">
+          <MapPin size={14} className="text-accent" />
           {teacher.city}
         </p>
-        <Button
-          size="sm"
-          className="w-full"
-          onClick={() => navigate(`/teachers/${teacher.id}`)}
-        >
+        <Button size="sm" className="w-full" onClick={() => navigate(`/teachers/${teacher.id}`)}>
           View Profile
         </Button>
       </div>
-    </div>
+    </section>
   )
 }
 
@@ -121,17 +88,17 @@ export function MobileFeaturedTeachers({ teachers }: FeaturedTeachersProps) {
 
   return (
     <section className="lg:hidden -mx-1">
-      <h2 className="font-heading text-base font-medium mb-3 px-1">Featured Teachers</h2>
-      <div className="flex gap-3 overflow-x-auto pb-1 px-1 snap-x snap-mandatory">
+      <h2 className="mb-3 px-1 font-heading text-base font-semibold text-foreground">Featured Teachers</h2>
+      <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-1">
         {teachers.map((teacher) => (
           <button
             key={teacher.id}
             type="button"
             onClick={() => navigate(`/teachers/${teacher.id}`)}
-            className="shrink-0 w-[5.5rem] flex flex-col items-center gap-2 snap-start cursor-pointer"
+            className="flex w-[5.5rem] shrink-0 snap-start cursor-pointer flex-col items-center gap-2"
           >
             <Avatar src={teacher.photo} name={teacher.name} size={56} />
-            <span className="text-xs font-medium text-foreground truncate w-full text-center">
+            <span className="w-full truncate text-center text-xs font-medium text-foreground">
               {teacher.name.split(' ')[0]}
             </span>
           </button>
@@ -144,7 +111,7 @@ export function MobileFeaturedTeachers({ teachers }: FeaturedTeachersProps) {
 export function FeaturedTeachers({ teachers }: FeaturedTeachersProps) {
   return (
     <div>
-      <h2 className="font-heading text-lg font-medium mb-4">Featured Teachers</h2>
+      <h2 className="mb-4 font-heading text-lg font-semibold text-foreground">Featured Teachers</h2>
       <div className="space-y-1">
         {teachers.map((t) => (
           <TeacherCard key={t.id} teacher={t} compact />

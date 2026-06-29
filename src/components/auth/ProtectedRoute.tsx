@@ -29,6 +29,7 @@ export function RequireVerifiedTeacher() {
 
   if (authLoading) return <AuthLoading />
   if (!user) return <Navigate to="/auth/teacher" state={{ from: location.pathname }} replace />
+  if (user.role === 'admin') return <Outlet />
   if (user.role !== 'teacher') {
     return <Navigate to={getPostLoginPath(user)} replace />
   }

@@ -331,7 +331,7 @@ export function MessagesHub() {
           <div
             className={
               inChatView
-                ? 'fixed inset-0 z-[55] flex flex-col h-[100dvh] max-h-[100dvh] overflow-hidden bg-elevated md:static md:z-auto md:inset-auto md:h-auto md:max-h-none md:flex-1 md:min-h-0'
+                ? 'fixed inset-x-0 top-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-[55] flex flex-col overflow-hidden bg-elevated md:static md:z-auto md:inset-auto md:bottom-auto md:h-auto md:max-h-none md:flex-1 md:min-h-0'
                 : 'hidden md:block flex-1 min-h-0'
             }
           >
@@ -341,7 +341,7 @@ export function MessagesHub() {
           <div
             className={
               inChatView
-                ? 'fixed inset-0 z-[55] flex flex-col h-[100dvh] max-h-[100dvh] overflow-hidden bg-elevated md:static md:z-auto md:inset-auto md:h-auto md:max-h-none md:flex-1 md:min-h-0'
+                ? 'fixed inset-x-0 top-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-[55] flex flex-col overflow-hidden bg-elevated md:static md:z-auto md:inset-auto md:bottom-auto md:h-auto md:max-h-none md:flex-1 md:min-h-0'
                 : 'hidden md:flex flex-1 min-h-0 flex-col'
             }
           >

@@ -92,6 +92,10 @@ export async function createDirectVideoCall(params: {
     if (error.code === 'PGRST205' || error.code === '42P01') {
       throw new Error('Video calls are not set up. Run supabase/direct-video-calls.sql.')
     }
+    const message = error.message ?? ''
+    if (message.includes('room_name') || error.code === 'PGRST204') {
+      throw new Error('Video calls database is missing room_name. Apply migration 010_direct_video_calls_room_name.sql.')
+    }
     throw error
   }
 

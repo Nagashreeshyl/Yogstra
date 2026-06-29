@@ -42,7 +42,7 @@ export function MobileNavigation({ navItems, badges }: MobileNavigationProps) {
   return (
     <>
       <nav
-        className="lg:hidden fixed bottom-0 inset-x-0 z-50 border-t border-border bg-elevated/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]"
+        className="lg:hidden fixed bottom-0 inset-x-0 z-[70] border-t border-border bg-elevated/98 backdrop-blur-md pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_24px_rgba(15,31,23,0.08)]"
         aria-label="Mobile navigation"
       >
         <ul className="grid grid-cols-5 h-16">
@@ -53,7 +53,7 @@ export function MobileNavigation({ navItems, badges }: MobileNavigationProps) {
                 end={item.end}
                 className={({ isActive }) =>
                   `relative flex flex-col items-center justify-center gap-1 h-full px-1 text-[11px] transition-colors duration-150 ${
-                    isActive ? 'text-primary font-medium' : 'text-muted-foreground'
+                    isActive ? 'text-accent font-semibold' : 'text-muted-foreground'
                   }`
                 }
               >
@@ -71,7 +71,7 @@ export function MobileNavigation({ navItems, badges }: MobileNavigationProps) {
               type="button"
               onClick={() => setMoreOpen(true)}
               className={`relative flex flex-col items-center justify-center gap-1 h-full w-full px-1 text-[11px] transition-colors duration-150 cursor-pointer ${
-                moreActive ? 'text-primary font-medium' : 'text-muted-foreground'
+                moreActive ? 'text-accent font-semibold' : 'text-muted-foreground'
               }`}
               aria-label="More navigation"
               aria-expanded={moreOpen}

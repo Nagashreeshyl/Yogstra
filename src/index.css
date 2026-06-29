@@ -3,24 +3,26 @@
 /* Yogstra V2 semantic tokens — light/dark via ThemeProvider */
 :root {
   color-scheme: light;
-  --y-bg: #f7f5f0;
-  --y-fg: #1c1c1c;
+  --y-bg: #f6f1e6;
+  --y-fg: #0f1f17;
   --y-muted: #ebe8e2;
-  --y-muted-fg: #6b6560;
-  --y-border: #e0dbd2;
+  --y-muted-fg: #4a5c52;
+  --y-border: #d9d2c4;
   --y-elevated: #ffffff;
+  --y-surface: #f6f1e6;
   --y-primary: #2d5a3d;
   --y-primary-hover: #1e3d28;
-  --y-primary-fg: #f7f5f0;
-  --y-accent: #c9a227;
-  --y-accent-fg: #1c1c1c;
+  --y-primary-fg: #f6f1e6;
+  --y-accent: #d4af37;
+  --y-accent-fg: #0f1f17;
   --y-destructive: #dc2626;
-  --y-sidebar: #1a2e22;
-  --y-sidebar-fg: #f7f5f0;
-  --y-sidebar-muted: rgba(247, 245, 240, 0.62);
-  --y-sidebar-border: rgba(247, 245, 240, 0.1);
-  --y-sidebar-hover: rgba(247, 245, 240, 0.08);
-  --y-sidebar-active: rgba(45, 90, 61, 0.42);
+  --y-sidebar: #0f1f17;
+  --y-sidebar-secondary: #16281d;
+  --y-sidebar-fg: #f6f1e6;
+  --y-sidebar-muted: rgba(246, 241, 230, 0.62);
+  --y-sidebar-border: rgba(246, 241, 230, 0.1);
+  --y-sidebar-hover: rgba(246, 241, 230, 0.08);
+  --y-sidebar-active: rgba(212, 175, 55, 0.22);
 }
 
 .dark {
@@ -53,6 +55,7 @@
   --color-muted-foreground: var(--y-muted-fg);
   --color-border: var(--y-border);
   --color-elevated: var(--y-elevated);
+  --color-surface: var(--y-surface);
   --color-primary: var(--y-primary);
   --color-primary-hover: var(--y-primary-hover);
   --color-primary-foreground: var(--y-primary-fg);
@@ -65,6 +68,7 @@
   --color-sidebar-border: var(--y-sidebar-border);
   --color-sidebar-hover: var(--y-sidebar-hover);
   --color-sidebar-active: var(--y-sidebar-active);
+  --color-sidebar-secondary: var(--y-sidebar-secondary);
   --color-forest: #2d5a3d;
   --color-forest-dark: #1e3d28;
   --color-gold: #c9a227;
