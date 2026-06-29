@@ -4,7 +4,7 @@ import { footerNav } from '../public/publicNavLinks'
 export function PublicFooter() {
   return (
     <footer className="mt-auto border-t border-border bg-sidebar-secondary text-sidebar-foreground">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+      <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         <div className="grid grid-cols-2 gap-8 lg:grid-cols-5 lg:gap-10">
           <div className="col-span-2 lg:col-span-2">
             <Link to="/" className="font-heading text-xl font-semibold text-sidebar-foreground">

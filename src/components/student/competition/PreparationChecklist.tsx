@@ -1,3 +1,5 @@
+import { Check } from 'lucide-react'
+
 interface ChecklistItem {
   id: string
   label: string
@@ -28,14 +30,14 @@ export function PreparationChecklist({
         {items.map((item) => (
           <li key={item.id} className="flex items-start gap-3">
             <span
-              className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-xs ${
+              className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
                 item.done
                   ? 'border-primary bg-primary text-primary-foreground'
                   : 'border-border bg-elevated text-transparent'
               }`}
               aria-hidden
             >
-              ✓
+              {item.done && <Check size={12} strokeWidth={3} />}
             </span>
             <span
               className={`text-sm ${item.done ? 'text-muted-foreground line-through' : 'text-foreground'}`}

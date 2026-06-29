@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import {
   ArrowRight,
   Building2,
+  Check,
   GraduationCap,
   IndianRupee,
   Trophy,
@@ -49,7 +50,7 @@ export function HowYogstraWorksPage() {
   return (
     <>
       <section className="border-b border-border bg-muted/20">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20 text-center">
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8 py-16 sm:py-24 text-center">
           <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-semibold text-foreground tracking-tight">
             How Yogstra Works
           </h1>
@@ -94,24 +95,24 @@ export function HowYogstraWorksPage() {
             Pay only when value is delivered
           </h3>
           <ul className="text-sm text-muted-foreground space-y-3 text-left max-w-md mx-auto">
-            <li className="flex gap-2">
-              <span className="text-accent shrink-0">✓</span>
+            <li className="flex gap-2 items-start">
+              <Check size={16} className="text-accent shrink-0 mt-0.5" />
               Free to create an account and explore the platform
             </li>
-            <li className="flex gap-2">
-              <span className="text-accent shrink-0">✓</span>
+            <li className="flex gap-2 items-start">
+              <Check size={16} className="text-accent shrink-0 mt-0.5" />
               Coaches and academies set their own program fees
             </li>
-            <li className="flex gap-2">
-              <span className="text-accent shrink-0">✓</span>
+            <li className="flex gap-2 items-start">
+              <Check size={16} className="text-accent shrink-0 mt-0.5" />
               Yogstra takes a small commission on successful paid enrollments
             </li>
-            <li className="flex gap-2">
-              <span className="text-accent shrink-0">✓</span>
+            <li className="flex gap-2 items-start">
+              <Check size={16} className="text-accent shrink-0 mt-0.5" />
               Competition entry fees include a platform fee when applicable
             </li>
-            <li className="flex gap-2">
-              <span className="text-accent shrink-0">✓</span>
+            <li className="flex gap-2 items-start">
+              <Check size={16} className="text-accent shrink-0 mt-0.5" />
               Secure online payments handled directly in the app
             </li>
           </ul>

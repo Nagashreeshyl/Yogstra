@@ -18,8 +18,8 @@ export function PublicSection({
   centered = false,
 }: PublicSectionProps) {
   return (
-    <section id={id} className={`py-14 sm:py-20 ${className}`}>
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <section id={id} className={`py-16 sm:py-24 ${className}`}>
+      <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
         {(title || description) && (
           <div className={`mb-10 max-w-2xl ${centered ? 'mx-auto text-center' : ''}`}>
             {title && (

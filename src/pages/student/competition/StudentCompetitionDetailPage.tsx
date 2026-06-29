@@ -163,7 +163,7 @@ export const StudentCompetitionDetailPage = memo(function StudentCompetitionDeta
       {tab === 'overview' && (
         <div className="grid gap-6 lg:grid-cols-2">
           <DashboardCard title="About">
-            <p className="text-sm text-muted-foreground">{competition.description ?? 'Details coming soon.'}</p>
+            <p className="text-sm text-muted-foreground">{competition.description ?? 'No description provided yet.'}</p>
             <dl className="mt-4 space-y-2 text-sm">
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">Entry fee</dt>
@@ -261,7 +261,7 @@ export const StudentCompetitionDetailPage = memo(function StudentCompetitionDeta
       {tab === 'gallery' && (
         <DashboardCard title="Gallery">
           {gallery.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Gallery coming soon.</p>
+            <p className="text-sm text-muted-foreground">No gallery photos yet.</p>
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {gallery.map((url) => (

@@ -75,7 +75,6 @@ export function QuickActions({ coach, hasLiveClass }: QuickActionsProps) {
                 key={key}
                 className="flex flex-col items-start gap-3 rounded-[12px] border border-border px-4 py-4 opacity-50 cursor-not-allowed"
                 aria-disabled="true"
-                title="Coming soon"
               >
                 {content}
               </div>

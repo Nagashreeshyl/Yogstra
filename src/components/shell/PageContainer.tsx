@@ -8,9 +8,9 @@ interface PageContainerProps {
 }
 
 const widthClasses = {
-  default: 'max-w-6xl',
+  default: 'max-w-[1280px]',
   narrow: 'max-w-3xl',
-  wide: 'max-w-7xl',
+  wide: 'max-w-[1280px]',
   full: 'max-w-none',
 }
 

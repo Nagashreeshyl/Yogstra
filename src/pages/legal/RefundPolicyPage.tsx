@@ -14,12 +14,12 @@ export function RefundPolicyPage() {
         <p>
           If you have <strong>not attended</strong> a scheduled class and cancel within{' '}
           <strong>7 days</strong> of payment, you are eligible for a <strong>full refund</strong> of the
-          class fee paid (excluding payment gateway charges retained by Razorpay, if any).
+          class fee paid (excluding payment gateway charges retained by the payment processor, if any).
         </p>
         <p>
           To request a refund, email{' '}
           <a href="mailto:support@yogstra.com" className="text-primary hover:underline">support@yogstra.com</a>{' '}
-          with your registered email, teacher name, booking date, and Razorpay payment reference.
+          with your registered email, teacher name, booking date, and payment reference.
         </p>
       </LegalDocumentLayout.Section>
 
@@ -41,7 +41,7 @@ export function RefundPolicyPage() {
 
       <LegalDocumentLayout.Section title="Processing time">
         <p>
-          Approved refunds are processed back to the original payment method via Razorpay within 5–10
+          Approved refunds are processed back to the original payment method within 5–10
           business days, depending on your bank or card issuer.
         </p>
       </LegalDocumentLayout.Section>

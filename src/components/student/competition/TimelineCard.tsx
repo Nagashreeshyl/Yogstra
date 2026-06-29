@@ -1,13 +1,14 @@
+import { Check, Circle } from 'lucide-react'
 import type { CompetitionTimelineStage } from '../../../services/studentCompetitionExperience'
 
 interface TimelineCardProps {
   stages: CompetitionTimelineStage[]
 }
 
-function stageIcon(status: CompetitionTimelineStage['status']) {
-  if (status === 'completed') return '✓'
-  if (status === 'current') return '●'
-  return '○'
+function StageIcon({ status }: { status: CompetitionTimelineStage['status'] }) {
+  if (status === 'completed') return <Check size={12} strokeWidth={3} />
+  if (status === 'current') return <Circle size={8} fill="currentColor" />
+  return <Circle size={8} />
 }
 
 export function TimelineCard({ stages }: TimelineCardProps) {
@@ -32,7 +33,7 @@ export function TimelineCard({ stages }: TimelineCardProps) {
             }`}
             aria-hidden
           >
-            {stageIcon(stage.status)}
+            <StageIcon status={stage.status} />
           </span>
 
           <div className="min-w-0 flex-1 pt-0.5">

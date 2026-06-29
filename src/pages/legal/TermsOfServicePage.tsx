@@ -32,13 +32,13 @@ export function TermsOfServicePage() {
 
       <LegalDocumentLayout.Section title="Payments & commission">
         <p>
-          Class fees are collected through Razorpay at the time of booking. Yogstra retains a platform
+          Class fees are collected through our integrated payment partner at the time of booking. Yogstra retains a platform
           commission on each successful payment (the current percentage is shown at checkout and in
           admin settings). The remaining amount is allocated to the teacher as earnings and paid out
           according to our payout process.
         </p>
         <p>
-          By booking a class, you authorize Yogstra and Razorpay to charge the displayed amount. All
+          By booking a class, you authorize Yogstra and our payment partner to charge the displayed amount. All
           prices are in Indian Rupees (INR) unless stated otherwise.
         </p>
       </LegalDocumentLayout.Section>
@@ -64,7 +64,7 @@ export function TermsOfServicePage() {
 
       <LegalDocumentLayout.Section title="Live classes & video calls">
         <p>
-          Live sessions use third-party video infrastructure (LiveKit). You agree not to record, redistribute,
+          Live sessions use secure real-time communication technology. You agree not to record, redistribute,
           or misuse session content without consent. Yogstra is not liable for interruptions caused by
           your internet connection or device limitations.
         </p>

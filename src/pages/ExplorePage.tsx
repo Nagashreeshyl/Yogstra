@@ -58,11 +58,11 @@ export function ExplorePage() {
         ) : teachersError ? (
           <ErrorState message="Unable to load coaches. Please refresh." />
         ) : featuredList.length === 0 ? (
-          <EmptyState title="Coaches coming soon" description="Verified coaches appear after registration and approval." action={<Link to="/auth/get-started"><Button>Get Started</Button></Link>} />
+          <EmptyState title="No coaches yet" description="Verified coaches appear here after registration and approval." action={<Link to="/auth/get-started"><Button>Get Started</Button></Link>} />
         ) : (
           <>
             <MobileFeaturedTeachers teachers={featuredList.slice(0, 6)} />
-            <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {featuredList.map((t) => <TeacherCard key={t.id} teacher={t} />)}
             </div>
             <div className="mt-6 text-center">
@@ -79,7 +79,7 @@ export function ExplorePage() {
             {[1, 2, 3].map((i) => <div key={i} className="h-24 animate-pulse rounded-[20px] bg-muted/80" />)}
           </div>
         ) : (academies ?? []).length === 0 ? (
-          <EmptyState title="Academies coming soon" description="Academies register through Yogstra to manage their operations." />
+          <EmptyState title="No academies yet" description="Academies register through Yogstra to manage their operations." action={<Link to="/auth/get-started"><Button>Register Academy</Button></Link>} />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {(academies ?? []).slice(0, 6).map((a) => (

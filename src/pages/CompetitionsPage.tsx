@@ -242,7 +242,7 @@ export function PublicCompetitionDetailPage() {
       <section className="mb-8">
         <h2 className="mb-4 font-heading text-lg font-semibold">Categories</h2>
         {summary.categories.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Categories coming soon.</p>
+          <p className="text-sm text-muted-foreground">Categories will be announced by the organizer.</p>
         ) : (
           <ul className="grid gap-2 sm:grid-cols-2">
             {summary.categories.map((cat) => (

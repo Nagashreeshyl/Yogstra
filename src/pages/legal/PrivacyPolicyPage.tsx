@@ -5,8 +5,8 @@ export function PrivacyPolicyPage() {
     <LegalDocumentLayout title="Yogstra Privacy Policy" lastUpdated="June 2026">
       <LegalDocumentLayout.Section title="Introduction">
         <p>
-          Yogstra (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) operates an online yoga coaching marketplace
-          at yogstra.vercel.app. This Privacy Policy explains how we collect, use, store, and share
+          Yogstra (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) operates an online yoga coaching marketplace.
+          This Privacy Policy explains how we collect, use, store, and share
           your personal data when you use our platform as a student, teacher, or visitor.
         </p>
         <p>
@@ -20,9 +20,9 @@ export function PrivacyPolicyPage() {
         <ul className="list-disc pl-5 space-y-2">
           <li>Account information: name, email, phone number, password (hashed), role, profile photo</li>
           <li>Teacher information: bio, certifications, specializations, pricing, verification status, bank details for payouts</li>
-          <li>Booking and payment data: class orders, schedules, transaction references from Razorpay</li>
+          <li>Booking and payment data: class orders, schedules, and transaction references</li>
           <li>Communications: direct messages, community posts, comments, chat reports</li>
-          <li>Video session metadata: LiveKit room names, call/session status, timestamps</li>
+          <li>Video session metadata: session identifiers, call status, and timestamps</li>
           <li>Technical data: device/browser type, IP address, cookies, and usage logs</li>
         </ul>
       </LegalDocumentLayout.Section>
@@ -31,7 +31,7 @@ export function PrivacyPolicyPage() {
         <ul className="list-disc pl-5 space-y-2">
           <li>Create and manage your account and role (student, teacher, or admin)</li>
           <li>Facilitate teacher discovery, messaging, class bookings, and live video sessions</li>
-          <li>Process payments and route teacher payouts through our payment partner</li>
+          <li>Process payments and route teacher payouts through our integrated payment partner</li>
           <li>Verify teachers, moderate community content, and respond to support requests</li>
           <li>Send transactional notifications (bookings, approvals, class reminders)</li>
           <li>Improve platform security, prevent fraud, and comply with legal obligations</li>
@@ -41,16 +41,16 @@ export function PrivacyPolicyPage() {
       <LegalDocumentLayout.Section title="Who we share it with">
         <p>We do not sell your personal data. We share data only with trusted service providers necessary to operate Yogstra:</p>
         <ul className="list-disc pl-5 space-y-2">
-          <li><strong>Razorpay</strong> — payment processing, order verification, and teacher payout routing</li>
-          <li><strong>LiveKit</strong> — real-time video for live classes and direct video calls</li>
-          <li><strong>Supabase</strong> — authentication, database, file storage (avatars, post media), and realtime updates</li>
-          <li><strong>Cloudinary</strong> — media delivery and optimization where configured for images and video assets</li>
-          <li><strong>Vercel</strong> — application hosting and serverless API routes</li>
+          <li><strong>Integrated payment partner</strong> — payment processing, order verification, and teacher payout routing</li>
+          <li><strong>Real-time communication technology</strong> — live classes and direct video calls</li>
+          <li><strong>Secure cloud infrastructure</strong> — encrypted authentication, database, file storage, and realtime updates</li>
+          <li><strong>Secure media storage</strong> — delivery and optimization of profile photos, community media, and video assets</li>
+          <li><strong>Application hosting</strong> — secure deployment and API services</li>
         </ul>
         <p>
-          Payments are processed by Razorpay. Video sessions are hosted via LiveKit. Profile photos,
-          community media, and other uploads may be stored in Supabase Storage and/or delivered through
-          Cloudinary.
+          Payments are processed through our integrated payment partner. Video sessions use real-time
+          communication technology. Profile photos, community media, and other uploads are stored in
+          secure cloud and media storage systems.
         </p>
       </LegalDocumentLayout.Section>
 

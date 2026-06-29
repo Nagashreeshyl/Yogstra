@@ -1,10 +1,12 @@
+import { useApp } from '../../context/AppContext'
 import { useNavigate } from 'react-router-dom'
-import { BadgeCheck, MapPin, Star, Trophy, Users } from 'lucide-react'
+import { BadgeCheck, BookOpen, MapPin, MessageCircle, Star, Trophy, Users } from 'lucide-react'
 import type { Teacher } from '../../types'
 import { Avatar } from '../ui/Avatar'
 import { Badge } from '../ui/Badge'
 import { Button } from '../ui/Button'
 import { TERMS } from '../../constants/terminology'
+import { buildChatNavigationState, messagesPathForRole } from '../../utils/chatNavigation'
 
 interface TeacherCardProps {
   teacher: Teacher
@@ -13,11 +15,25 @@ interface TeacherCardProps {
 
 export function TeacherCard({ teacher, compact = false }: TeacherCardProps) {
   const navigate = useNavigate()
+  const { requireAuth, user } = useApp()
   const cardImage = teacher.coverPhoto || teacher.photo
   const startingPrice = Math.min(
     teacher.pricing.oneOnOneMonth || teacher.monthlyFee,
     teacher.pricing.groupMonth || teacher.monthlyFee,
   ) || teacher.monthlyFee
+
+  const handleMessage = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!requireAuth()) return
+    if (user?.role !== 'student') return
+    navigate(messagesPathForRole('student'), {
+      state: buildChatNavigationState(
+        { id: teacher.id, name: teacher.name, photo: teacher.photo, verified: teacher.verified },
+        'teacher',
+      ),
+    })
+  }
 
   if (compact) {
     return (
@@ -61,13 +77,13 @@ export function TeacherCard({ teacher, compact = false }: TeacherCardProps) {
         )}
       </div>
 
-      <div className="p-5 sm:p-6 space-y-4 flex-1 flex flex-col">
+      <div className="p-6 space-y-4 flex-1 flex flex-col">
         <div>
           <h3 className="font-heading text-lg font-semibold text-foreground">{teacher.name}</h3>
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-2 mt-1.5">
             <Star size={14} className="fill-accent text-accent" />
             <span className="text-sm font-medium text-foreground">{teacher.rating.toFixed(1)}</span>
-            <span className="text-xs text-muted-foreground">· {teacher.experienceYears} years</span>
+            <span className="text-xs text-muted-foreground">· {teacher.experienceYears} yrs experience</span>
           </div>
         </div>
 
@@ -80,13 +96,17 @@ export function TeacherCard({ teacher, compact = false }: TeacherCardProps) {
         </div>
 
         <div className="grid grid-cols-2 gap-y-2 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1.5">
+          <span className="inline-flex items-center gap-1.5 col-span-2">
             <MapPin size={13} className="text-accent shrink-0" />
             {teacher.city}{teacher.state ? `, ${teacher.state}` : ''}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <Users size={13} className="text-accent shrink-0" />
-            {teacher.totalStudents} trained
+            {teacher.totalStudents} students trained
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <BookOpen size={13} className="text-accent shrink-0" />
+            Programs available
           </span>
           {teacher.achievements.length > 0 && (
             <span className="inline-flex items-center gap-1.5 col-span-2">
@@ -94,11 +114,6 @@ export function TeacherCard({ teacher, compact = false }: TeacherCardProps) {
               {teacher.achievements[0]}
             </span>
           )}
-        </div>
-
-        <div className="flex flex-wrap gap-1.5 pt-1">
-          <Badge variant="default" className="text-xs">{TERMS.personalCoaching}</Badge>
-          <Badge variant="default" className="text-xs">{TERMS.trainingBatch}</Badge>
         </div>
 
         {startingPrice > 0 && (
@@ -109,11 +124,12 @@ export function TeacherCard({ teacher, compact = false }: TeacherCardProps) {
         )}
 
         <div className="flex gap-2 pt-2 mt-auto">
-          <Button size="sm" variant="secondary" className="flex-1" onClick={() => navigate(`/teachers/${teacher.id}`)}>
-            {TERMS.bookTrial}
-          </Button>
           <Button size="sm" className="flex-1" onClick={() => navigate(`/teachers/${teacher.id}`)}>
             {TERMS.viewProfile}
+          </Button>
+          <Button size="sm" variant="secondary" className="flex-1 gap-1.5" onClick={handleMessage}>
+            <MessageCircle size={14} />
+            Message
           </Button>
         </div>
       </div>
