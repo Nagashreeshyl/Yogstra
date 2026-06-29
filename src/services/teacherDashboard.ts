@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase'
-import { competitions } from '../lib/constants'
+import { fetchPublishedCompetitions } from './competitionService'
 import { fetchTeacherActiveStudentCount } from './bookings'
 import { fetchTodaySchedules } from './schedules'
 import { fetchTeacherById } from './teachers'
@@ -251,20 +251,46 @@ async function fetchPendingFeeBookings(teacherId: string) {
   })
 }
 
-function pickCompetition(): TeacherDashboardCompetition | null {
-  const next = competitions
-    .map((comp) => ({ ...comp, parsed: new Date(comp.date) }))
-    .filter((comp) => !Number.isNaN(comp.parsed.getTime()))
-    .sort((a, b) => a.parsed.getTime() - b.parsed.getTime())[0]
+async function fetchTeacherCompetitionWidget(
+  teacherId: string,
+): Promise<TeacherDashboardCompetition | null> {
+  const published = await fetchPublishedCompetitions(10)
+  const next = published
+    .filter((c) => c.startDate)
+    .sort((a, b) => new Date(a.startDate!).getTime() - new Date(b.startDate!).getTime())[0]
 
   if (!next) return null
+
+  const { data: students } = await supabase
+    .from('bookings')
+    .select('student_id')
+    .eq('teacher_id', teacherId)
+    .eq('status', 'active')
+
+  const studentIds = (students ?? []).map((s) => s.student_id as string).filter(Boolean)
+
+  let studentsRegistered = 0
+  let pendingRegistrations = 0
+
+  if (studentIds.length) {
+    const { data: regs } = await supabase
+      .from('competition_registrations')
+      .select('registrant_id, status, payment_status')
+      .eq('competition_id', next.id)
+      .in('registrant_id', studentIds)
+
+    for (const reg of regs ?? []) {
+      if (reg.status === 'confirmed') studentsRegistered += 1
+      else if (reg.status === 'pending') pendingRegistrations += 1
+    }
+  }
 
   return {
     id: next.id,
     name: next.name,
-    daysUntil: daysUntilDate(next.date),
-    studentsRegistered: 0,
-    pendingRegistrations: 0,
+    daysUntil: daysUntilDate(next.startDate ?? ''),
+    studentsRegistered,
+    pendingRegistrations,
     missingDocuments: 0,
   }
 }
@@ -363,6 +389,7 @@ export async function fetchTeacherDashboard(teacherId: string): Promise<TeacherD
     pendingBookings,
     pendingChanges,
     attendanceStats,
+    competition,
   ] = await Promise.all([
     fetchTeacherById(teacherId),
     fetchTeacherActiveStudentCount(teacherId),
@@ -376,6 +403,7 @@ export async function fetchTeacherDashboard(teacherId: string): Promise<TeacherD
     fetchPendingFeeBookings(teacherId),
     fetchTeacherPendingScheduleChanges(teacherId),
     fetchWeeklyAttendanceStats(teacherId),
+    fetchTeacherCompetitionWidget(teacherId),
   ])
 
   const profileIncomplete = teacherProfile?.verified
@@ -383,7 +411,6 @@ export async function fetchTeacherDashboard(teacherId: string): Promise<TeacherD
     : false
 
   const primaryAcademy = academies.find((a) => !a.isBranch) ?? academies[0] ?? null
-  const competition = pickCompetition()
 
   const messages: TeacherDashboardMessage[] = messagingUsers
     .filter((user) => user.threadId && user.lastMessage)

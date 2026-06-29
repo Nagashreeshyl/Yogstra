@@ -9,6 +9,7 @@ import { prepareImageForCrop } from '../../utils/imageCrop'
 import { AvatarCropModal } from '../../components/profile/AvatarCropModal'
 import { Avatar } from '../../components/ui/Avatar'
 import { Button } from '../../components/ui/Button'
+import { NotificationPreferencesSection } from '../../components/settings/NotificationPreferencesSection'
 import { Input } from '../../components/ui/Input'
 import { Toast } from '../../components/ui/Toast'
 import { SettingsFormSkeleton } from '../../components/ui/Skeleton'
@@ -169,6 +170,8 @@ export function StudentSettingsPage() {
             {saving ? 'Saving...' : 'Save changes'}
           </Button>
         </form>
+
+        <NotificationPreferencesSection />
       </div>
 
       {cropImageSrc && (

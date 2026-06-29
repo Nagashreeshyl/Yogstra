@@ -9,6 +9,11 @@ import {
   IndianRupee,
   Grid3X3,
   Settings,
+  Trophy,
+  Building2,
+  BarChart3,
+  UserCog,
+  ScrollText,
 } from 'lucide-react'
 import type { ShellNavItem } from '../types'
 
@@ -22,11 +27,16 @@ export const adminNavItems: ShellNavItem[] = [
   },
   { to: '/admin/teachers', label: 'Teachers', icon: Users, placement: ['sidebar', 'tab'] },
   { to: '/admin/students', label: 'Students', icon: GraduationCap, placement: ['sidebar', 'tab'] },
+  { to: '/admin/users', label: 'Users', icon: UserCog, placement: ['sidebar', 'more'] },
   { to: '/admin/community', label: 'Community', icon: MessageSquare, placement: ['sidebar', 'more'] },
   { to: '/admin/bookings', label: 'Bookings', icon: Calendar, placement: ['sidebar', 'more'] },
   { to: '/admin/schedules', label: 'Schedules', icon: Clock, placement: ['sidebar', 'more'] },
   { to: '/admin/chats', label: 'Chats', icon: MessageCircle, placement: ['sidebar', 'more'] },
   { to: '/admin/payouts', label: 'Payouts', icon: IndianRupee, placement: ['sidebar', 'more'] },
+  { to: '/admin/competitions', label: 'Competitions', icon: Trophy, placement: ['sidebar', 'more'] },
+  { to: '/admin/academies', label: 'Academies', icon: Building2, placement: ['sidebar', 'more'] },
+  { to: '/admin/reports', label: 'Reports', icon: BarChart3, placement: ['sidebar', 'more'] },
+  { to: '/admin/audit', label: 'Audit log', icon: ScrollText, placement: ['sidebar', 'more'] },
   { to: '/admin/categories', label: 'Categories', icon: Grid3X3, placement: ['sidebar', 'more'] },
   { to: '/admin/settings', label: 'Settings', icon: Settings, placement: ['sidebar', 'more'] },
 ]

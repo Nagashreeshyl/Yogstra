@@ -314,7 +314,7 @@ export async function generateCertificatesForResults(
     const certificate = await issueCertificate(draft.id, {
       signedBy: 'Yogstra Platform',
       signedAt: new Date().toISOString(),
-      algorithm: 'ed25519-placeholder',
+      algorithm: 'sha256-content-digest',
     })
     issued.push(certificate)
   }

@@ -21,6 +21,9 @@ const TeacherProfilePage = lazy(() => import('./pages/TeacherProfilePage').then(
 const StudentProfilePage = lazy(() => import('./pages/StudentProfilePage').then((m) => ({ default: m.StudentProfilePage })))
 const CommunityPage = lazy(() => import('./pages/CommunityPage').then((m) => ({ default: m.CommunityPage })))
 const CompetitionsPage = lazy(() => import('./pages/CompetitionsPage').then((m) => ({ default: m.CompetitionsPage })))
+const PublicCompetitionDetailPage = lazy(() =>
+  import('./pages/CompetitionsPage').then((m) => ({ default: m.PublicCompetitionDetailPage })),
+)
 const ShopPage = lazy(() => import('./pages/ShopPage').then((m) => ({ default: m.ShopPage })))
 const RoleSelectionPage = lazy(() => import('./pages/RoleSelectionPage').then((m) => ({ default: m.RoleSelectionPage })))
 const StudentAuthPage = lazy(() => import('./pages/StudentAuthPage').then((m) => ({ default: m.StudentAuthPage })))
@@ -51,6 +54,11 @@ const AdminChatsPage = lazy(() => import('./pages/admin/AdminChatsPage').then((m
 const AdminPayoutsPage = lazy(() => import('./pages/admin/AdminPayoutsPage').then((m) => ({ default: m.AdminPayoutsPage })))
 const AdminCategoriesPage = lazy(() => import('./pages/admin/AdminCategoriesPage').then((m) => ({ default: m.AdminCategoriesPage })))
 const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage').then((m) => ({ default: m.AdminSettingsPage })))
+const AdminCompetitionsPage = lazy(() => import('./pages/admin/AdminCompetitionsPage').then((m) => ({ default: m.AdminCompetitionsPage })))
+const AdminAcademiesPage = lazy(() => import('./pages/admin/AdminAcademiesPage').then((m) => ({ default: m.AdminAcademiesPage })))
+const AdminReportsPage = lazy(() => import('./pages/admin/AdminReportsPage').then((m) => ({ default: m.AdminReportsPage })))
+const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage })))
+const AdminAuditPage = lazy(() => import('./pages/admin/AdminAuditPage').then((m) => ({ default: m.AdminAuditPage })))
 const PrivacyPolicyPage = lazy(() => import('./pages/legal/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage })))
 const TermsOfServicePage = lazy(() => import('./pages/legal/TermsOfServicePage').then((m) => ({ default: m.TermsOfServicePage })))
 const RefundPolicyPage = lazy(() => import('./pages/legal/RefundPolicyPage').then((m) => ({ default: m.RefundPolicyPage })))
@@ -59,6 +67,8 @@ const AcademyTeachersPage = lazy(() => import('./pages/academy/academyPages').th
 const AcademyStudentsPage = lazy(() => import('./pages/academy/academyPages').then((m) => ({ default: m.AcademyStudentsPage })))
 const AcademyBatchesPage = lazy(() => import('./pages/academy/academyPages').then((m) => ({ default: m.AcademyBatchesPage })))
 const AcademyFinancePage = lazy(() => import('./pages/academy/academyPages').then((m) => ({ default: m.AcademyFinancePage })))
+const AcademyMembersPage = lazy(() => import('./pages/academy/academyPages').then((m) => ({ default: m.AcademyMembersPage })))
+const AcademySettingsPage = lazy(() => import('./pages/academy/academyPages').then((m) => ({ default: m.AcademySettingsPage })))
 const CompetitionHomePage = lazy(() => import('./pages/competition/competitionPages').then((m) => ({ default: m.CompetitionHomePage })))
 const CompetitionDetailPage = lazy(() => import('./pages/competition/competitionPages').then((m) => ({ default: m.CompetitionDetailPage })))
 const JudgeHomePage = lazy(() => import('./pages/competition/competitionPages').then((m) => ({ default: m.JudgeHomePage })))
@@ -140,6 +150,7 @@ export default function App() {
                 <Route path="students/:id" element={<StudentProfilePage />} />
                 <Route path="community" element={<CommunityPage />} />
                 <Route path="competitions" element={<CompetitionsPage />} />
+                <Route path="competitions/:slug" element={<PublicCompetitionDetailPage />} />
                 <Route path="shop" element={<ShopPage />} />
                 <Route path="privacy-policy" element={<PrivacyPolicyPage />} />
                 <Route path="terms-of-service" element={<TermsOfServicePage />} />
@@ -216,6 +227,8 @@ export default function App() {
                   <Route path="students" element={<AcademyStudentsPage />} />
                   <Route path="batches" element={<AcademyBatchesPage />} />
                   <Route path="finance" element={<AcademyFinancePage />} />
+                  <Route path="members" element={<AcademyMembersPage />} />
+                  <Route path="settings" element={<AcademySettingsPage />} />
                 </Route>
               </Route>
 
@@ -253,6 +266,11 @@ export default function App() {
                   <Route path="chats" element={<AdminChatsPage />} />
                   <Route path="payouts" element={<AdminPayoutsPage />} />
                   <Route path="categories" element={<AdminCategoriesPage />} />
+                  <Route path="competitions" element={<AdminCompetitionsPage />} />
+                  <Route path="academies" element={<AdminAcademiesPage />} />
+                  <Route path="reports" element={<AdminReportsPage />} />
+                  <Route path="users" element={<AdminUsersPage />} />
+                  <Route path="audit" element={<AdminAuditPage />} />
                   <Route path="settings" element={<AdminSettingsPage />} />
                 </Route>
               </Route>

@@ -32,9 +32,8 @@ const actions: QuickActionItem[] = [
   {
     key: 'upload',
     label: 'Upload practice',
-    href: '/dashboard/student/settings',
+    href: '/dashboard/student/competitions',
     icon: Upload,
-    disabled: true,
   },
   {
     key: 'message',

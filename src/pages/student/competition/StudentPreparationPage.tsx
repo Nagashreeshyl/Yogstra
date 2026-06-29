@@ -105,10 +105,13 @@ export function StudentPreparationPage() {
             <Calendar className="h-4 w-4" aria-hidden />
             Live status
           </Link>
-          <button type="button" className="action-btn" disabled title="Coming soon">
+          <Link
+            to={`/dashboard/student/competitions/register/${competitionId}`}
+            className="action-btn"
+          >
             <Upload className="h-4 w-4" aria-hidden />
-            Upload practice
-          </button>
+            Update documents
+          </Link>
         </div>
       </PreparationCard>
     </>

@@ -193,6 +193,66 @@ export function subscribeToAdminDashboard(onUpdate: () => void) {
   }
 }
 
+export type AdminReportStats = {
+  totalBookings: number
+  activeBookings: number
+  monthlyRevenue: number
+  totalPayouts: number
+  pendingPayouts: number
+  paidPayoutAmount: number
+  totalRegistrations: number
+  confirmedRegistrations: number
+}
+
+export async function fetchAdminReportStats(): Promise<AdminReportStats> {
+  const [
+    { count: totalBookings },
+    { count: activeBookings },
+    { data: activePaidBookings },
+    { count: totalPayouts },
+    { count: pendingPayouts },
+    { data: paidPayouts },
+    { count: totalRegistrations },
+    { count: confirmedRegistrations },
+  ] = await Promise.all([
+    supabase.from('bookings').select('*', { count: 'exact', head: true }),
+    supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+    supabase
+      .from('bookings')
+      .select('monthly_fee')
+      .eq('status', 'active')
+      .eq('payment_status', 'paid'),
+    supabase.from('payouts').select('*', { count: 'exact', head: true }),
+    supabase.from('payouts').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+    supabase.from('payouts').select('amount').eq('status', 'paid'),
+    supabase.from('competition_registrations').select('*', { count: 'exact', head: true }),
+    supabase
+      .from('competition_registrations')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'confirmed'),
+  ])
+
+  const monthlyRevenue = (activePaidBookings ?? []).reduce(
+    (sum, row) => sum + Number(row.monthly_fee ?? 0),
+    0,
+  )
+  const paidPayoutAmount = (paidPayouts ?? []).reduce(
+    (sum, row) => sum + Number(row.amount ?? 0),
+    0,
+  )
+
+  return {
+    totalBookings: totalBookings ?? 0,
+    activeBookings: activeBookings ?? 0,
+    monthlyRevenue,
+    totalPayouts: totalPayouts ?? 0,
+    pendingPayouts: pendingPayouts ?? 0,
+    paidPayoutAmount,
+    totalRegistrations: totalRegistrations ?? 0,
+    confirmedRegistrations: confirmedRegistrations ?? 0,
+  }
+}
+
 export async function fetchRecentActivity(): Promise<{ id: string; text: string; time: string }[]> {
   const activities: { id: string; text: string; time: string; ts: number }[] = []
 

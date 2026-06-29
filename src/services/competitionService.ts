@@ -30,6 +30,10 @@ export async function fetchOrganizerCompetitions(userId: string) {
   return competitionRepository.listForOrganizer(userId)
 }
 
+export async function fetchAllCompetitions(limit = 200) {
+  return competitionRepository.listAll(limit)
+}
+
 export async function fetchCompetitionEvents(competitionId: string) {
   return competitionRepository.listEvents(competitionId)
 }

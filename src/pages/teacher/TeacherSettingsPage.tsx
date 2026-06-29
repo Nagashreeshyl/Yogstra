@@ -18,6 +18,7 @@ import { Textarea } from '../../components/ui/Textarea'
 import { Toast } from '../../components/ui/Toast'
 import { ProfilePageSkeleton } from '../../components/ui/Skeleton'
 import { SettingsPageLayout } from '../../components/layout/FeedPageLayout'
+import { NotificationPreferencesSection } from '../../components/settings/NotificationPreferencesSection'
 import { TeacherPayoutSettings } from '../../components/profile/TeacherPayoutSettings'
 import { formatIndianNumber, parseIndianNumber } from '../../utils/format'
 import {
@@ -602,6 +603,9 @@ export function TeacherSettingsPage() {
               Add your UPI ID so admin can pay you when students book your classes.
             </p>
             <TeacherPayoutSettings />
+            <div className="mt-8">
+              <NotificationPreferencesSection />
+            </div>
           </>
         )}
       </SettingsPageLayout>

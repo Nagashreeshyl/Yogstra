@@ -1,6 +1,8 @@
 import { supabase } from '../lib/supabase'
-import { competitions } from '../lib/constants'
 import { fetchStudentActiveBooking } from './bookings'
+import { fetchPublishedCompetitions } from './competitionService'
+import { fetchUserRegistrations } from './registrationService'
+import { fetchStudentAcademyAssociation, fetchAcademyById } from './academyService'
 import { fetchStudentCoachingTeachers, type StudentCoachingTeacher } from './liveClasses'
 import { fetchStudentSessionCount } from './schedules'
 import { fetchStudentScheduleChangeRequests } from './scheduleChangeRequests'
@@ -100,25 +102,39 @@ function daysUntilDate(dateStr: string): number {
   return Math.max(0, Math.ceil((target.getTime() - now.getTime()) / 86_400_000))
 }
 
-function pickNextCompetition(): StudentDashboardCompetition | null {
-  const parsed = competitions
-    .map((comp) => ({
-      ...comp,
-      parsedDate: new Date(comp.date),
-    }))
-    .filter((comp) => !Number.isNaN(comp.parsedDate.getTime()))
-    .sort((a, b) => a.parsedDate.getTime() - b.parsedDate.getTime())
+async function pickNextCompetition(studentId: string): Promise<StudentDashboardCompetition | null> {
+  const [published, registrations] = await Promise.all([
+    fetchPublishedCompetitions(20),
+    fetchUserRegistrations(studentId),
+  ])
 
-  const next = parsed[0]
+  const sorted = published
+    .filter((c) => c.startDate)
+    .sort((a, b) => new Date(a.startDate!).getTime() - new Date(b.startDate!).getTime())
+
+  const next = sorted[0]
   if (!next) return null
+
+  const reg = registrations.find((r) => r.competitionId === next.id)
+  const dateLabel = next.startDate
+    ? new Date(next.startDate).toLocaleDateString('en-IN', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : 'Dates TBA'
 
   return {
     id: next.id,
     name: next.name,
-    city: next.city,
-    date: next.date,
-    daysUntil: daysUntilDate(next.date),
-    registrationStatus: 'not_registered',
+    city: next.city ?? 'India',
+    date: dateLabel,
+    daysUntil: daysUntilDate(next.startDate ?? ''),
+    registrationStatus: reg
+      ? reg.status === 'confirmed'
+        ? 'registered'
+        : 'pending'
+      : 'not_registered',
   }
 }
 
@@ -368,6 +384,8 @@ export async function fetchStudentDashboard(studentId: string): Promise<StudentD
     attendance,
     weeklySessionCounts,
     streakWeeks,
+    competition,
+    academyAssociation,
   ] = await Promise.all([
     fetchStudentActiveBooking(studentId),
     fetchStudentCoachingTeachers(studentId),
@@ -377,6 +395,8 @@ export async function fetchStudentDashboard(studentId: string): Promise<StudentD
     fetchMonthlyAttendance(studentId),
     fetchWeeklySessionCounts(studentId),
     estimateStreakWeeks(studentId),
+    pickNextCompetition(studentId),
+    fetchStudentAcademyAssociation(studentId),
   ])
 
   const primaryCoach = coaches[0]
@@ -396,12 +416,18 @@ export async function fetchStudentDashboard(studentId: string): Promise<StudentD
 
   const weeklyHours = weeklySessionCounts.reduce((sum, count) => sum + count, 0)
 
+  let resolvedAcademyName: string | null = null
+  if (academyAssociation.type === 'academy_batch') {
+    const academy = await fetchAcademyById(academyAssociation.academyId)
+    resolvedAcademyName = academy?.name ?? null
+  }
+
   return {
     coach: primaryCoach,
-    academyName: null,
+    academyName: resolvedAcademyName,
     todaysPractice: derivePractice(primaryCoach, nextClass),
     nextClass,
-    competition: pickNextCompetition(),
+    competition,
     attendance,
     progress: {
       streakWeeks,

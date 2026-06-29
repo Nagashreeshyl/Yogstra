@@ -136,4 +136,51 @@ export const batchRepository = {
     if (error) throw error
     return (data ?? []).map(mapBatchStudent)
   },
+
+  async listStudentsByAcademy(academyId: string) {
+    const { data: batches, error: batchError } = await supabase
+      .from('batches')
+      .select('id, name')
+      .eq('academy_id', academyId)
+
+    if (batchError) throw batchError
+
+    const batchIds = (batches ?? []).map((b) => b.id as string)
+    if (!batchIds.length) return []
+
+    const { data, error } = await supabase
+      .from('batch_students')
+      .select(`
+        id,
+        batch_id,
+        student_id,
+        enrollment_type,
+        status,
+        enrolled_at,
+        created_at,
+        updated_at,
+        student:profiles!student_id(full_name, avatar_url)
+      `)
+      .in('batch_id', batchIds)
+      .neq('status', 'removed')
+      .order('enrolled_at', { ascending: false })
+
+    if (error) throw error
+
+    const batchNameMap = new Map((batches ?? []).map((b) => [b.id as string, b.name as string]))
+
+    return (data ?? []).map((row) => {
+      const student = mapBatchStudent(row)
+      return {
+        ...student,
+        batchName: batchNameMap.get(student.batchId) ?? 'Batch',
+      }
+    })
+  },
+
+  async countActiveStudentsByAcademy(academyId: string): Promise<number> {
+    const rows = await this.listStudentsByAcademy(academyId)
+    const uniqueStudents = new Set(rows.filter((r) => r.status === 'active').map((r) => r.studentId))
+    return uniqueStudents.size
+  },
 }

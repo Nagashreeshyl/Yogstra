@@ -28,6 +28,10 @@ export async function fetchAcademiesForUser(userId: string) {
   return academyRepository.listForUser(userId)
 }
 
+export async function fetchAllAcademies(limit = 200) {
+  return academyRepository.listAll(limit)
+}
+
 export async function fetchActiveAcademies(limit = 50) {
   return academyRepository.listActive(limit)
 }

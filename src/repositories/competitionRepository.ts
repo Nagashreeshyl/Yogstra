@@ -96,6 +96,17 @@ export const competitionRepository = {
     return (data ?? []).map(mapCompetition)
   },
 
+  async listAll(limit = 200) {
+    const { data, error } = await supabase
+      .from('competitions')
+      .select(competitionSelect)
+      .order('created_at', { ascending: false })
+      .limit(limit)
+
+    if (error) throw error
+    return (data ?? []).map(mapCompetition)
+  },
+
   async listForOrganizer(userId: string) {
     const { data, error } = await supabase
       .from('competitions')

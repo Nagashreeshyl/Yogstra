@@ -2,6 +2,8 @@ import { useMemo } from 'react'
 import { useApp } from '../../context/AppContext'
 import { useMessageNotifications } from '../../hooks/useMessageNotifications'
 import { useTeacherNotificationCount } from '../../hooks/useTeacherNotificationCount'
+import { useAsyncData } from '../../hooks/useAsyncData'
+import { fetchUnreadNotificationCountForUser } from '../../services/notificationCenter'
 import type { NavBadgeKey, ShellVariant } from './types'
 
 export function useNavBadges(variant: ShellVariant) {
@@ -17,8 +19,17 @@ export function useNavBadges(variant: ShellVariant) {
     role ? user?.id : undefined,
     role ?? 'student',
   )
-  const { count: notificationCount } = useTeacherNotificationCount(
+  const { count: teacherNotificationCount } = useTeacherNotificationCount(
     variant === 'teacher' ? user?.id : undefined,
+  )
+
+  const { data: studentNotificationCount } = useAsyncData(
+    () =>
+      variant === 'student' && user?.id
+        ? fetchUnreadNotificationCountForUser(user.id, 'student')
+        : Promise.resolve(0),
+    [variant, user?.id],
+    { enabled: variant === 'student' && Boolean(user?.id) },
   )
 
   return useMemo(() => {
@@ -28,10 +39,13 @@ export function useNavBadges(variant: ShellVariant) {
     if (variant === 'student' || variant === 'teacher' || variant === 'public') {
       if (messageBadge > 0) badges.messages = messageBadge
     }
-    if (variant === 'teacher' && notificationCount > 0) {
-      badges.notifications = notificationCount
+    if (variant === 'teacher' && teacherNotificationCount > 0) {
+      badges.notifications = teacherNotificationCount
+    }
+    if (variant === 'student' && (studentNotificationCount ?? 0) > 0) {
+      badges.notifications = studentNotificationCount ?? 0
     }
 
     return badges
-  }, [variant, unreadTotal, incomingRequests, notificationCount])
+  }, [variant, unreadTotal, incomingRequests, teacherNotificationCount, studentNotificationCount])
 }

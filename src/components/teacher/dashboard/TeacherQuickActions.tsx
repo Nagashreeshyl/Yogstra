@@ -15,43 +15,24 @@ const actions = [
   { key: 'student', label: 'Add student', href: '/dashboard/teacher/students', icon: UserPlus },
   { key: 'competition', label: 'Register competition', href: '/dashboard/teacher/students', icon: Trophy },
   { key: 'announce', label: 'Send announcement', href: '/dashboard/teacher/community', icon: Megaphone },
-  { key: 'upload', label: 'Upload resource', href: '/dashboard/teacher/settings', icon: Upload, disabled: true },
+  { key: 'upload', label: 'Share resource', href: '/dashboard/teacher/community', icon: Upload },
 ]
 
 export function TeacherQuickActions() {
   return (
     <DashboardCard title="Quick actions" description="Common tasks, one tap away">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {actions.map(({ key, label, href, icon: Icon, disabled }) => {
-          const content = (
-            <>
-              <span className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-primary/10 text-primary">
-                <Icon size={18} aria-hidden />
-              </span>
-              <span className="text-sm font-medium text-foreground">{label}</span>
-            </>
-          )
-
-          if (disabled) {
-            return (
-              <div
-                key={key}
-                className="flex flex-col items-start gap-3 rounded-[12px] border border-border px-4 py-4 opacity-50 cursor-not-allowed"
-                aria-disabled="true"
-                title="Coming soon"
-              >
-                {content}
-              </div>
-            )
-          }
-
+        {actions.map(({ key, label, href, icon: Icon }) => {
           return (
             <Link
               key={key}
               to={href}
               className="flex flex-col items-start gap-3 rounded-[12px] border border-border px-4 py-4 hover:bg-muted/50 transition-colors"
             >
-              {content}
+              <span className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-primary/10 text-primary">
+                <Icon size={18} aria-hidden />
+              </span>
+              <span className="text-sm font-medium text-foreground">{label}</span>
             </Link>
           )
         })}

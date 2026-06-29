@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase'
-import type { AddAcademyMemberInput, AcademyMemberRole } from '../domain/academy/models'
+import type { AddAcademyMemberInput, AcademyMemberRole, AcademyMemberStatus } from '../domain/academy/models'
 import { mapAcademyMember, mapTeacherAcademy } from '../utils/academyMappers'
 
 const memberSelect = `
@@ -119,5 +119,52 @@ export const academyMemberRepository = {
     const membership = await this.findMembership(academyId, userId)
     if (membership?.status === 'active') return membership.role
     return null
+  },
+
+  async inviteMember(input: AddAcademyMemberInput & { invitedBy: string }) {
+    const { data, error } = await supabase
+      .from('academy_members')
+      .insert({
+        academy_id: input.academyId,
+        user_id: input.userId,
+        role: input.role,
+        invited_by: input.invitedBy,
+        status: 'invited',
+        joined_at: null,
+      })
+      .select(memberSelect)
+      .single()
+
+    if (error) throw error
+    return mapAcademyMember(data)
+  },
+
+  async updateMemberRole(memberId: string, role: AcademyMemberRole) {
+    const { data, error } = await supabase
+      .from('academy_members')
+      .update({ role })
+      .eq('id', memberId)
+      .select(memberSelect)
+      .single()
+
+    if (error) throw error
+    return mapAcademyMember(data)
+  },
+
+  async updateMemberStatus(memberId: string, status: AcademyMemberStatus) {
+    const updates: Record<string, unknown> = { status }
+    if (status === 'active') {
+      updates.joined_at = new Date().toISOString()
+    }
+
+    const { data, error } = await supabase
+      .from('academy_members')
+      .update(updates)
+      .eq('id', memberId)
+      .select(memberSelect)
+      .single()
+
+    if (error) throw error
+    return mapAcademyMember(data)
   },
 }

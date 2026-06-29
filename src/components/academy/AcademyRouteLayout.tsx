@@ -1,11 +1,15 @@
 import { Outlet } from 'react-router-dom'
-import { PageContainer } from '../shell/PageContainer'
+import { RoleSelectionModal } from '../auth/RoleSelectionModal'
+import { AppShell, academyNavItems } from '../shell'
+import { AcademyContextProvider } from '../../hooks/useAcademyContext'
 
-/** Minimal layout wrapper for reserved academy routes — dashboard UI ships later. */
 export function AcademyRouteLayout() {
   return (
-    <PageContainer width="wide">
-      <Outlet />
-    </PageContainer>
+    <AcademyContextProvider>
+      <AppShell variant="teacher" title="Academy" navItems={academyNavItems}>
+        <Outlet />
+      </AppShell>
+      <RoleSelectionModal />
+    </AcademyContextProvider>
   )
 }

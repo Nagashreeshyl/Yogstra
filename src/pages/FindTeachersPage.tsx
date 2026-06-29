@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { useLiveDataRefresh } from '../hooks/useLiveDataRefresh'
@@ -14,8 +15,14 @@ import { TeacherGridSkeleton } from '../components/ui/Skeleton'
 const PAGE_SIZE = 6
 
 export function FindTeachersPage() {
-  const { searchQuery, filters, selectedCategory } = useApp()
+  const { searchQuery, filters, selectedCategory, setSearchQuery } = useApp()
+  const [searchParams] = useSearchParams()
   const [page, setPage] = useState(1)
+
+  useEffect(() => {
+    const q = searchParams.get('q')
+    if (q && q !== searchQuery) setSearchQuery(q)
+  }, [searchParams, searchQuery, setSearchQuery])
   const { data: teachers, loading, refetch } = useAsyncData(() => fetchTeachers(true))
 
   useLiveDataRefresh(refetch, ['teachers'])

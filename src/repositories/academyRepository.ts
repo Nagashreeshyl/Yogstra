@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase'
-import type { CreateAcademyInput } from '../domain/academy/models'
+import type { CreateAcademyInput, AcademySettings } from '../domain/academy/models'
 import { mapAcademy, mapAcademySettings } from '../utils/academyMappers'
 
 const academySelect = `
@@ -72,6 +72,17 @@ export const academyRepository = {
     return [...academies.values()]
   },
 
+  async listAll(limit = 200) {
+    const { data, error } = await supabase
+      .from('academies')
+      .select(academySelect)
+      .order('created_at', { ascending: false })
+      .limit(limit)
+
+    if (error) throw error
+    return (data ?? []).map(mapAcademy)
+  },
+
   async listActive(limit = 50) {
     const { data, error } = await supabase
       .from('academies')
@@ -125,5 +136,36 @@ export const academyRepository = {
 
     if (error) throw error
     return (data ?? []).map(mapAcademy)
+  },
+
+  async getSettings(academyId: string) {
+    const { data, error } = await supabase
+      .from('academy_settings')
+      .select('*')
+      .eq('academy_id', academyId)
+      .maybeSingle()
+
+    if (error) throw error
+    return data ? mapAcademySettings(data) : null
+  },
+
+  async updateSettings(
+    academyId: string,
+    partial: Partial<Pick<AcademySettings, 'timezone' | 'currency' | 'settings'>>,
+  ) {
+    const payload: Record<string, unknown> = {}
+    if (partial.timezone !== undefined) payload.timezone = partial.timezone
+    if (partial.currency !== undefined) payload.currency = partial.currency
+    if (partial.settings !== undefined) payload.settings = partial.settings
+
+    const { data, error } = await supabase
+      .from('academy_settings')
+      .update(payload)
+      .eq('academy_id', academyId)
+      .select('*')
+      .single()
+
+    if (error) throw error
+    return mapAcademySettings(data)
   },
 }

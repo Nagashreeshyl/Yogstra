@@ -10,12 +10,17 @@ import { CommunityFeed } from '../components/community/CommunityFeed'
 import { FeaturedTeachers, MobileFeaturedTeachers } from '../components/teachers/TeacherCard'
 import { CompetitionsTeaser } from '../components/competitions/CompetitionsTeaser'
 import { PostFeedSkeleton, TeacherGridSkeleton } from '../components/ui/Skeleton'
-import { competitions } from '../lib/constants'
+import { fetchPublicCompetitionTeaser } from '../services/publicCompetitionService'
 
 export function ExplorePage() {
   const { searchQuery, filters, selectedCategory } = useApp()
   const { data: teachers, loading: teachersLoading, error: teachersError, refetch: refetchTeachers } = useAsyncData(() => fetchTeachers(true))
   const { data: posts, loading: postsLoading, error: postsError, refetch: refetchPosts } = useAsyncData(() => fetchPosts())
+  const {
+    data: competitionTeaser,
+    loading: competitionsLoading,
+    error: competitionsError,
+  } = useAsyncData(() => fetchPublicCompetitionTeaser(3))
 
   useLiveSync(refetchTeachers, ['teachers'])
   useLiveSync(refetchPosts, ['posts'])
@@ -42,7 +47,11 @@ export function ExplorePage() {
   ) : (
     <>
       <FeaturedTeachers teachers={featuredList} />
-      <CompetitionsTeaser competitions={competitions} />
+      <CompetitionsTeaser
+        competitions={competitionTeaser ?? []}
+        loading={competitionsLoading}
+        error={competitionsError}
+      />
     </>
   )
 
