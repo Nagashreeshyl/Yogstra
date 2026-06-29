@@ -1,5 +1,6 @@
 import { CompetitionPlaceholderPage } from './CompetitionPlaceholderPage'
 import { OrganizerDashboardPage } from './OrganizerDashboardPage'
+import { JudgeDashboardPage } from '../judge/JudgeDashboardPage'
 
 export function CompetitionHomePage() {
   return (
@@ -20,12 +21,7 @@ export function CompetitionDetailPage() {
 }
 
 export function JudgeHomePage() {
-  return (
-    <CompetitionPlaceholderPage
-      title="Judge Portal"
-      description="Score participants and review assigned categories."
-    />
-  )
+  return <JudgeDashboardPage />
 }
 
 export function OrganizerHomePage() {

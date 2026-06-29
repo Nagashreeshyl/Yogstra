@@ -62,6 +62,7 @@ const AcademyFinancePage = lazy(() => import('./pages/academy/academyPages').the
 const CompetitionHomePage = lazy(() => import('./pages/competition/competitionPages').then((m) => ({ default: m.CompetitionHomePage })))
 const CompetitionDetailPage = lazy(() => import('./pages/competition/competitionPages').then((m) => ({ default: m.CompetitionDetailPage })))
 const JudgeHomePage = lazy(() => import('./pages/competition/competitionPages').then((m) => ({ default: m.JudgeHomePage })))
+const JudgeSessionPage = lazy(() => import('./pages/judge/judgePages').then((m) => ({ default: m.JudgeSessionPage })))
 const OrganizerHomePage = lazy(() => import('./pages/competition/competitionPages').then((m) => ({ default: m.OrganizerHomePage })))
 const CompetitionResultsPage = lazy(() => import('./pages/competition/competitionPages').then((m) => ({ default: m.CompetitionResultsPage })))
 const CompetitionRankingsPage = lazy(() => import('./pages/competition/competitionPages').then((m) => ({ default: m.CompetitionRankingsPage })))
@@ -164,6 +165,7 @@ export default function App() {
                 </Route>
                 <Route path="dashboard/judge" element={<CompetitionRouteLayout />}>
                   <Route index element={<JudgeHomePage />} />
+                  <Route path="session/:competitionId/:categoryId" element={<JudgeSessionPage />} />
                 </Route>
                 <Route path="dashboard/organizer" element={<CompetitionRouteLayout />}>
                   <Route index element={<OrganizerHomePage />} />
