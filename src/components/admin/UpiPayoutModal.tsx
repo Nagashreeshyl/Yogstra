@@ -57,32 +57,32 @@ export function UpiPayoutModal({ payout, isOpen, onClose, onMarkPaid }: UpiPayou
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-md">
       <h2 className="font-heading text-lg font-medium mb-1">Pay teacher via UPI</h2>
-      <p className="text-sm text-charcoal/60 mb-4">
+      <p className="text-sm text-muted-foreground mb-4">
         Scan with any UPI app (GPay, PhonePe, Paytm) to pay{' '}
         <strong>₹{amount.toLocaleString('en-IN')}</strong> to {payout.teacherName}.
       </p>
 
-      <div className="rounded-sm border border-border bg-cream-dark p-4 space-y-2 mb-4 text-sm">
+      <div className="rounded-sm border border-border bg-muted p-4 space-y-2 mb-4 text-sm">
         <p>
-          <span className="text-charcoal/50">Teacher:</span> {payout.teacherName}
+          <span className="text-muted-foreground">Teacher:</span> {payout.teacherName}
         </p>
         <p>
-          <span className="text-charcoal/50">UPI ID:</span>{' '}
+          <span className="text-muted-foreground">UPI ID:</span>{' '}
           <span className="font-mono">{upiId}</span>
         </p>
         <p>
-          <span className="text-charcoal/50">Amount:</span>{' '}
+          <span className="text-muted-foreground">Amount:</span>{' '}
           <span className="font-semibold">₹{amount.toLocaleString('en-IN')}</span>
         </p>
         {payout.studentName && (
           <p>
-            <span className="text-charcoal/50">For class:</span> {payout.studentName}
+            <span className="text-muted-foreground">For class:</span> {payout.studentName}
           </p>
         )}
       </div>
 
       <div className="flex flex-col items-center mb-6">
-        {loadingQr && <p className="text-sm text-charcoal/50 py-8">Generating QR code…</p>}
+        {loadingQr && <p className="text-sm text-muted-foreground py-8">Generating QR code…</p>}
         {!loadingQr && qrDataUrl && (
           <img
             src={qrDataUrl}
@@ -91,7 +91,7 @@ export function UpiPayoutModal({ payout, isOpen, onClose, onMarkPaid }: UpiPayou
           />
         )}
         {!loadingQr && !qrDataUrl && !error && (
-          <p className="text-sm text-charcoal/50 py-8">No UPI ID on file for this teacher.</p>
+          <p className="text-sm text-muted-foreground py-8">No UPI ID on file for this teacher.</p>
         )}
       </div>
 
@@ -109,7 +109,7 @@ export function UpiPayoutModal({ payout, isOpen, onClose, onMarkPaid }: UpiPayou
           {markingPaid ? 'Saving…' : 'Mark as Paid'}
         </Button>
       </div>
-      <p className="text-xs text-charcoal/45 mt-3 text-center">
+      <p className="text-xs text-muted-foreground/70 mt-3 text-center">
         Complete the UPI transfer in your app, then click Mark as Paid.
       </p>
     </Modal>

@@ -46,7 +46,7 @@ export function TermsOfServicePage() {
       <LegalDocumentLayout.Section title="Refund policy">
         <p>
           Refunds are governed by our separate{' '}
-          <a href="/refund-policy" className="text-teal hover:underline">Refund Policy</a>.
+          <a href="/refund-policy" className="text-primary hover:underline">Refund Policy</a>.
           In summary: classes not attended may qualify for a refund within 7 days; attended classes are
           not refundable except where required by law or at Yogstra&apos;s discretion for technical failures.
         </p>
@@ -93,7 +93,7 @@ export function TermsOfServicePage() {
         </p>
         <p>
           Questions:{' '}
-          <a href="mailto:support@yogstra.com" className="text-teal hover:underline">support@yogstra.com</a>
+          <a href="mailto:support@yogstra.com" className="text-primary hover:underline">support@yogstra.com</a>
         </p>
       </LegalDocumentLayout.Section>
     </LegalDocumentLayout>

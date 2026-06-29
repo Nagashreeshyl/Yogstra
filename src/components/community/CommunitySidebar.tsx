@@ -37,12 +37,12 @@ export function CommunitySidebar() {
           <Avatar src={user.avatar} name={user.name} size={44} />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold truncate">{user.name}</p>
-            <p className="text-xs text-charcoal/50 capitalize">{user.role}</p>
+            <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
           </div>
           {settingsPath && (
             <Link
               to={settingsPath}
-              className="text-xs font-semibold text-teal hover:text-teal-dark shrink-0"
+              className="text-xs font-semibold text-primary hover:text-primary-dark shrink-0"
             >
               Edit
             </Link>
@@ -53,19 +53,19 @@ export function CommunitySidebar() {
       {isTeacher && (
         <section>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-semibold text-charcoal/70">Students</p>
+            <p className="text-sm font-semibold text-muted-foreground">Students</p>
             <Link
               to="/dashboard/teacher/students"
-              className="text-xs font-semibold text-charcoal/60 hover:text-charcoal"
+              className="text-xs font-semibold text-muted-foreground hover:text-foreground"
             >
               My students
             </Link>
           </div>
 
           {studentsLoading ? (
-            <p className="text-xs text-charcoal/45">Loading...</p>
+            <p className="text-xs text-muted-foreground/70">Loading...</p>
           ) : (students ?? []).length === 0 ? (
-            <p className="text-xs text-charcoal/45 leading-relaxed">
+            <p className="text-xs text-muted-foreground/70 leading-relaxed">
               No students registered yet.
             </p>
           ) : (
@@ -78,11 +78,11 @@ export function CommunitySidebar() {
                   >
                     <Avatar src={student.avatar} name={student.name} size={36} />
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold truncate group-hover:text-teal transition-colors">
+                      <p className="text-sm font-semibold truncate group-hover:text-primary transition-colors">
                         {student.name}
                       </p>
                       {student.phone && (
-                        <p className="text-xs text-charcoal/45 truncate">{student.phone}</p>
+                        <p className="text-xs text-muted-foreground/70 truncate">{student.phone}</p>
                       )}
                     </div>
                   </Link>
@@ -96,8 +96,8 @@ export function CommunitySidebar() {
       {!isTeacher && suggested.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-semibold text-charcoal/70">Suggested for you</p>
-            <Link to="/teachers" className="text-xs font-semibold text-charcoal/60 hover:text-charcoal">
+            <p className="text-sm font-semibold text-muted-foreground">Suggested for you</p>
+            <Link to="/teachers" className="text-xs font-semibold text-muted-foreground hover:text-foreground">
               See all
             </Link>
           </div>
@@ -110,10 +110,10 @@ export function CommunitySidebar() {
                 >
                   <Avatar src={teacher.photo} name={teacher.name} size={36} />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold truncate group-hover:text-charcoal/80">
+                    <p className="text-sm font-semibold truncate group-hover:text-muted-foreground">
                       {teacher.name}
                     </p>
-                    <p className="text-xs text-charcoal/45 truncate">
+                    <p className="text-xs text-muted-foreground/70 truncate">
                       {[teacher.city, teacher.specializations[0]].filter(Boolean).join(' · ')}
                     </p>
                   </div>

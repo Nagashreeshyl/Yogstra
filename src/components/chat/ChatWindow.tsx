@@ -34,10 +34,10 @@ export function ChatWindow({
   }
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-cream border border-border rounded-sm overflow-hidden">
-      <div className="px-4 sm:px-6 py-4 border-b border-border bg-cream shrink-0">
+    <div className="flex flex-col h-full min-h-0 bg-elevated rounded-[16px] border border-border overflow-hidden">
+      <div className="px-4 sm:px-6 py-4 border-b border-border bg-elevated shrink-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <h2 className="font-heading text-lg font-medium text-charcoal">{participantName}</h2>
+          <h2 className="font-heading text-lg font-medium text-foreground">{participantName}</h2>
           {participantVerified && (
             <Badge variant="verified" className="flex items-center gap-1">
               <BadgeCheck size={12} />
@@ -49,9 +49,9 @@ export function ChatWindow({
 
       <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-3 min-h-0">
         {loading ? (
-          <p className="text-sm text-charcoal/50">Loading messages...</p>
+          <p className="text-sm text-muted-foreground">Loading messages...</p>
         ) : messages.length === 0 ? (
-          <p className="text-sm text-charcoal/50 text-center py-8">
+          <p className="text-sm text-muted-foreground text-center py-8">
             No messages yet. Say hello to start the conversation.
           </p>
         ) : (
@@ -62,14 +62,14 @@ export function ChatWindow({
                 key={msg.id}
                 className={`flex flex-col max-w-[85%] sm:max-w-[70%] ${isSent ? 'ml-auto items-end' : 'items-start'}`}
               >
-                <p className="text-[11px] text-charcoal/45 mb-1 px-1">
+                <p className="text-[11px] text-muted-foreground/70 mb-1 px-1">
                   {formatTime(msg.createdAt)}
                 </p>
                 <div
-                  className={`px-4 py-2.5 rounded-sm text-sm leading-relaxed ${
+                  className={`px-4 py-2.5 rounded-[12px] text-sm leading-relaxed ${
                     isSent
-                      ? 'bg-teal text-white'
-                      : 'bg-cream text-charcoal border border-border'
+                      ? 'bg-primary text-white'
+                      : 'bg-elevated text-foreground border border-border'
                   }`}
                 >
                   {msg.content}
@@ -90,19 +90,19 @@ export function ChatWindow({
       {!readOnly && (
         <form
           onSubmit={handleSubmit}
-          className="px-4 sm:px-6 py-4 border-t border-border bg-cream shrink-0 flex gap-2"
+          className="px-4 sm:px-6 py-4 border-t border-border bg-elevated shrink-0 flex gap-2"
         >
           <input
             type="text"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1 min-w-0 px-4 py-2.5 bg-cream border border-border rounded-sm text-charcoal placeholder:text-charcoal/40 focus:outline-none focus:border-teal transition-colors text-sm"
+            className="flex-1 min-w-0 px-4 py-2.5 bg-elevated rounded-[16px] border border-border text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary transition-colors text-sm"
           />
           <button
             type="submit"
             disabled={!draft.trim() || sending}
-            className="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-teal text-white rounded-sm text-sm font-medium hover:bg-teal/90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
+            className="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-white rounded-[12px] text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
             aria-label="Send message"
           >
             <Send size={16} />

@@ -20,6 +20,11 @@ import {
   type ClassSessionStatus,
 } from '../../services/classSessions'
 import { LiveClassRoom } from '../../components/classes/LiveClassRoom'
+import { PageContainer } from '../../components/shell/PageContainer'
+import { PageHeader } from '../../components/shell/PageHeader'
+import { EmptyState } from '../../components/shell/EmptyState'
+import { ErrorState } from '../../components/shell/ErrorState'
+import { DashboardCard } from '../../components/student/dashboard/DashboardCard'
 import { Avatar } from '../../components/ui/Avatar'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
@@ -173,32 +178,22 @@ export function TeacherClassesPage() {
       {infoToast && (
         <Toast message={infoToast} type="info" onClose={() => setInfoToast(null)} />
       )}
-      <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
-        <div className="flex items-center gap-2 mb-2">
-          <Video size={22} className="text-teal" />
-          <h1 className="font-heading text-2xl sm:text-3xl font-medium">Classes</h1>
-        </div>
-        <p className="text-sm text-charcoal/55 mb-8">
-          Your paid students and upcoming session times appear here. When a class starts, you&apos;ll
-          get a one-time notification — rejoin from this page anytime during the 1-hour session.
-        </p>
+      <PageContainer width="wide">
+        <div className="space-y-6">
+          <PageHeader
+            title="Classes"
+            description="Your paid students and upcoming session times appear here. When a class starts, you'll get a one-time notification — rejoin from this page anytime during the 1-hour session."
+          />
 
-        {error && (
-          <p className="text-sm text-red-600 mb-4 border border-red-200 bg-red-50 px-3 py-2 rounded-sm">
-            {error}
-          </p>
-        )}
+          {error && <ErrorState message={error} />}
 
-        {activeHourSession && (
-          <Card className="p-5 mb-6 border-teal/50 bg-teal-soft/50">
-            <div className="flex items-center gap-2 mb-2">
-              <Badge className="bg-teal text-cream">Class in progress</Badge>
-            </div>
-            <p className="font-medium mb-1">
+          {activeHourSession && (
+            <DashboardCard title="Class in progress">
+              <p className="font-medium mb-1">
               {activeHourSession.name}&apos;s session · until{' '}
               {sessionEndsAtLabel(activeHourSession.nextSessionAt!)}
             </p>
-            <p className="text-xs text-charcoal/55 mb-4">
+            <p className="text-xs text-foreground/55 mb-4">
               {liveSessionForActiveHour
                 ? 'Your student may still be in the video room. Rejoin to continue — the call is not closed when the hour ends.'
                 : 'Join before the 1-hour window ends. If you are already in the call, it will stay open after the hour.'}
@@ -215,26 +210,24 @@ export function TeacherClassesPage() {
                   ? 'Rejoin class'
                   : 'Start class'}
             </Button>
-          </Card>
-        )}
+            </DashboardCard>
+          )}
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="xl:col-span-2 space-y-3">
-            <div className="flex items-center gap-2 mb-2">
-              <Users size={16} className="text-teal" />
-              <h2 className="font-medium text-sm">Paid students</h2>
-            </div>
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="xl:col-span-2 space-y-3">
+              <h2 className="font-medium text-sm flex items-center gap-2">
+                <Users size={16} className="text-primary" />
+                Paid students
+              </h2>
 
-            {loading ? (
-              <TeacherTableSkeleton rows={4} />
-            ) : sortedStudents.length === 0 ? (
-              <Card className="p-8 text-center">
-                <p className="text-charcoal/50 text-sm">No paid students yet.</p>
-                <p className="text-charcoal/40 text-xs mt-2">
-                  Students appear here after they complete payment for your class.
-                </p>
-              </Card>
-            ) : (
+              {loading ? (
+                <TeacherTableSkeleton rows={4} />
+              ) : sortedStudents.length === 0 ? (
+                <EmptyState
+                  title="No paid students yet"
+                  description="Students appear here after they complete payment for your class."
+                />
+              ) : (
               sortedStudents.map((student) => {
                 const inHour =
                   student.nextSessionAt && isTeacherClassHour(student.nextSessionAt)
@@ -253,20 +246,20 @@ export function TeacherClassesPage() {
                       <div className="min-w-0">
                         <p className="font-medium truncate">{student.name}</p>
                         {student.nextSessionAt ? (
-                          <p className="text-xs text-charcoal/50 flex items-center gap-1 mt-0.5">
+                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                             <Clock size={12} />
                             Next: {formatTime(student.nextSessionAt)}{' '}
                             {formatSessionDate(student.nextSessionAt)}
                           </p>
                         ) : (
-                          <p className="text-xs text-charcoal/45 mt-0.5">No upcoming session</p>
+                          <p className="text-xs text-muted-foreground/70 mt-0.5">No upcoming session</p>
                         )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {inHour && (
                         <>
-                          <Badge className="bg-teal text-cream">Class time</Badge>
+                          <Badge className="bg-primary text-primary-foreground">Class time</Badge>
                           <Button
                             size="sm"
                             className="gap-1.5"
@@ -294,14 +287,9 @@ export function TeacherClassesPage() {
           </div>
 
           <div>
-            <Card className="p-5 sticky top-6">
-              <h2 className="font-medium text-sm mb-4 flex items-center gap-2">
-                <Clock size={16} className="text-teal" />
-                Next session
-              </h2>
-
+            <DashboardCard title="Next session">
               {!nextSession ? (
-                <p className="text-sm text-charcoal/50">
+                <p className="text-sm text-muted-foreground">
                   When a student has an upcoming class, their name and session time will show here.
                   At the scheduled start time you&apos;ll receive a notification to begin the class.
                 </p>
@@ -311,12 +299,12 @@ export function TeacherClassesPage() {
                     <Avatar src={nextSession.avatar} name={nextSession.name} size={72} />
                     <p className="font-semibold mt-3">{nextSession.name}</p>
                     {nextSession.nextSessionAt && (
-                      <p className="text-xs text-charcoal/50 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         {formatTime(nextSession.nextSessionAt)} ·{' '}
                         {formatSessionDate(nextSession.nextSessionAt)}
                       </p>
                     )}
-                    <Badge className="mt-2 bg-teal text-cream">
+                    <Badge className="mt-2 bg-primary text-primary-foreground">
                       {nextSession.sessionPhase === 'active'
                         ? 'Class time'
                         : nextSession.sessionPhase === 'upcoming'
@@ -327,7 +315,7 @@ export function TeacherClassesPage() {
 
                   {nextSession.sessionPhase === 'active' ? (
                     <>
-                      <p className="text-xs text-charcoal/50 text-center leading-relaxed">
+                      <p className="text-xs text-muted-foreground text-center leading-relaxed">
                         Rejoin available until {sessionEndsAtLabel(nextSession.nextSessionAt!)}.
                       </p>
                       <Button
@@ -346,23 +334,24 @@ export function TeacherClassesPage() {
                       </Button>
                     </>
                   ) : (
-                    <p className="text-xs text-charcoal/50 text-center leading-relaxed">
+                    <p className="text-xs text-muted-foreground text-center leading-relaxed">
                       You&apos;ll get a one-time ring notification at the scheduled start time.
                     </p>
                   )}
 
                   <Link
                     to={studentProfilePath(nextSession.id, 'teacher')}
-                    className="block text-center text-xs text-teal font-medium hover:underline"
+                    className="block text-center text-xs text-primary font-medium hover:underline"
                   >
                     View student profile
                   </Link>
                 </div>
               )}
-            </Card>
+            </DashboardCard>
           </div>
         </div>
-      </div>
+        </div>
+      </PageContainer>
     </>
   )
 }

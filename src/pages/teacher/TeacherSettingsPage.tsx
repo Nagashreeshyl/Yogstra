@@ -7,6 +7,7 @@ import { fetchTeacherById, updateTeacherSettings } from '../../services/teachers
 import { uploadTeacherAvatar, uploadTeacherCover } from '../../services/avatars'
 import { prepareImageForCrop } from '../../utils/imageCrop'
 import { TEACHER_CARD_CROP, TEACHER_CARD_PREVIEW } from '../../utils/panZoomCrop'
+import { PageHeader } from '../../components/shell/PageHeader'
 import { AvatarCropModal } from '../../components/profile/AvatarCropModal'
 import { PanZoomCropModal } from '../../components/profile/PanZoomCropModal'
 import { SettingsSidebar } from '../../components/profile/SettingsSidebar'
@@ -335,8 +336,8 @@ export function TeacherSettingsPage() {
               onClick={() => setSettingsTab(tab)}
               className={`px-4 py-2.5 text-sm capitalize cursor-pointer border-b-2 -mb-px transition-colors ${
                 settingsTab === tab
-                  ? 'border-teal text-charcoal font-medium'
-                  : 'border-transparent text-charcoal/50 hover:text-charcoal'
+                  ? 'border-primary text-foreground font-medium'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
               }`}
             >
               {tab}
@@ -349,9 +350,9 @@ export function TeacherSettingsPage() {
         <div className="mb-6">
           <TeacherAcademyInvitesSection />
         </div>
-        <h1 className="text-xl font-semibold mb-2">Edit profile</h1>
+        <PageHeader title="Edit profile" description="Complete your profile to appear in Find Teachers." />
         {profilePercent < 100 && (
-          <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-sm px-3 py-2 mb-6">
+          <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-[12px] px-3 py-2 mb-6">
             Complete every field below and set class pricing to reach 100%. Until then, you
             won&apos;t appear in Find Teachers.
           </p>
@@ -377,11 +378,11 @@ export function TeacherSettingsPage() {
               type="button"
               onClick={() => avatarInputRef.current?.click()}
               disabled={uploading}
-              className="text-sm font-semibold text-teal hover:text-teal-dark mt-1 cursor-pointer disabled:opacity-60"
+              className="text-sm font-semibold text-primary hover:text-primary-dark mt-1 cursor-pointer disabled:opacity-60"
             >
               Change profile photo
             </button>
-            <p className="text-xs text-charcoal/45 mt-1">Used in sidebar, messages &amp; comments</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">Used in sidebar, messages &amp; comments</p>
           </div>
           <input
             ref={avatarInputRef}
@@ -397,13 +398,13 @@ export function TeacherSettingsPage() {
           <div className="flex items-start justify-between gap-4 mb-4">
             <div>
               <p className="text-sm font-semibold">Teacher card photo</p>
-              <p className="text-xs text-charcoal/45 mt-0.5">Shown on Find Teachers</p>
+              <p className="text-xs text-muted-foreground/70 mt-0.5">Shown on Find Teachers</p>
             </div>
             <button
               type="button"
               onClick={() => coverInputRef.current?.click()}
               disabled={uploading}
-              className="text-sm font-semibold text-teal hover:text-teal-dark shrink-0 cursor-pointer disabled:opacity-60"
+              className="text-sm font-semibold text-primary hover:text-primary-dark shrink-0 cursor-pointer disabled:opacity-60"
             >
               Change
             </button>
@@ -510,13 +511,13 @@ export function TeacherSettingsPage() {
                 {specializations.map((spec) => (
                   <span
                     key={spec}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-teal-soft text-sm rounded-sm"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-sm rounded-sm"
                   >
                     {spec}
                     <button
                       type="button"
                       onClick={() => removeSpec(spec)}
-                      className="text-charcoal/50 hover:text-charcoal cursor-pointer"
+                      className="text-muted-foreground hover:text-foreground cursor-pointer"
                     >
                       ×
                     </button>
@@ -535,11 +536,10 @@ export function TeacherSettingsPage() {
 
         {settingsTab === 'pricing' && (
           <>
-            <h1 className="text-xl font-semibold mb-2">Class pricing</h1>
-            <p className="text-sm text-charcoal/55 mb-2">
-              Set fees for online classes. Students see these when booking from chat.
-            </p>
-            <p className="text-sm text-charcoal/45 mb-6">All four fees are required for a complete profile.</p>
+            <PageHeader
+              title="Class pricing"
+              description="Set fees for online classes. Students see these when booking from chat. All four fees are required for a complete profile."
+            />
             <form
               className="space-y-6 max-w-lg"
               onSubmit={(e) => {
@@ -602,10 +602,10 @@ export function TeacherSettingsPage() {
 
         {settingsTab === 'payouts' && (
           <>
-            <h1 className="text-xl font-semibold mb-2">Payouts</h1>
-            <p className="text-sm text-charcoal/55 mb-6">
-              Add your UPI ID so admin can pay you when students book your classes.
-            </p>
+            <PageHeader
+              title="Payouts"
+              description="Add your UPI ID so admin can pay you when students book your classes."
+            />
             <TeacherPayoutSettings />
             <div className="mt-8">
               <NotificationPreferencesSection />

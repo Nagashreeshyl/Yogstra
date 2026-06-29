@@ -137,13 +137,13 @@ export function LiveClassRoom({
 
   if (error && callPhase !== 'confirm_end') {
     return (
-      <div className="fixed inset-0 z-[100] bg-charcoal flex items-center justify-center p-6">
+      <div className="fixed inset-0 z-[100] bg-sidebar flex items-center justify-center p-6">
         <div className="max-w-md text-center">
           <p className="text-red-300 mb-4">{error}</p>
           <button
             type="button"
             onClick={onLeave}
-            className="px-4 py-2 bg-cream text-charcoal rounded-sm font-medium cursor-pointer"
+            className="px-4 py-2 bg-elevated text-foreground rounded-sm font-medium cursor-pointer"
           >
             Go back
           </button>
@@ -153,32 +153,32 @@ export function LiveClassRoom({
   }
 
   return (
-    <div className="fixed inset-0 z-[100] bg-charcoal pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+    <div className="fixed inset-0 z-[100] bg-sidebar pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
       {callPhase === 'confirm_end' && role === 'teacher' && (
         <ClassSessionStatusWatcher sessionId={session.id} onTerminalStatus={handleRemoteEnd} />
       )}
 
       {callPhase === 'loading' && (
         <div className="flex h-full items-center justify-center">
-          <Loader2 className="animate-spin text-teal" size={40} />
+          <Loader2 className="animate-spin text-primary" size={40} />
         </div>
       )}
 
       {callPhase === 'confirm_end' && role === 'teacher' && (
         <div className="flex h-full items-center justify-center p-6">
-          <div className="relative w-full max-w-md rounded-sm border border-teal/40 bg-charcoal shadow-2xl p-8 text-center">
+          <div className="relative w-full max-w-md rounded-sm border border-primary/40 bg-sidebar shadow-2xl p-8 text-center">
             <button
               type="button"
               onClick={handleTeacherBackToClasses}
-              className="absolute top-3 right-3 p-1.5 text-cream/50 hover:text-cream cursor-pointer rounded-sm"
+              className="absolute top-3 right-3 p-1.5 text-primary-foreground/50 hover:text-primary-foreground cursor-pointer rounded-sm"
               aria-label="Close"
             >
               <X size={20} />
             </button>
-            <h2 className="text-cream text-xl font-semibold mb-2">Is the class over?</h2>
-            <p className="text-cream/55 text-sm mb-6">
+            <h2 className="text-primary-foreground text-xl font-semibold mb-2">Is the class over?</h2>
+            <p className="text-primary-foreground/55 text-sm mb-6">
               {session.studentName ?? 'Your student'} will stay in the call until you confirm.
-              Choose <strong className="text-cream font-medium">Yes</strong> only when the class
+              Choose <strong className="text-primary-foreground font-medium">Yes</strong> only when the class
               is finished.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">

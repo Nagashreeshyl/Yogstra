@@ -2,6 +2,7 @@ import { useAsyncData } from '../../hooks/useAsyncData'
 import { fetchAdminReportStats } from '../../services/admin'
 import { StatCard } from '../../components/admin/AdminTable'
 import { AdminDashboardSkeleton } from '../../components/ui/Skeleton'
+import { PageHeader } from '../../components/shell/PageHeader'
 
 export function AdminReportsPage() {
   const { data: stats, loading, error } = useAsyncData(() => fetchAdminReportStats())
@@ -10,9 +11,10 @@ export function AdminReportsPage() {
 
   if (error || !stats) {
     return (
-      <div className="p-4 sm:p-6 lg:p-8">
-        <h1 className="font-heading text-3xl font-medium mb-8">Reports</h1>
-        <p className="text-sm text-red-600 border border-red-200 bg-red-50 px-4 py-3 rounded-sm">
+      <div className="space-y-6">
+      <PageHeader title="Reports" description="User-submitted chat reports." />
+
+      <p className="text-sm text-red-600 border border-red-200 bg-red-50 px-4 py-3 rounded-sm">
           Unable to load report data. Please refresh the page.
         </p>
       </div>
@@ -22,7 +24,7 @@ export function AdminReportsPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <h1 className="font-heading text-3xl font-medium mb-2">Reports</h1>
-      <p className="text-charcoal/60 mb-8">
+      <p className="text-muted-foreground mb-8">
         Platform aggregates from bookings, payouts, and competition registrations.
       </p>
 

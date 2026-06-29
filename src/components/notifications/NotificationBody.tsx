@@ -24,7 +24,7 @@ export function NotificationBody({
       <Link
         key={`${studentId}-${match.index}`}
         to={studentProfilePath(studentId, viewerRole)}
-        className="font-semibold text-teal underline underline-offset-2 hover:text-teal-dark"
+        className="font-semibold text-primary underline underline-offset-2 hover:text-primary-dark"
       >
         {name}
       </Link>,

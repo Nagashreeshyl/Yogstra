@@ -86,9 +86,9 @@ export function EmptyChatPanel({
   }
 
   return (
-    <div className="flex flex-col h-full min-h-0 flex-1 bg-cream-dark md:border md:border-border md:rounded-sm overflow-hidden">
+    <div className="flex flex-col h-full min-h-0 flex-1 bg-muted md:border md:border-border md:rounded-[16px] overflow-hidden">
       <div
-        className={`px-4 py-3 border-b border-cream/10 bg-charcoal shrink-0 flex items-center gap-2 min-w-0 ${
+        className={`px-4 py-3 border-b border-cream/10 bg-sidebar shrink-0 flex items-center gap-2 min-w-0 ${
           onBack ? 'pt-[max(0.75rem,env(safe-area-inset-top))]' : ''
         }`}
       >
@@ -96,7 +96,7 @@ export function EmptyChatPanel({
           <button
             type="button"
             onClick={onBack}
-            className="md:hidden p-1.5 -ml-1 text-cream/70 hover:text-cream rounded-sm cursor-pointer shrink-0"
+            className="md:hidden p-1.5 -ml-1 text-primary-foreground/70 hover:text-primary-foreground rounded-[12px] cursor-pointer shrink-0"
             aria-label="Back to messages"
           >
             <ArrowLeft size={20} />
@@ -105,12 +105,12 @@ export function EmptyChatPanel({
         <button
           type="button"
           onClick={() => navigate(profilePath)}
-          className="flex items-center gap-3 min-w-0 flex-1 text-left cursor-pointer rounded-sm hover:bg-cream/5 transition-colors -m-1 p-1"
+          className="flex items-center gap-3 min-w-0 flex-1 text-left cursor-pointer rounded-sm hover:bg-elevated/5 transition-colors -m-1 p-1"
         >
           <Avatar src={participantAvatar} name={participantName} size={40} />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold truncate text-cream">{participantName}</h2>
+              <h2 className="text-sm font-semibold truncate text-primary-foreground">{participantName}</h2>
               {participantVerified && (
                 <Badge variant="verified" className="flex items-center gap-1 shrink-0">
                   <BadgeCheck size={10} />
@@ -118,22 +118,22 @@ export function EmptyChatPanel({
                 </Badge>
               )}
             </div>
-            <p className="text-xs text-cream/45">Tap to view profile</p>
+            <p className="text-xs text-primary-foreground/45">Tap to view profile</p>
           </div>
         </button>
       </div>
 
-      <div className="flex-1 min-h-0 bg-cream-dark" />
+      <div className="flex-1 min-h-0 bg-muted" />
 
       {error && (
-        <p className="px-4 py-2 text-xs text-red-600 border-t border-border bg-cream shrink-0">
+        <p className="px-4 py-2 text-xs text-red-600 border-t border-border bg-elevated shrink-0">
           {error}
         </p>
       )}
 
       <form
         onSubmit={handleSubmit}
-        className="px-3 pt-2.5 border-t border-border bg-cream-dark shrink-0 flex items-center gap-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:pb-2.5"
+        className="px-3 pt-2.5 border-t border-border bg-muted shrink-0 flex items-center gap-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:pb-2.5"
       >
         <input
           type="text"
@@ -141,12 +141,12 @@ export function EmptyChatPanel({
           onChange={(e) => setDraft(e.target.value)}
           placeholder="Type a message"
           disabled={sending}
-          className="flex-1 min-w-0 px-4 py-2.5 bg-charcoal border border-cream/10 rounded-full text-cream placeholder:text-cream/40 focus:outline-none focus:border-teal transition-colors text-sm disabled:opacity-60"
+          className="flex-1 min-w-0 px-4 py-2.5 bg-sidebar border border-cream/10 rounded-full text-primary-foreground placeholder:text-primary-foreground/40 focus:outline-none focus:border-primary transition-colors text-sm disabled:opacity-60"
         />
         <button
           type="submit"
           disabled={!draft.trim() || sending}
-          className="shrink-0 w-10 h-10 inline-flex items-center justify-center bg-teal text-cream rounded-full hover:bg-teal-dark disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
+          className="shrink-0 w-10 h-10 inline-flex items-center justify-center bg-primary text-primary-foreground rounded-full hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
           aria-label="Send message"
         >
           <Send size={18} />

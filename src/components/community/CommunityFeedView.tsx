@@ -8,6 +8,7 @@ import { CommunityFeed } from './CommunityFeed'
 import { CommunitySidebar } from './CommunitySidebar'
 import { CreatePostModal } from './CreatePostModal'
 import { FeedPageLayout } from '../layout/FeedPageLayout'
+import { EmptyState } from '../shell/EmptyState'
 import { PostFeedSkeleton } from '../ui/Skeleton'
 
 export function CommunityFeedView() {
@@ -41,7 +42,7 @@ export function CommunityFeedView() {
           <button
             type="button"
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-1.5 text-sm font-semibold text-teal hover:text-teal-dark cursor-pointer"
+            className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary-dark cursor-pointer"
           >
             <Plus size={18} strokeWidth={2.5} />
             Create
@@ -52,21 +53,23 @@ export function CommunityFeedView() {
       {loading ? (
         <PostFeedSkeleton count={3} />
       ) : (posts ?? []).length === 0 ? (
-        <div className="border border-border/70 rounded-sm py-16 text-center">
-          <p className="text-sm font-semibold text-charcoal/70">No posts yet</p>
-          <p className="text-sm text-charcoal/45 mt-1">
-            {isStudent ? 'Share your yoga journey with the community.' : 'Posts from students will appear here.'}
-          </p>
-          {isStudent && (
-            <button
-              type="button"
-              onClick={() => setShowCreateModal(true)}
-              className="mt-4 text-sm font-semibold text-teal hover:text-teal-dark cursor-pointer"
-            >
-              Create your first post
-            </button>
-          )}
-        </div>
+        <EmptyState
+          title="No posts yet"
+          description={
+            isStudent ? 'Share your yoga journey with the community.' : 'Posts from students will appear here.'
+          }
+          action={
+            isStudent ? (
+              <button
+                type="button"
+                onClick={() => setShowCreateModal(true)}
+                className="text-sm font-semibold text-primary hover:text-primary-dark cursor-pointer"
+              >
+                Create your first post
+              </button>
+            ) : undefined
+          }
+        />
       ) : (
         <CommunityFeed
           posts={posts ?? []}

@@ -34,15 +34,15 @@ export function CompetitionsTeaser({ competitions, loading, error }: Competition
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 animate-pulse rounded-sm border border-border bg-cream-dark" />
+            <div key={i} className="h-20 animate-pulse rounded-[12px] border border-border bg-muted" />
           ))}
         </div>
       ) : error ? (
-        <p className="text-sm text-charcoal/60 border border-border rounded-sm px-4 py-3 bg-cream">
+        <p className="text-sm text-muted-foreground rounded-[16px] border border-border px-4 py-3 bg-elevated">
           Competitions unavailable right now.
         </p>
       ) : competitions.length === 0 ? (
-        <p className="text-sm text-charcoal/60 border border-border rounded-sm px-4 py-3 bg-cream">
+        <p className="text-sm text-muted-foreground rounded-[16px] border border-border px-4 py-3 bg-elevated">
           No upcoming competitions yet.
         </p>
       ) : (
@@ -51,10 +51,10 @@ export function CompetitionsTeaser({ competitions, loading, error }: Competition
             <Link
               key={comp.id}
               to={`/competitions/${comp.slug}`}
-              className="block rounded-sm border border-border bg-cream p-4 transition hover:border-teal/40 hover:bg-cream-dark"
+              className="block rounded-sm border border-border bg-elevated p-4 transition hover:border-primary/40 hover:bg-muted"
             >
               <h3 className="font-medium text-sm mb-2">{comp.name}</h3>
-              <div className="flex items-center gap-3 text-xs text-charcoal/50">
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
                 {(comp.city || comp.state) && (
                   <span className="flex items-center gap-1">
                     <MapPin size={12} /> {[comp.city, comp.state].filter(Boolean).join(', ')}
@@ -64,7 +64,7 @@ export function CompetitionsTeaser({ competitions, loading, error }: Competition
                   <Calendar size={12} /> {formatDate(comp.startDate)}
                 </span>
                 {comp.registrationOpen && (
-                  <span className="rounded-full bg-teal/10 px-2 py-0.5 text-teal">Open</span>
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-primary">Open</span>
                 )}
               </div>
             </Link>

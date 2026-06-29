@@ -65,7 +65,7 @@ export function PrivacyPolicyPage() {
         </ul>
         <p>
           To exercise these rights, contact us at{' '}
-          <a href="mailto:support@yogstra.com" className="text-teal hover:underline">support@yogstra.com</a>.
+          <a href="mailto:support@yogstra.com" className="text-primary hover:underline">support@yogstra.com</a>.
           We will respond within a reasonable timeframe as required by law.
         </p>
       </LegalDocumentLayout.Section>
@@ -93,7 +93,7 @@ export function PrivacyPolicyPage() {
         </p>
         <p>
           Email:{' '}
-          <a href="mailto:support@yogstra.com" className="text-teal hover:underline">support@yogstra.com</a>
+          <a href="mailto:support@yogstra.com" className="text-primary hover:underline">support@yogstra.com</a>
           <br />
           Yogstra, Karnataka, India
         </p>

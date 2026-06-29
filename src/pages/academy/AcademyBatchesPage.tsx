@@ -143,14 +143,14 @@ export function AcademyBatchesPage() {
               onChange={(e) => setCapacity(e.target.value)}
             />
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="difficulty" className="text-sm font-medium text-charcoal">
+              <label htmlFor="difficulty" className="text-sm font-medium text-foreground">
                 Difficulty
               </label>
               <select
                 id="difficulty"
                 value={difficulty}
                 onChange={(e) => setDifficulty(e.target.value as BatchDifficulty | '')}
-                className="w-full px-4 py-2.5 text-sm bg-cream border border-border rounded-sm focus:outline-none focus:border-teal"
+                className="w-full px-4 py-2.5 text-sm bg-elevated rounded-[16px] border border-border focus:outline-none focus:border-primary"
               >
                 <option value="">Any</option>
                 <option value="beginner">Beginner</option>
@@ -171,14 +171,14 @@ export function AcademyBatchesPage() {
         >
           <h2 className="font-heading text-lg font-semibold">Enroll student</h2>
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="enroll-batch" className="text-sm font-medium text-charcoal">
+            <label htmlFor="enroll-batch" className="text-sm font-medium text-foreground">
               Batch
             </label>
             <select
               id="enroll-batch"
               value={enrollBatchId}
               onChange={(e) => setEnrollBatchId(e.target.value)}
-              className="w-full px-4 py-2.5 text-sm bg-cream border border-border rounded-sm focus:outline-none focus:border-teal"
+              className="w-full px-4 py-2.5 text-sm bg-elevated rounded-[16px] border border-border focus:outline-none focus:border-primary"
               required
             >
               <option value="">Select batch</option>
@@ -197,7 +197,7 @@ export function AcademyBatchesPage() {
             required
           />
           {enrollError && <p className="text-sm text-red-600">{enrollError}</p>}
-          {enrollSuccess && <p className="text-sm text-teal">{enrollSuccess}</p>}
+          {enrollSuccess && <p className="text-sm text-primary">{enrollSuccess}</p>}
           <Button type="submit" disabled={enrolling || !enrollBatchId || !enrollStudentId.trim()}>
             {enrolling ? 'Enrolling…' : 'Enroll student'}
           </Button>
@@ -223,9 +223,9 @@ export function AcademyBatchesPage() {
               <td className="px-4 py-3 capitalize">{batch.difficulty ?? '—'}</td>
               <td className="px-4 py-3">{batch.capacity ?? '—'}</td>
               <td className="px-4 py-3">
-                <Badge variant={batch.status === 'active' ? 'teal' : 'default'}>{batch.status}</Badge>
+                <Badge variant={batch.status === 'active' ? 'primary' : 'default'}>{batch.status}</Badge>
               </td>
-              <td className="px-4 py-3 text-charcoal/70">
+              <td className="px-4 py-3 text-muted-foreground">
                 {new Date(batch.updatedAt).toLocaleDateString('en-IN')}
               </td>
             </tr>

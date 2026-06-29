@@ -18,7 +18,7 @@ export function RefundPolicyPage() {
         </p>
         <p>
           To request a refund, email{' '}
-          <a href="mailto:support@yogstra.com" className="text-teal hover:underline">support@yogstra.com</a>{' '}
+          <a href="mailto:support@yogstra.com" className="text-primary hover:underline">support@yogstra.com</a>{' '}
           with your registered email, teacher name, booking date, and Razorpay payment reference.
         </p>
       </LegalDocumentLayout.Section>
@@ -49,7 +49,7 @@ export function RefundPolicyPage() {
       <LegalDocumentLayout.Section title="Contact">
         <p>
           Refund requests and questions:{' '}
-          <a href="mailto:support@yogstra.com" className="text-teal hover:underline">support@yogstra.com</a>
+          <a href="mailto:support@yogstra.com" className="text-primary hover:underline">support@yogstra.com</a>
         </p>
       </LegalDocumentLayout.Section>
     </LegalDocumentLayout>

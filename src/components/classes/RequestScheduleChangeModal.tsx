@@ -120,24 +120,24 @@ export function RequestScheduleChangeModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className="flex items-center gap-2 mb-2">
-        <CalendarClock size={20} className="text-teal" />
+        <CalendarClock size={20} className="text-primary" />
         <h2 className="font-heading text-xl font-medium">Change class timing</h2>
       </div>
-      <p className="text-sm text-charcoal/55 mb-6">
+      <p className="text-sm text-foreground/55 mb-6">
         Request a new time with {teacherName}. Your teacher must approve before it takes effect.
       </p>
 
       {loading ? (
-        <p className="text-sm text-charcoal/50">Loading your schedule…</p>
+        <p className="text-sm text-muted-foreground">Loading your schedule…</p>
       ) : hasPending ? (
-        <div className="border border-amber-200 bg-amber-50 rounded-sm px-4 py-3 text-sm text-amber-900">
+        <div className="border border-amber-200 bg-amber-50 rounded-[12px] px-4 py-3 text-sm text-amber-900">
           You already have a pending timing change request for this coach. Wait for your teacher
           to respond before submitting another.
         </div>
       ) : (
         <div className="space-y-4">
           {planStartDate && planEndDate && (
-            <div className="text-xs text-charcoal/50 border border-border rounded-sm px-3 py-2 bg-surface-muted/30">
+            <div className="text-xs text-muted-foreground rounded-[16px] border border-border px-3 py-2 bg-muted/30">
               Your coaching plan runs{' '}
               {new Date(`${planStartDate}T12:00:00`).toLocaleDateString('en-IN', {
                 day: 'numeric',
@@ -154,8 +154,8 @@ export function RequestScheduleChangeModal({
           )}
 
           {currentScheduledAt && (
-            <div className="text-sm border border-border rounded-sm px-3 py-2.5 bg-surface-muted/50">
-              <span className="text-charcoal/50">Current next session: </span>
+            <div className="text-sm rounded-[16px] border border-border px-3 py-2.5 bg-muted/50">
+              <span className="text-muted-foreground">Current next session: </span>
               <span className="font-medium">
                 {formatTime(currentScheduledAt)}{' '}
                 {new Date(currentScheduledAt).toLocaleDateString('en-IN', {
@@ -202,7 +202,7 @@ export function RequestScheduleChangeModal({
             </Select>
           </div>
 
-          <p className="text-xs text-charcoal/45 -mt-1">
+          <p className="text-xs text-muted-foreground/70 -mt-1">
             {scope === 'permanent'
               ? 'Permanent changes apply to all remaining sessions until your plan ends.'
               : `This updates your class time for ${SCHEDULE_CHANGE_SCOPE_LABELS[scope].toLowerCase()} starting on the selected date.`}

@@ -4,6 +4,8 @@ import { useLiveDataRefresh } from '../../hooks/useLiveDataRefresh'
 import { fetchPayouts, markPayoutPaid } from '../../services/admin'
 import { AdminTable } from '../../components/admin/AdminTable'
 import { UpiPayoutModal } from '../../components/admin/UpiPayoutModal'
+import { EmptyState } from '../../components/shell/EmptyState'
+import { PageHeader } from '../../components/shell/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { TeacherTableSkeleton } from '../../components/ui/Skeleton'
@@ -22,12 +24,8 @@ export function AdminPayoutsPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <h1 className="font-heading text-3xl font-medium mb-2">Payouts</h1>
-      <p className="text-sm text-charcoal/50 mb-8">
-        Pay teachers via UPI using their saved UPI ID, or mark payouts paid after Razorpay Route
-        transfers.
-      </p>
+    <div className="space-y-6">
+      <PageHeader title="Payouts" description="Teacher payout ledger and transfers." />
 
       {loading ? (
         <TeacherTableSkeleton rows={4} />
@@ -48,31 +46,34 @@ export function AdminPayoutsPage() {
           >
             {(payouts ?? []).length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-4 py-3 text-sm text-charcoal/50">
-                  No payouts yet. They appear when a student completes payment.
+                <td colSpan={9}>
+                  <EmptyState
+                    title="No payouts yet"
+                    description="They appear when a student completes payment."
+                  />
                 </td>
               </tr>
             ) : (
               payouts!.map((p) => (
                 <tr key={p.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-3 font-medium">{p.teacherName}</td>
-                  <td className="px-4 py-3 font-mono text-sm text-charcoal/70">
+                  <td className="px-4 py-3 font-mono text-sm text-muted-foreground">
                     {p.teacherUpiId ?? '—'}
                   </td>
                   <td className="px-4 py-3">{p.studentName ?? '—'}</td>
                   <td className="px-4 py-3">
                     ₹{(p.grossAmount ?? p.amount).toLocaleString('en-IN')}
                   </td>
-                  <td className="px-4 py-3 text-charcoal/60">
+                  <td className="px-4 py-3 text-muted-foreground">
                     ₹{(p.commissionAmount ?? 0).toLocaleString('en-IN')}
                   </td>
                   <td className="px-4 py-3 font-medium">
                     ₹{(p.teacherAmount ?? p.amount).toLocaleString('en-IN')}
                   </td>
                   <td className="px-4 py-3">
-                    <Badge variant={p.status === 'Paid' ? 'verified' : 'teal'}>{p.status}</Badge>
+                    <Badge variant={p.status === 'Paid' ? 'verified' : 'primary'}>{p.status}</Badge>
                   </td>
-                  <td className="px-4 py-3 text-charcoal/60">
+                  <td className="px-4 py-3 text-muted-foreground">
                     {p.createdAt ? formatRelativeDate(p.createdAt) : '—'}
                   </td>
                   <td className="px-4 py-3">

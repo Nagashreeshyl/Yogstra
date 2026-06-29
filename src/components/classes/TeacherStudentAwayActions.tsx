@@ -33,14 +33,14 @@ export function TeacherStudentAwayActions({
 
   return (
     <div className="absolute inset-x-0 top-20 z-[110] flex justify-center px-4 pointer-events-none">
-      <div className="pointer-events-auto w-full max-w-md rounded-sm border border-amber-400/40 bg-charcoal/95 px-4 py-4 shadow-lg">
+      <div className="pointer-events-auto w-full max-w-md rounded-sm border border-amber-400/40 bg-sidebar/95 px-4 py-4 shadow-lg">
         <div className="flex items-start gap-3">
           <UserX size={20} className="text-amber-300 shrink-0 mt-0.5" />
           <div className="min-w-0 flex-1">
-            <p className="text-cream text-sm font-medium">
+            <p className="text-primary-foreground text-sm font-medium">
               {studentName ?? 'Student'} left the call
             </p>
-            <p className="text-cream/55 text-xs mt-1">
+            <p className="text-primary-foreground/55 text-xs mt-1">
               You can stay in the room and ring them again to rejoin.
             </p>
             {error && <p className="text-red-300 text-xs mt-2">{error}</p>}

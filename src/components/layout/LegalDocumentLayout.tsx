@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react'
+import { PageContainer } from '../shell/PageContainer'
+import { PageHeader } from '../shell/PageHeader'
 
 interface LegalDocumentLayoutProps {
   title: string
@@ -8,20 +10,25 @@ interface LegalDocumentLayoutProps {
 
 export function LegalDocumentLayout({ title, lastUpdated, children }: LegalDocumentLayoutProps) {
   return (
-    <article className="flex-1 p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto w-full">
-      <header className="mb-8 pb-6 border-b border-border">
-        <h1 className="font-heading text-2xl sm:text-3xl font-medium text-charcoal mb-2">{title}</h1>
-        <p className="text-sm text-charcoal/50">Last updated: {lastUpdated}</p>
-      </header>
-      <div className="prose-legal space-y-6 text-sm text-charcoal/80 leading-relaxed pb-8">{children}</div>
-    </article>
+    <PageContainer width="narrow">
+      <article>
+        <PageHeader
+          title={title}
+          description={`Last updated: ${lastUpdated}`}
+          className="mb-8 pb-6 border-b border-border"
+        />
+        <div className="prose-legal space-y-6 text-sm text-muted-foreground leading-relaxed pb-8">
+          {children}
+        </div>
+      </article>
+    </PageContainer>
   )
 }
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section>
-      <h2 className="font-heading text-lg font-medium text-charcoal mb-3">{title}</h2>
+      <h2 className="font-heading text-lg font-semibold text-foreground mb-3">{title}</h2>
       <div className="space-y-3">{children}</div>
     </section>
   )

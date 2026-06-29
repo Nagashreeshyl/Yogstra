@@ -6,6 +6,7 @@ import { fetchStudents } from '../../services/students'
 import { fetchAllTeachersAdmin } from '../../services/teachers'
 import { fetchBookingsByStudent } from '../../services/bookings'
 import { AdminTable, AdminPagination } from '../../components/admin/AdminTable'
+import { PageHeader } from '../../components/shell/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Modal } from '../../components/ui/Modal'
@@ -45,8 +46,8 @@ export function AdminStudentsPage() {
   const getTeacherName = (id?: string) => (teachers ?? []).find((t) => t.id === id)?.name || '—'
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <h1 className="font-heading text-3xl font-medium mb-8">Students</h1>
+    <div className="space-y-6">
+      <PageHeader title="Students" description="View and manage student accounts." />
 
       {loading ? (
         <TeacherTableSkeleton rows={5} />
@@ -60,8 +61,8 @@ export function AdminStudentsPage() {
             {paginated.map((s) => (
               <tr key={s.id} className="border-b border-border last:border-0">
                 <td className="px-4 py-3 font-medium">{s.name}</td>
-                <td className="px-4 py-3 text-charcoal/70">{s.email || '—'}</td>
-                <td className="px-4 py-3 text-charcoal/70">{s.phone}</td>
+                <td className="px-4 py-3 text-muted-foreground">{s.email || '—'}</td>
+                <td className="px-4 py-3 text-muted-foreground">{s.phone}</td>
                 <td className="px-4 py-3">{s.joinedDate}</td>
                 <td className="px-4 py-3">{getTeacherName(s.activeTeacherId)}</td>
                 <td className="px-4 py-3">{s.totalSessions}</td>
@@ -93,23 +94,23 @@ export function AdminStudentsPage() {
         className="max-w-lg"
       >
         <h2 className="font-heading text-lg font-medium mb-1">Bookings</h2>
-        <p className="text-sm text-charcoal/50 mb-4">{bookingsStudent?.name}</p>
+        <p className="text-sm text-muted-foreground mb-4">{bookingsStudent?.name}</p>
 
         {bookingsLoading ? (
           <TeacherTableSkeleton rows={3} />
         ) : (studentBookings ?? []).length === 0 ? (
-          <p className="text-sm text-charcoal/50">No bookings for this student.</p>
+          <p className="text-sm text-muted-foreground">No bookings for this student.</p>
         ) : (
           <div className="space-y-3 max-h-80 overflow-y-auto">
             {(studentBookings ?? []).map((b) => (
-              <div key={b.id} className="border border-border rounded-sm p-3 bg-cream">
+              <div key={b.id} className="rounded-[16px] border border-border p-3 bg-elevated">
                 <p className="text-sm font-medium">{b.teacherName}</p>
-                <p className="text-xs text-charcoal/50 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Started {b.startDate} · ₹{b.monthlyFee.toLocaleString('en-IN')}/mo
                 </p>
                 <div className="flex gap-2 mt-2">
                   <Badge>{b.status}</Badge>
-                  <Badge variant={b.paymentStatus === 'Paid' ? 'verified' : 'teal'}>{b.paymentStatus}</Badge>
+                  <Badge variant={b.paymentStatus === 'Paid' ? 'verified' : 'primary'}>{b.paymentStatus}</Badge>
                 </div>
               </div>
             ))}

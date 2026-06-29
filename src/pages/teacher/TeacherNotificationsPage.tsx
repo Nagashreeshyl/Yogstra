@@ -14,6 +14,10 @@ import {
   approveScheduleChangeRequest,
   rejectScheduleChangeRequest,
 } from '../../services/scheduleChangeRequests'
+import { PageContainer } from '../../components/shell/PageContainer'
+import { PageHeader } from '../../components/shell/PageHeader'
+import { EmptyState } from '../../components/shell/EmptyState'
+import { ErrorState } from '../../components/shell/ErrorState'
 import { Button } from '../../components/ui/Button'
 import { NotificationBody } from '../../components/notifications/NotificationBody'
 import { NotificationsListSkeleton } from '../../components/ui/Skeleton'
@@ -85,53 +89,48 @@ export function TeacherNotificationsPage() {
   }
 
   return (
-    <div className="p-4 sm:p-8 max-w-3xl">
-      <div className="flex items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-2">
-          <Bell size={22} className="text-teal" />
-          <h1 className="text-xl font-semibold">Notifications</h1>
-          {unread > 0 && (
-            <span className="text-xs font-semibold text-cream bg-teal px-2 py-0.5 rounded-full">
-              {unread} new
-            </span>
-          )}
-        </div>
-        {unread > 0 && (
-          <Button variant="secondary" size="sm" onClick={() => void handleMarkAllRead()}>
-            <CheckCheck size={14} className="mr-1.5" />
-            Mark all read
-          </Button>
-        )}
-      </div>
+    <PageContainer width="narrow">
+      <div className="space-y-6">
+        <PageHeader
+          title="Notifications"
+          description={
+            unread > 0
+              ? `${unread} unread notification${unread === 1 ? '' : 's'}`
+              : 'New class bookings appear here after students complete payment.'
+          }
+          actions={
+            unread > 0 ? (
+              <Button variant="secondary" size="sm" onClick={() => void handleMarkAllRead()}>
+                <CheckCheck size={14} className="mr-1.5" />
+                Mark all read
+              </Button>
+            ) : undefined
+          }
+        />
 
-      {error && (
-        <p className="text-sm text-red-600 mb-4 border border-red-200 bg-red-50 px-3 py-2 rounded-sm">
-          {error}
-        </p>
-      )}
+        {error && <ErrorState message={error} onRetry={() => void refetch(true)} />}
 
-      {!notifications?.length ? (
-        <div className="border border-border rounded-sm bg-cream px-6 py-12 text-center">
-          <p className="text-charcoal/50 text-sm">No notifications yet.</p>
-          <p className="text-charcoal/40 text-xs mt-2">
-            New class bookings appear here after students complete payment.
-          </p>
-        </div>
-      ) : (
+        {!notifications?.length ? (
+          <EmptyState
+            icon={<Bell size={24} />}
+            title="No notifications yet"
+            description="New class bookings appear here after students complete payment."
+          />
+        ) : (
         <ul className="space-y-3">
           {(notifications ?? []).map((n) => (
             <li
               key={n.id}
-              className={`border rounded-sm p-4 transition-colors ${
+              className={`rounded-[16px] border border-border p-4 transition-colors ${
                 n.readAt
-                  ? 'border-border bg-cream'
-                  : 'border-teal/30 bg-teal-soft/40'
+                  ? 'border-border bg-elevated'
+                  : 'border-primary/20 bg-primary/10/40'
               }`}
             >
               <div className="flex items-start justify-between gap-3 mb-2">
                 <div>
                   <p className="font-medium text-sm">{n.title}</p>
-                  <p className="text-xs text-charcoal/45 mt-0.5">
+                  <p className="text-xs text-muted-foreground/70 mt-0.5">
                     {formatRelativeDate(n.createdAt)}
                   </p>
                 </div>
@@ -139,13 +138,13 @@ export function TeacherNotificationsPage() {
                   <button
                     type="button"
                     onClick={() => void handleMarkRead(n.id)}
-                    className="text-xs text-teal font-medium shrink-0 cursor-pointer hover:underline"
+                    className="text-xs text-primary font-medium shrink-0 cursor-pointer hover:underline"
                   >
                     Mark read
                   </button>
                 )}
               </div>
-              <div className="text-sm text-charcoal/80 whitespace-pre-wrap font-sans leading-relaxed">
+              <div className="text-sm text-muted-foreground whitespace-pre-wrap font-sans leading-relaxed">
                 <NotificationBody text={n.body} />
               </div>
               {n.type === 'schedule_change' && n.requestId && !n.readAt && (
@@ -174,7 +173,7 @@ export function TeacherNotificationsPage() {
               {n.studentId && (
                 <Link
                   to={studentProfilePath(n.studentId, 'teacher')}
-                  className="inline-block text-xs text-teal font-medium mt-3 hover:underline"
+                  className="inline-block text-xs text-primary font-medium mt-3 hover:underline"
                 >
                   View student profile →
                 </Link>
@@ -182,7 +181,8 @@ export function TeacherNotificationsPage() {
             </li>
           ))}
         </ul>
-      )}
-    </div>
+        )}
+      </div>
+    </PageContainer>
   )
 }

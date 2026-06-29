@@ -4,12 +4,13 @@ import { fetchAllCompetitions } from '../../services/competitionService'
 import { AdminTable, AdminPagination } from '../../components/admin/AdminTable'
 import { Badge } from '../../components/ui/Badge'
 import { TeacherTableSkeleton } from '../../components/ui/Skeleton'
+import { PageHeader } from '../../components/shell/PageHeader'
 
 const PAGE_SIZE = 10
 
 function statusVariant(status: string) {
   if (status === 'registration_open') return 'verified'
-  if (status === 'draft') return 'teal'
+  if (status === 'draft') return 'primary'
   if (status === 'completed') return 'default'
   return 'default'
 }
@@ -40,8 +41,8 @@ export function AdminCompetitionsPage() {
   }, [competitions])
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <h1 className="font-heading text-3xl font-medium mb-8">Competitions</h1>
+    <div className="space-y-6">
+      <PageHeader title="Competitions" description="Competition registry and status." />
 
       {loading ? (
         <TeacherTableSkeleton rows={6} />
@@ -66,7 +67,7 @@ export function AdminCompetitionsPage() {
           >
             {paginated.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-3 text-sm text-charcoal/50">
+                <td colSpan={6} className="px-4 py-3 text-sm text-muted-foreground">
                   No competitions found.
                 </td>
               </tr>
@@ -74,7 +75,7 @@ export function AdminCompetitionsPage() {
               paginated.map((c) => (
                 <tr key={c.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-3 font-medium">{c.name}</td>
-                  <td className="px-4 py-3 text-charcoal/70">{c.organizerName ?? '—'}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{c.organizerName ?? '—'}</td>
                   <td className="px-4 py-3">
                     {[c.city, c.state].filter(Boolean).join(', ') || '—'}
                   </td>

@@ -28,7 +28,7 @@ export function ChatMessageContent({
         key={`${studentId}-${match.index}`}
         to={studentProfilePath(studentId, viewerRole)}
         className={`font-semibold underline underline-offset-2 ${
-          isSent ? 'text-cream hover:text-white' : 'text-teal hover:text-teal-dark'
+          isSent ? 'text-primary-foreground hover:text-white' : 'text-primary hover:text-primary-dark'
         }`}
         onClick={(e) => e.stopPropagation()}
       >

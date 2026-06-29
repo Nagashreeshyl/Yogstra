@@ -5,6 +5,9 @@ import { useAsyncData } from '../../hooks/useAsyncData'
 import { useLiveDataRefresh } from '../../hooks/useLiveDataRefresh'
 import { fetchPosts, deletePost, createPost, updatePostPin } from '../../services/posts'
 import { CreatePostModal } from '../../components/community/CreatePostModal'
+import { PageHeader } from '../../components/shell/PageHeader'
+import { EmptyState } from '../../components/shell/EmptyState'
+import { ErrorState } from '../../components/shell/ErrorState'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Modal } from '../../components/ui/Modal'
@@ -68,47 +71,41 @@ export function AdminCommunityPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <div>
-          <h1 className="font-heading text-3xl font-medium">Community Posts</h1>
-          <p className="text-sm text-charcoal/55 mt-1">
-            Create announcements and pin important posts to the top of the feed.
-          </p>
-        </div>
-        <Button onClick={() => setShowCreateModal(true)} className="shrink-0">
-          <Plus size={18} className="mr-2" />
-          Create Post
-        </Button>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Community Posts"
+        description="Create announcements and pin important posts to the top of the feed."
+        actions={
+          <Button onClick={() => setShowCreateModal(true)} className="shrink-0">
+            <Plus size={18} className="mr-2" />
+            Create Post
+          </Button>
+        }
+      />
 
       {createError && (
-        <p className="text-sm text-red-600 border border-red-200 bg-red-50 px-4 py-3 rounded-sm mb-6">
-          {createError}
-        </p>
+        <ErrorState message={createError} />
       )}
       {pinError && (
-        <p className="text-sm text-red-600 border border-red-200 bg-red-50 px-4 py-3 rounded-sm mb-6">
-          {pinError}
-        </p>
+        <ErrorState message={pinError} />
       )}
 
       {loading ? (
         <PostFeedSkeleton count={4} />
       ) : (posts ?? []).length === 0 ? (
-        <div className="border border-border rounded-sm p-10 text-center">
-          <p className="text-charcoal/60 text-sm">No community posts yet.</p>
-          <Button className="mt-4" onClick={() => setShowCreateModal(true)}>
-            Create first post
-          </Button>
-        </div>
+        <EmptyState
+          title="No community posts yet"
+          action={
+            <Button onClick={() => setShowCreateModal(true)}>Create first post</Button>
+          }
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {(posts ?? []).map((post) => (
             <article
               key={post.id}
-              className={`border rounded-sm bg-cream overflow-hidden flex flex-col ${
-                post.pinned ? 'border-teal/50 ring-1 ring-teal/20' : 'border-border'
+              className={`rounded-[16px] border border-border bg-elevated overflow-hidden flex flex-col ${
+                post.pinned ? 'border-primary/50 ring-1 ring-teal/20' : 'border-border'
               }`}
             >
               <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
@@ -122,18 +119,18 @@ export function AdminCommunityPage() {
                       </Badge>
                     )}
                   </div>
-                  <p className="text-xs text-charcoal/50">
+                  <p className="text-xs text-muted-foreground">
                     {post.level} · {post.date}
                   </p>
                 </div>
               </div>
 
               {post.text && (
-                <p className="text-sm text-charcoal/80 px-4 py-3 leading-relaxed">{post.text}</p>
+                <p className="text-sm text-muted-foreground px-4 py-3 leading-relaxed">{post.text}</p>
               )}
 
               {post.image && (
-                <div className="w-full aspect-[4/5] max-h-[420px] overflow-hidden bg-charcoal/[0.03]">
+                <div className="w-full aspect-[4/5] max-h-[420px] overflow-hidden bg-sidebar/[0.03]">
                   <img src={post.image} alt="" className="w-full h-full object-cover" />
                 </div>
               )}
@@ -142,7 +139,7 @@ export function AdminCommunityPage() {
                 <video
                   src={post.video}
                   controls
-                  className="w-full max-h-[420px] object-contain bg-charcoal/[0.03]"
+                  className="w-full max-h-[420px] object-contain bg-sidebar/[0.03]"
                 />
               )}
 
@@ -186,7 +183,7 @@ export function AdminCommunityPage() {
 
       <Modal isOpen={!!confirmRemove} onClose={() => setConfirmRemove(null)} className="max-w-sm">
         <h2 className="font-heading text-lg font-medium mb-3">Remove Post</h2>
-        <p className="text-sm text-charcoal/70 mb-6">
+        <p className="text-sm text-muted-foreground mb-6">
           Are you sure you want to remove this post?
         </p>
         {removeError && <p className="text-sm text-red-600 mb-4">{removeError}</p>}

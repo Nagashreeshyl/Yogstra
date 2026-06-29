@@ -27,12 +27,12 @@ export function StarRating({
         >
           <Star
             size={size}
-            className={star <= rating ? 'fill-teal text-teal' : 'text-border'}
+            className={star <= rating ? 'fill-teal text-primary' : 'text-border'}
           />
         </button>
       ))}
       {showValue && (
-        <span className="text-sm text-charcoal/70 ml-1">{rating.toFixed(1)}</span>
+        <span className="text-sm text-muted-foreground ml-1">{rating.toFixed(1)}</span>
       )}
     </div>
   )

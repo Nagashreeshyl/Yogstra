@@ -2,14 +2,16 @@ import { useAsyncData } from '../../hooks/useAsyncData'
 import { fetchRecentActivity } from '../../services/admin'
 import { AdminTable } from '../../components/admin/AdminTable'
 import { TeacherTableSkeleton } from '../../components/ui/Skeleton'
+import { PageHeader } from '../../components/shell/PageHeader'
 
 export function AdminAuditPage() {
   const { data: activities, loading, error, refetch } = useAsyncData(() => fetchRecentActivity())
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <h1 className="font-heading text-3xl font-medium mb-2">Audit log</h1>
-      <p className="text-charcoal/60 mb-8">Recent platform activity from registrations and bookings.</p>
+    <div className="space-y-6">
+      <PageHeader title="Audit log" description="Administrative action history." />
+
+      <p className="text-muted-foreground mb-8">Recent platform activity from registrations and bookings.</p>
 
       {loading ? (
         <TeacherTableSkeleton rows={6} />
@@ -21,7 +23,7 @@ export function AdminAuditPage() {
           <button
             type="button"
             onClick={() => void refetch()}
-            className="text-sm font-medium text-teal hover:underline"
+            className="text-sm font-medium text-primary hover:underline"
           >
             Try again
           </button>
@@ -30,7 +32,7 @@ export function AdminAuditPage() {
         <AdminTable headers={['Activity', 'When']}>
           {(activities ?? []).length === 0 ? (
             <tr>
-              <td colSpan={2} className="px-4 py-3 text-sm text-charcoal/50">
+              <td colSpan={2} className="px-4 py-3 text-sm text-muted-foreground">
                 No recent activity recorded.
               </td>
             </tr>
@@ -38,7 +40,7 @@ export function AdminAuditPage() {
             activities!.map((a) => (
               <tr key={a.id} className="border-b border-border last:border-0">
                 <td className="px-4 py-3">{a.text}</td>
-                <td className="px-4 py-3 text-charcoal/50 shrink-0">{a.time}</td>
+                <td className="px-4 py-3 text-muted-foreground shrink-0">{a.time}</td>
               </tr>
             ))
           )}

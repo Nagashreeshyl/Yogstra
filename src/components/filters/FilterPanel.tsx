@@ -41,7 +41,7 @@ export function FilterPanel({ onClose }: FilterPanelProps) {
   }
 
   return (
-    <div className="absolute top-full left-0 right-0 mt-2 z-40 bg-surface-elevated border border-surface-inset rounded-sm p-4 sm:p-6 shadow-lg max-h-[min(70vh,32rem)] overflow-y-auto">
+    <div className="absolute top-full left-0 right-0 mt-2 z-40 bg-elevated border border-surface-inset rounded-[16px] p-4 sm:p-6 shadow-lg max-h-[min(70vh,32rem)] overflow-y-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div>
           <p className="text-sm font-medium mb-3">Category</p>
@@ -50,10 +50,10 @@ export function FilterPanel({ onClose }: FilterPanelProps) {
               <button
                 key={cat.id}
                 onClick={() => toggleCategory(cat.name)}
-                className={`px-3 py-1.5 text-xs border rounded-sm transition-colors cursor-pointer ${
+                className={`px-3 py-1.5 text-xs rounded-[16px] border border-border transition-colors cursor-pointer ${
                   local.categories.includes(cat.name)
-                    ? 'bg-teal-soft border-teal text-charcoal'
-                    : 'border-surface-inset bg-surface-muted text-charcoal/70 hover:border-teal/50'
+                    ? 'bg-primary/10 border-primary text-foreground'
+                    : 'border-surface-inset bg-muted text-muted-foreground hover:border-primary/40'
                 }`}
               >
                 {cat.name}
@@ -69,10 +69,10 @@ export function FilterPanel({ onClose }: FilterPanelProps) {
               <button
                 key={mode}
                 onClick={() => setLocal((p) => ({ ...p, teachingMode: p.teachingMode === mode ? '' : mode }))}
-                className={`px-3 py-1.5 text-xs border rounded-sm transition-colors cursor-pointer ${
+                className={`px-3 py-1.5 text-xs rounded-[16px] border border-border transition-colors cursor-pointer ${
                   local.teachingMode === mode
-                    ? 'bg-teal-soft border-teal text-charcoal'
-                    : 'border-surface-inset bg-surface-muted text-charcoal/70 hover:border-teal/50'
+                    ? 'bg-primary/10 border-primary text-foreground'
+                    : 'border-surface-inset bg-muted text-muted-foreground hover:border-primary/40'
                 }`}
               >
                 {mode}
@@ -93,7 +93,7 @@ export function FilterPanel({ onClose }: FilterPanelProps) {
               onChange={(e) => setLocal((p) => ({ ...p, priceMax: Number(e.target.value) }))}
               className="flex-1 accent-teal"
             />
-            <span className="text-sm text-charcoal/70 whitespace-nowrap">Up to ₹{local.priceMax.toLocaleString('en-IN')}</span>
+            <span className="text-sm text-muted-foreground whitespace-nowrap">Up to ₹{local.priceMax.toLocaleString('en-IN')}</span>
           </div>
         </div>
 
@@ -131,7 +131,7 @@ export function FilterPanel({ onClose }: FilterPanelProps) {
       </div>
 
       <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
-        <button onClick={reset} className="text-sm text-charcoal/50 hover:text-charcoal cursor-pointer">
+        <button onClick={reset} className="text-sm text-muted-foreground hover:text-foreground cursor-pointer">
           Reset all
         </button>
         <Button onClick={apply}>Apply Filters</Button>

@@ -41,18 +41,18 @@ export function IncomingCallOverlay({
   }
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-charcoal/80 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-sm border border-teal/40 bg-charcoal shadow-2xl p-8 text-center animate-pulse">
+    <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-sidebar/80 backdrop-blur-sm">
+      <div className="w-full max-w-sm rounded-sm border border-primary/40 bg-sidebar shadow-2xl p-8 text-center animate-pulse">
         <div className="flex justify-center mb-4">
           <div className="relative">
             <Avatar src={callerPhoto} name={callerName} size={88} />
-            <span className="absolute -bottom-1 -right-1 bg-teal rounded-full p-1.5">
-              <Video size={16} className="text-charcoal" />
+            <span className="absolute -bottom-1 -right-1 bg-primary rounded-full p-1.5">
+              <Video size={16} className="text-foreground" />
             </span>
           </div>
         </div>
-        <p className="text-cream/60 text-sm mb-1">Incoming video class</p>
-        <p className="text-cream text-xl font-semibold mb-6">{callerName}</p>
+        <p className="text-primary-foreground/60 text-sm mb-1">Incoming video class</p>
+        <p className="text-primary-foreground text-xl font-semibold mb-6">{callerName}</p>
         <div className="flex gap-3 justify-center">
           <Button
             variant="secondary"

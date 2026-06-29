@@ -1,11 +1,26 @@
-import { Outlet } from 'react-router-dom'
-import { PageContainer } from '../shell/PageContainer'
+import { Link, Outlet } from 'react-router-dom'
+import { AppShell, competitionNavItems, PageContainer } from '../shell'
 
-/** Minimal layout wrapper for reserved competition routes — dashboard UI ships later. */
+const competitionFooter = (
+  <Link
+    to="/"
+    className="block text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+  >
+    Return to Yogstra
+  </Link>
+)
+
 export function CompetitionRouteLayout() {
   return (
-    <PageContainer width="wide">
-      <Outlet />
-    </PageContainer>
+    <AppShell
+      variant="teacher"
+      title="Competitions"
+      navItems={competitionNavItems}
+      footer={competitionFooter}
+    >
+      <PageContainer width="wide">
+        <Outlet />
+      </PageContainer>
+    </AppShell>
   )
 }

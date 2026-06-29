@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { signUpTeacher } from '../services/auth'
 import { indianStates } from '../lib/constants'
+import { PageContainer } from '../components/shell/PageContainer'
+import { PageHeader } from '../components/shell/PageHeader'
 import { Input } from '../components/ui/Input'
 import { PasswordInput } from '../components/ui/PasswordInput'
 import { Textarea } from '../components/ui/Textarea'
@@ -73,32 +75,30 @@ export function TeacherRegistrationPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-full flex flex-col items-center justify-center p-8 bg-cream">
-        <div className="max-w-md text-center">
-          <h1 className="font-heading text-2xl font-medium mb-4">Thank You!</h1>
-          <p className="text-charcoal/70 leading-relaxed mb-6">
-            Your registration has been submitted. We will verify your credentials and contact you within 12–24 hours on your registered phone number.
-          </p>
+      <div className="min-h-full flex flex-col items-center justify-center bg-background">
+        <PageContainer width="narrow" className="text-center !py-8">
+          <PageHeader title="Thank You!" description="Your registration has been submitted. We will verify your credentials and contact you within 12–24 hours on your registered phone number." />
           <Button onClick={() => navigate('/')}>Return to Yogstra</Button>
-        </div>
+        </PageContainer>
       </div>
     )
   }
 
   return (
-    <div className="min-h-full flex flex-col items-center p-8 bg-cream">
-      <div className="w-full max-w-lg">
-        <div className="text-center mb-8">
-          <h1 className="font-heading text-2xl font-semibold mb-1">Teacher Registration</h1>
-          <p className="text-sm text-charcoal/50">Step {step} of 3</p>
-          <div className="flex gap-2 mt-4 justify-center">
-            {[1, 2, 3].map((s) => (
-              <div
-                key={s}
-                className={`h-1 w-16 rounded-full ${s <= step ? 'bg-teal' : 'bg-border'}`}
-              />
-            ))}
-          </div>
+    <div className="min-h-full flex flex-col items-center bg-elevated">
+      <PageContainer width="narrow" className="!py-8">
+        <PageHeader
+          title="Teacher Registration"
+          description={`Step ${step} of 3`}
+          className="text-center [&_h1]:text-center [&_p]:mx-auto"
+        />
+        <div className="flex gap-2 mb-8 justify-center">
+          {[1, 2, 3].map((s) => (
+            <div
+              key={s}
+              className={`h-1 w-16 rounded-full ${s <= step ? 'bg-primary' : 'bg-border'}`}
+            />
+          ))}
         </div>
 
         {error && (
@@ -140,10 +140,10 @@ export function TeacherRegistrationPage() {
                     key={cat.id}
                     type="button"
                     onClick={() => toggleSpec(cat.name)}
-                    className={`px-3 py-1.5 text-xs border rounded-sm cursor-pointer ${
+                    className={`px-3 py-1.5 text-xs rounded-[16px] border border-border cursor-pointer ${
                       form.specializations.includes(cat.name)
-                        ? 'bg-teal-soft border-teal'
-                        : 'border-border hover:border-teal/50'
+                        ? 'bg-primary/10 border-primary'
+                        : 'border-border hover:border-primary/40'
                     }`}
                   >
                     {cat.name}
@@ -153,7 +153,7 @@ export function TeacherRegistrationPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="monthly-fee" className="text-sm font-medium text-charcoal">
+              <label htmlFor="monthly-fee" className="text-sm font-medium text-foreground">
                 Monthly Fee (₹)
               </label>
               <input
@@ -163,7 +163,7 @@ export function TeacherRegistrationPage() {
                 placeholder="e.g. 10,000"
                 value={form.monthlyFee}
                 onChange={(e) => handleMonthlyFeeChange(e.target.value)}
-                className="w-full px-4 py-2.5 bg-cream border border-border rounded-sm text-charcoal placeholder:text-charcoal/40 focus:outline-none focus:border-teal transition-colors"
+                className="w-full px-4 py-2.5 bg-elevated rounded-[16px] border border-border text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary transition-colors"
               />
             </div>
 
@@ -179,7 +179,7 @@ export function TeacherRegistrationPage() {
 
         {step === 3 && (
           <div className="space-y-4">
-            <div className="border border-border rounded-sm p-5 space-y-3 text-sm">
+            <div className="rounded-[16px] border border-border p-5 space-y-3 text-sm">
               <SummaryRow label="Name" value={form.fullName} />
               <SummaryRow label="Email" value={form.email} />
               <SummaryRow label="Phone" value={form.phone} />
@@ -190,7 +190,7 @@ export function TeacherRegistrationPage() {
               {form.certifications && <SummaryRow label="Certifications" value={form.certifications} />}
             </div>
 
-            <div className="bg-teal-soft border border-teal/30 rounded-sm p-4 text-sm leading-relaxed">
+            <div className="bg-primary/10 border border-primary/20 rounded-[16px] p-4 text-sm leading-relaxed">
               Your profile is under review. We will verify your credentials and contact you within 12–24 hours on your registered phone number. You will receive login access once verified.
             </div>
 
@@ -203,10 +203,10 @@ export function TeacherRegistrationPage() {
           </div>
         )}
 
-        <Link to="/auth/role" className="block text-center text-sm text-charcoal/50 hover:text-charcoal mt-6">
+        <Link to="/auth/role" className="block text-center text-sm text-muted-foreground hover:text-foreground mt-6">
           ← Back
         </Link>
-      </div>
+      </PageContainer>
     </div>
   )
 }
@@ -214,7 +214,7 @@ export function TeacherRegistrationPage() {
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-4">
-      <span className="text-charcoal/50">{label}</span>
+      <span className="text-muted-foreground">{label}</span>
       <span className="font-medium text-right">{value}</span>
     </div>
   )

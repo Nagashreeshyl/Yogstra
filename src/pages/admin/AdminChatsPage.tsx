@@ -11,6 +11,9 @@ import {
 } from '../../services/reports'
 import { subscribeToAdminChats } from '../../services/admin'
 import { formatChatError } from '../../services/directChat'
+import { PageHeader } from '../../components/shell/PageHeader'
+import { EmptyState } from '../../components/shell/EmptyState'
+import { ErrorState } from '../../components/shell/ErrorState'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { AdminChatSkeleton } from '../../components/ui/Skeleton'
@@ -66,11 +69,11 @@ export function AdminChatsPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 h-full flex flex-col min-h-0">
-      <h1 className="font-heading text-2xl sm:text-3xl font-medium mb-2">Reported Chats</h1>
-      <p className="text-sm text-charcoal/50 mb-6 max-w-2xl">
-        Conversations appear here only when reported. Snapshots include deleted messages.
-      </p>
+    <div className="space-y-6 h-full flex flex-col min-h-0">
+      <PageHeader
+        title="Reported Chats"
+        description="Conversations appear here only when reported. Snapshots include deleted messages."
+      />
 
       <div className="flex gap-1 mb-6 border-b border-border">
         {(['open', 'history'] as const).map((t) => (
@@ -80,8 +83,8 @@ export function AdminChatsPage() {
             onClick={() => setTab(t)}
             className={`px-4 py-2.5 text-sm font-semibold capitalize cursor-pointer border-b-2 -mb-px transition-colors ${
               tab === t
-                ? 'border-teal text-charcoal'
-                : 'border-transparent text-charcoal/45 hover:text-charcoal/70'
+                ? 'border-primary text-foreground'
+                : 'border-transparent text-muted-foreground/70 hover:text-muted-foreground'
             }`}
           >
             {t === 'open' ? 'Open reports' : 'Report history'}
@@ -92,25 +95,21 @@ export function AdminChatsPage() {
       {loading && !conversations ? (
         <AdminChatSkeleton />
       ) : error ? (
-        <p className="text-sm text-red-600 border border-red-200 bg-red-50 px-4 py-3 rounded-sm max-w-xl">
-          {formatChatError({ message: error })}
-        </p>
+        <ErrorState message={formatChatError({ message: error })} onRetry={refetch} />
       ) : (conversations ?? []).length === 0 ? (
-        <div className="border border-border rounded-sm p-10 text-center max-w-lg bg-surface-muted">
-          <Flag size={32} className="mx-auto text-charcoal/25 mb-3" />
-          <p className="text-charcoal/70 font-medium">
-            {tab === 'open' ? 'No open reports' : 'No report history yet'}
-          </p>
-          <p className="text-sm text-charcoal/45 mt-2">
-            {tab === 'open'
+        <EmptyState
+          icon={<Flag size={24} />}
+          title={tab === 'open' ? 'No open reports' : 'No report history yet'}
+          description={
+            tab === 'open'
               ? 'When a user reports a chat, it will appear here with the full conversation snapshot.'
-              : 'Reviewed reports will appear in this history.'}
-          </p>
-        </div>
+              : 'Reviewed reports will appear in this history.'
+          }
+        />
       ) : (
         <div className="flex flex-col md:flex-row gap-4 md:gap-6 flex-1 min-h-0 md:h-[calc(100vh-260px)]">
           <div
-            className={`w-full md:w-80 shrink-0 border border-border rounded-sm overflow-y-auto bg-cream max-h-[40vh] md:max-h-none ${
+            className={`w-full md:w-80 shrink-0 rounded-[16px] border border-border overflow-y-auto bg-elevated max-h-[40vh] md:max-h-none ${
               selectedReportId ? 'hidden md:block' : 'block'
             }`}
           >
@@ -119,8 +118,8 @@ export function AdminChatsPage() {
                 key={conv.reportId}
                 type="button"
                 onClick={() => setSelectedReportId(conv.reportId)}
-                className={`w-full text-left p-4 border-b border-border cursor-pointer hover:bg-cream-dark transition-colors ${
-                  selected?.reportId === conv.reportId ? 'bg-teal-soft' : ''
+                className={`w-full text-left p-4 border-b border-border cursor-pointer hover:bg-muted transition-colors ${
+                  selected?.reportId === conv.reportId ? 'bg-primary/10' : ''
                 }`}
               >
                 <p className="text-sm font-medium truncate">
@@ -134,7 +133,7 @@ export function AdminChatsPage() {
                   <Flag size={12} />
                   {conv.reportReason}
                 </p>
-                <p className="text-[10px] text-charcoal/40 mt-1">
+                <p className="text-[10px] text-muted-foreground/70 mt-1">
                   {conv.reporterName} · {formatReportDate(conv.reportedAt)}
                 </p>
               </button>
@@ -142,23 +141,23 @@ export function AdminChatsPage() {
           </div>
 
           {selected && (
-            <Card className={`flex-1 flex flex-col overflow-hidden bg-cream-dark min-h-[50vh] md:min-h-0 ${selectedReportId ? 'flex' : 'hidden md:flex'}`}>
-              <div className="px-4 sm:px-6 py-4 border-b border-border bg-cream space-y-3">
+            <Card className={`flex-1 flex flex-col overflow-hidden bg-muted min-h-[50vh] md:min-h-0 ${selectedReportId ? 'flex' : 'hidden md:flex'}`}>
+              <div className="px-4 sm:px-6 py-4 border-b border-border bg-elevated space-y-3">
                 <div className="flex items-start justify-between gap-4 flex-wrap">
                   <div className="min-w-0 flex-1">
                     <button
                       type="button"
                       onClick={() => setSelectedReportId(null)}
-                      className="md:hidden mb-2 text-sm text-teal font-medium cursor-pointer"
+                      className="md:hidden mb-2 text-sm text-primary font-medium cursor-pointer"
                     >
                       ← Back to list
                     </button>
                     <p className="font-medium">
                       {selected.participantOneName}{' '}
-                      <span className="text-charcoal/40">↔</span>{' '}
+                      <span className="text-muted-foreground/70">↔</span>{' '}
                       {selected.participantTwoName}
                     </p>
-                    <p className="text-xs text-charcoal/50 mt-0.5">
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       Reported by {selected.reporterName} · {formatReportDate(selected.reportedAt)}
                     </p>
                   </div>
@@ -167,7 +166,7 @@ export function AdminChatsPage() {
                       type="button"
                       onClick={() => void handleReviewed()}
                       disabled={reviewing}
-                      className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold text-white rounded-sm cursor-pointer transition-opacity hover:opacity-90 disabled:opacity-50"
+                      className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold text-white rounded-[12px] cursor-pointer transition-opacity hover:opacity-90 disabled:opacity-50"
                       style={{ backgroundColor: '#72B1C1' }}
                     >
                       {reviewing ? 'Saving...' : 'Report Reviewed'}
@@ -181,14 +180,14 @@ export function AdminChatsPage() {
                   <p className="text-sm text-red-900 leading-relaxed">{selected.reportReason}</p>
                 </div>
                 {selected.reviewedAt && (
-                  <p className="text-xs text-charcoal/45">
+                  <p className="text-xs text-muted-foreground/70">
                     Reviewed {formatReportDate(selected.reviewedAt)}
                   </p>
                 )}
               </div>
-              <div className="flex-1 overflow-y-auto p-6 space-y-3 bg-cream-dark">
+              <div className="flex-1 overflow-y-auto p-6 space-y-3 bg-muted">
                 {selected.messages.length === 0 ? (
-                  <p className="text-sm text-charcoal/50 text-center py-8">
+                  <p className="text-sm text-muted-foreground text-center py-8">
                     No messages in snapshot.
                   </p>
                 ) : (
@@ -201,7 +200,7 @@ export function AdminChatsPage() {
                         className={`flex ${isTeacher ? 'justify-start' : 'justify-end'}`}
                       >
                         <div className="max-w-[75%]">
-                          <p className="text-[11px] text-charcoal/45 mb-1 px-1">
+                          <p className="text-[11px] text-muted-foreground/70 mb-1 px-1">
                             {msg.sender}
                             <span className="mx-1">·</span>
                             <span className="capitalize">{msg.senderRole}</span>
@@ -212,10 +211,10 @@ export function AdminChatsPage() {
                           <div
                             className={`px-3 py-2 rounded-2xl text-sm ${
                               isDeleted
-                                ? 'border border-dashed border-charcoal/25 text-charcoal/50 italic bg-charcoal/5'
+                                ? 'border border-dashed border-charcoal/25 text-muted-foreground italic bg-sidebar/5'
                                 : isTeacher
-                                  ? 'bg-teal text-cream rounded-tl-sm'
-                                  : 'bg-cream border border-border text-charcoal rounded-tr-sm'
+                                  ? 'bg-primary text-primary-foreground rounded-tl-sm'
+                                  : 'bg-elevated border border-border text-foreground rounded-tr-sm'
                             }`}
                           >
                             {msg.text}

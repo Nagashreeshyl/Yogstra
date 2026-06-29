@@ -4,6 +4,9 @@ import { useLiveSync } from '../hooks/useLiveSync'
 import { fetchPosts } from '../services/posts'
 import { fetchTeachers } from '../services/teachers'
 import { filterTeachers } from '../utils/filterTeachers'
+import { PageContainer } from '../components/shell/PageContainer'
+import { ErrorState } from '../components/shell/ErrorState'
+import { EmptyState } from '../components/shell/EmptyState'
 import { SearchBar } from '../components/filters/SearchBar'
 import { CategoryFlashCards } from '../components/categories/CategoryFlashCards'
 import { CommunityFeed } from '../components/community/CommunityFeed'
@@ -32,18 +35,16 @@ export function ExplorePage() {
 
   const sidebar = teachersLoading ? (
     <div className="space-y-4">
-      <div className="h-4 w-32 animate-pulse rounded-sm bg-surface-inset/80" />
+      <div className="h-4 w-32 animate-pulse rounded-[12px] bg-muted/80" />
       <TeacherGridSkeleton count={3} />
     </div>
   ) : teachersError ? (
-    <p className="text-sm text-red-600 border border-red-200 bg-red-50 px-4 py-3 rounded-sm">
-      Unable to load teachers right now. Please refresh the page.
-    </p>
+    <ErrorState message="Unable to load teachers right now. Please refresh the page." />
   ) : featuredList.length === 0 ? (
-    <div className="border border-border rounded-sm p-6 text-center bg-cream">
-      <p className="text-charcoal/60 text-sm">No verified teachers yet.</p>
-      <p className="text-charcoal/40 text-xs mt-1">Teachers appear after registration and admin approval.</p>
-    </div>
+    <EmptyState
+      title="No verified teachers yet"
+      description="Teachers appear after registration and admin approval."
+    />
   ) : (
     <>
       <FeaturedTeachers teachers={featuredList} />
@@ -56,9 +57,8 @@ export function ExplorePage() {
   )
 
   return (
-    <div className="px-4 sm:px-6 py-5 sm:py-8 pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-8">
-      <div className="mx-auto max-w-6xl">
-        <div className="flex flex-col lg:flex-row lg:items-start gap-6 lg:gap-10">
+    <PageContainer className="pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-8 !py-5 sm:!py-8">
+      <div className="flex flex-col lg:flex-row lg:items-start gap-6 lg:gap-10">
           <div className="flex-1 min-w-0 space-y-5 lg:space-y-8">
             {!teachersLoading && featuredList.length > 0 && (
               <MobileFeaturedTeachers teachers={featuredList} />
@@ -71,14 +71,12 @@ export function ExplorePage() {
               {postsLoading ? (
                 <PostFeedSkeleton count={2} />
               ) : postsError ? (
-                <p className="text-sm text-red-600 border border-red-200 bg-red-50 px-4 py-3 rounded-sm">
-                  Unable to load community posts right now. Please refresh the page.
-                </p>
+                <ErrorState message="Unable to load community posts right now. Please refresh the page." />
               ) : (posts ?? []).length === 0 ? (
-                <div className="border border-border rounded-sm p-8 text-center bg-cream">
-                  <p className="text-charcoal/60 text-sm">No community posts yet.</p>
-                  <p className="text-charcoal/40 text-xs mt-1">Posts from the community will appear here.</p>
-                </div>
+                <EmptyState
+                  title="No community posts yet"
+                  description="Posts from the community will appear here."
+                />
               ) : (
                 <div className="lg:max-w-[520px]">
                   <CommunityFeed posts={posts ?? []} variant="instagram" showTitle={false} />
@@ -91,7 +89,6 @@ export function ExplorePage() {
             {sidebar}
           </aside>
         </div>
-      </div>
-    </div>
+    </PageContainer>
   )
 }

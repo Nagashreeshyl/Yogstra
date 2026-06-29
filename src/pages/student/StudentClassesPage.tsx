@@ -15,6 +15,10 @@ import {
 } from '../../services/classSessions'
 import { LiveClassRoom } from '../../components/classes/LiveClassRoom'
 import { RequestScheduleChangeModal } from '../../components/classes/RequestScheduleChangeModal'
+import { PageContainer } from '../../components/shell/PageContainer'
+import { PageHeader } from '../../components/shell/PageHeader'
+import { EmptyState } from '../../components/shell/EmptyState'
+import { DashboardCard } from '../../components/student/dashboard/DashboardCard'
 import { Avatar } from '../../components/ui/Avatar'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
@@ -148,66 +152,53 @@ export function StudentClassesPage(_props: StudentClassesPageProps) {
       {infoToast && (
         <Toast message={infoToast} type="info" onClose={() => setInfoToast(null)} />
       )}
-      <div className="p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto">
-        <div className="flex items-center gap-2 mb-2">
-          <Video size={22} className="text-teal" />
-          <h1 className="font-heading text-2xl sm:text-3xl font-medium">Classes</h1>
-        </div>
-        <p className="text-sm text-charcoal/55 mb-8">
-          Join live video sessions when your teacher starts class. You&apos;ll get an incoming call
-          notification.
-        </p>
+      <PageContainer>
+        <div className="space-y-6">
+          <PageHeader
+            title="Classes"
+            description="Join live video sessions when your teacher starts class. You'll get an incoming call notification."
+          />
 
-        {liveSession && (
-          <Card className="p-5 mb-6 border-teal/50 bg-teal-soft/50">
-            <div className="flex items-center gap-2 mb-2">
-              <Badge className="bg-teal text-cream">Live now</Badge>
-            </div>
-            <p className="font-medium mb-1">
+          {liveSession && (
+            <DashboardCard title="Live now">
+              <p className="font-medium mb-1">
               Class in progress with {liveSession.teacherName ?? 'your teacher'}
             </p>
-            <p className="text-xs text-charcoal/55 mb-4">
+            <p className="text-xs text-foreground/55 mb-4">
               Your teacher is in the video room. Rejoin if you stepped out.
             </p>
             <Button className="gap-2" onClick={() => handleRejoin(liveSession)}>
               <Video size={18} />
               Rejoin class
             </Button>
-          </Card>
-        )}
+            </DashboardCard>
+          )}
 
-        {!liveSession && coachInWindow && (
-          <Card className="p-5 mb-6 border-teal/40 bg-teal-soft/30">
-            <div className="flex items-center gap-2 mb-3">
-              <Clock size={16} className="text-teal" />
-              <h2 className="font-medium text-sm">Scheduled now</h2>
-              <Badge className="bg-teal text-cream ml-auto">In session window</Badge>
-            </div>
-            <div className="flex items-center gap-3">
+          {!liveSession && coachInWindow && (
+            <DashboardCard title="Scheduled now">
+              <div className="flex items-center gap-3">
               <Avatar src={coachInWindow.photo} name={coachInWindow.name} size={56} />
               <div>
                 <p className="font-semibold">{coachInWindow.name}</p>
                 {coachInWindow.currentSessionAt && (
-                  <p className="text-xs text-charcoal/55 mt-0.5">
+                  <p className="text-xs text-foreground/55 mt-0.5">
                     Session: {formatTime(coachInWindow.currentSessionAt)}{' '}
                     {formatSessionDate(coachInWindow.currentSessionAt)}
                   </p>
                 )}
-                <p className="text-xs text-charcoal/45 mt-1">
+                <p className="text-xs text-muted-foreground/70 mt-1">
                   Wait for your teacher to start the call — you&apos;ll get a ring notification.
                 </p>
               </div>
-            </div>
-          </Card>
-        )}
+              </div>
+            </DashboardCard>
+          )}
 
-        <div className="space-y-3">
-          <h2 className="font-medium text-sm">Your coaches</h2>
-          {(teachers ?? []).length === 0 ? (
-            <Card className="p-8 text-center">
-              <p className="text-charcoal/50 text-sm">No active coaching yet.</p>
-            </Card>
-          ) : (
+          <div className="space-y-3">
+            <h2 className="font-medium text-sm">Your coaches</h2>
+            {(teachers ?? []).length === 0 ? (
+              <EmptyState title="No active coaching yet" description="Book a class with a teacher to get started." />
+            ) : (
             teachers!.map((teacher) => {
               const pending = pendingByTeacher.get(teacher.id)
               const teacherLiveSession = liveSession?.teacherId === teacher.id ? liveSession : null
@@ -216,7 +207,7 @@ export function StudentClassesPage(_props: StudentClassesPageProps) {
                 <Card
                   key={teacher.id}
                   className={`p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${
-                    teacher.isScheduledNow ? 'border-teal/40 bg-teal-soft/20' : ''
+                    teacher.isScheduledNow ? 'border-primary/40 bg-primary/10/20' : ''
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
@@ -225,23 +216,23 @@ export function StudentClassesPage(_props: StudentClassesPageProps) {
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-medium">{teacher.name}</p>
                         {teacher.isScheduledNow && (
-                          <Badge className="bg-teal text-cream text-[10px]">Now</Badge>
+                          <Badge className="bg-primary text-primary-foreground text-[10px]">Now</Badge>
                         )}
                       </div>
                       {teacher.isScheduledNow && teacher.currentSessionAt ? (
-                        <p className="text-xs text-teal-dark font-medium flex items-center gap-1 mt-0.5">
+                        <p className="text-xs text-primary-dark font-medium flex items-center gap-1 mt-0.5">
                           <Clock size={12} />
                           Current session: {formatTime(teacher.currentSessionAt)}{' '}
                           {formatSessionDate(teacher.currentSessionAt)}
                         </p>
                       ) : teacher.nextSessionAt ? (
-                        <p className="text-xs text-charcoal/50 flex items-center gap-1 mt-0.5">
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                           <Clock size={12} />
                           Next session: {formatTime(teacher.nextSessionAt)}{' '}
                           {formatSessionDate(teacher.nextSessionAt)}
                         </p>
                       ) : (
-                        <p className="text-xs text-charcoal/45 mt-0.5">Awaiting schedule</p>
+                        <p className="text-xs text-muted-foreground/70 mt-0.5">Awaiting schedule</p>
                       )}
                       {pending && (
                         <p className="text-xs text-amber-700 mt-1">
@@ -290,20 +281,20 @@ export function StudentClassesPage(_props: StudentClassesPageProps) {
 
         {(changeRequests ?? []).some((r) => r.status !== 'pending') && (
           <div className="space-y-2 mt-8">
-            <h2 className="font-medium text-sm text-charcoal/70">Timing change history</h2>
+            <h2 className="font-medium text-sm text-muted-foreground">Timing change history</h2>
             {(changeRequests ?? [])
               .filter((r) => r.status !== 'pending')
               .slice(0, 3)
               .map((request) => (
                 <Card key={request.id} className="p-3 text-sm">
                   <p className="font-medium">{request.teacherName ?? 'Coach'}</p>
-                  <p className="text-xs text-charcoal/55 mt-1">
+                  <p className="text-xs text-foreground/55 mt-1">
                     {formatScheduleChangeSummary(request)} —{' '}
                     <span
                       className={
                         request.status === 'approved'
-                          ? 'text-teal font-medium'
-                          : 'text-charcoal/45'
+                          ? 'text-primary font-medium'
+                          : 'text-muted-foreground/70'
                       }
                     >
                       {request.status}
@@ -327,7 +318,8 @@ export function StudentClassesPage(_props: StudentClassesPageProps) {
             }}
           />
         )}
-      </div>
+        </div>
+      </PageContainer>
     </>
   )
 }

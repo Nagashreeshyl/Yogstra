@@ -5,6 +5,9 @@ import { useAsyncData } from '../hooks/useAsyncData'
 import { useLiveDataRefresh } from '../hooks/useLiveDataRefresh'
 import { fetchTeachers } from '../services/teachers'
 import { filterTeachers } from '../utils/filterTeachers'
+import { PageContainer } from '../components/shell/PageContainer'
+import { PageHeader } from '../components/shell/PageHeader'
+import { EmptyState } from '../components/shell/EmptyState'
 import { SearchBar } from '../components/filters/SearchBar'
 import { CategoryFlashCards } from '../components/categories/CategoryFlashCards'
 import { TeacherCard } from '../components/teachers/TeacherCard'
@@ -32,17 +35,17 @@ export function FindTeachersPage() {
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <h1 className="font-heading text-2xl sm:text-3xl font-medium mb-6">Find Teachers</h1>
-
+    <PageContainer>
       <div className="space-y-8">
+        <PageHeader title="Find Teachers" description="Browse verified yoga teachers across India." />
+
         <SearchBar />
         <CategoryFlashCards onSelect={() => setPage(1)} />
 
         {loading ? (
           <TeacherGridSkeleton count={PAGE_SIZE} />
         ) : filtered.length === 0 ? (
-          <p className="text-charcoal/50 text-center py-12">No teachers match your filters.</p>
+          <EmptyState title="No teachers match your filters" description="Try adjusting your search or category filters." />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {paginated.map((t) => (
@@ -66,8 +69,8 @@ export function FindTeachersPage() {
                 key={p}
                 type="button"
                 onClick={() => setPage(p)}
-                className={`w-8 h-8 text-sm rounded-sm cursor-pointer ${
-                  p === page ? 'bg-teal text-charcoal font-medium' : 'text-charcoal/50 hover:bg-surface-elevated'
+                className={`w-8 h-8 text-sm rounded-[12px] cursor-pointer ${
+                  p === page ? 'bg-primary text-foreground font-medium' : 'text-muted-foreground hover:bg-elevated'
                 }`}
               >
                 {p}
@@ -84,6 +87,6 @@ export function FindTeachersPage() {
           </div>
         )}
       </div>
-    </div>
+    </PageContainer>
   )
 }

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
+import { PageContainer } from '../components/shell/PageContainer'
+import { PageHeader } from '../components/shell/PageHeader'
 import { Input } from '../components/ui/Input'
 import { PasswordInput } from '../components/ui/PasswordInput'
 import { Button } from '../components/ui/Button'
@@ -80,22 +82,20 @@ export function StudentAuthPage() {
   }
 
   return (
-    <div className="min-h-full flex flex-col items-center justify-center p-8 bg-cream">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="font-heading text-3xl font-semibold mb-2">Yogstra</h1>
-        </div>
+    <div className="min-h-full flex flex-col items-center justify-center bg-background">
+      <PageContainer width="narrow" className="!py-8">
+        <PageHeader title="Yogstra" className="justify-center text-center [&_h1]:text-center [&_p]:mx-auto" />
 
-        <div className="flex border border-border rounded-sm mb-6 overflow-hidden p-1 bg-cream">
+        <div className="flex rounded-[16px] border border-border mb-6 overflow-hidden rounded-[16px] p-1 bg-elevated">
           {(['login', 'signup'] as const).map((m) => (
             <button
               key={m}
               type="button"
               onClick={() => { setMode(m); setError(null); setSuccess(null) }}
-              className={`flex-1 py-2.5 text-sm font-medium capitalize cursor-pointer transition-colors rounded-sm ${
+              className={`flex-1 py-2.5 text-sm font-medium capitalize cursor-pointer transition-colors rounded-[12px] ${
                 mode === m
-                  ? 'bg-charcoal text-cream font-medium'
-                  : 'text-charcoal/50 hover:text-charcoal hover:bg-cream-dark'
+                  ? 'bg-sidebar text-primary-foreground font-medium'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               }`}
             >
               {m === 'login' ? 'Login' : 'Sign Up'}
@@ -104,7 +104,7 @@ export function StudentAuthPage() {
         </div>
 
         {success && (
-          <p role="status" aria-live="polite" className="text-sm text-teal mb-4 border border-teal/30 bg-teal-soft px-3 py-2 rounded-sm">
+          <p role="status" aria-live="polite" className="text-sm text-primary mb-4 border border-primary/20 bg-primary/10 px-3 py-2 rounded-sm">
             {success}
           </p>
         )}
@@ -161,7 +161,7 @@ export function StudentAuthPage() {
                 type="button"
                 disabled={loading}
                 onClick={() => void handleForgotPassword()}
-                className="text-sm text-teal hover:underline cursor-pointer disabled:opacity-50"
+                className="text-sm text-primary hover:underline cursor-pointer disabled:opacity-50"
               >
                 Forgot Password?
               </button>
@@ -175,11 +175,11 @@ export function StudentAuthPage() {
 
         <Link
           to="/auth/role"
-          className="block text-center text-sm text-charcoal/50 hover:text-charcoal mt-6"
+          className="block text-center text-sm text-muted-foreground hover:text-foreground mt-6"
         >
           ← Back
         </Link>
-      </div>
+      </PageContainer>
     </div>
   )
 }

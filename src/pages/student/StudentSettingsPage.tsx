@@ -6,6 +6,8 @@ import { fetchStudentProfile, updateStudentSettings } from '../../services/stude
 import { subscribeToOwnProfile } from '../../services/liveSync'
 import { uploadProfileAvatar } from '../../services/avatars'
 import { prepareImageForCrop } from '../../utils/imageCrop'
+import { PageContainer } from '../../components/shell/PageContainer'
+import { PageHeader } from '../../components/shell/PageHeader'
 import { AvatarCropModal } from '../../components/profile/AvatarCropModal'
 import { Avatar } from '../../components/ui/Avatar'
 import { Button } from '../../components/ui/Button'
@@ -123,10 +125,11 @@ export function StudentSettingsPage() {
         <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
       )}
 
-      <div className="mx-auto max-w-lg px-6 py-8">
-        <h1 className="text-xl font-semibold mb-6">Edit profile</h1>
+      <PageContainer width="narrow">
+        <div className="space-y-6">
+          <PageHeader title="Edit profile" description="Update your name, contact details, and photo." />
 
-        <section className="flex items-center gap-6 mb-8 pb-8 border-b border-border/70">
+        <section className="flex items-center gap-6 pb-8 border-b border-border/70">
           <button
             type="button"
             onClick={() => avatarInputRef.current?.click()}
@@ -145,7 +148,7 @@ export function StudentSettingsPage() {
               type="button"
               onClick={() => avatarInputRef.current?.click()}
               disabled={uploading}
-              className="text-sm font-semibold text-teal hover:text-teal-dark mt-1 cursor-pointer disabled:opacity-60"
+              className="text-sm font-semibold text-primary hover:text-primary-dark mt-1 cursor-pointer disabled:opacity-60"
             >
               Change profile photo
             </button>
@@ -172,7 +175,8 @@ export function StudentSettingsPage() {
         </form>
 
         <NotificationPreferencesSection />
-      </div>
+        </div>
+      </PageContainer>
 
       {cropImageSrc && (
         <AvatarCropModal

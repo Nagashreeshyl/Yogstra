@@ -19,13 +19,13 @@ export function TeacherCard({ teacher, compact = false }: TeacherCardProps) {
       <button
         type="button"
         onClick={() => navigate(`/teachers/${teacher.id}`)}
-        className="flex items-center gap-3 w-full text-left p-3 rounded-sm hover:bg-cream-dark transition-colors cursor-pointer"
+        className="flex items-center gap-3 w-full text-left p-3 rounded-sm hover:bg-muted transition-colors cursor-pointer"
       >
         <Avatar src={teacher.photo} name={teacher.name} size={48} />
         <div className="min-w-0 flex-1">
           <p className="font-medium text-sm truncate">{teacher.name}</p>
-          <div className="flex items-center gap-1 text-xs text-charcoal/50">
-            <Star size={12} className="text-teal fill-teal" />
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Star size={12} className="text-primary fill-teal" />
             {teacher.rating.toFixed(1)}
           </div>
         </div>
@@ -35,7 +35,7 @@ export function TeacherCard({ teacher, compact = false }: TeacherCardProps) {
 
   return (
     <div
-      className="relative w-full h-[300px] sm:h-[380px] lg:h-[440px] rounded-xl overflow-hidden bg-teal"
+      className="relative w-full h-[300px] sm:h-[380px] lg:h-[440px] rounded-xl overflow-hidden bg-primary"
     >
       {cardImage ? (
         <img
@@ -87,14 +87,14 @@ export function TeacherCard({ teacher, compact = false }: TeacherCardProps) {
             </Badge>
           ))}
         </div>
-        <div className="flex items-center justify-between text-xs text-charcoal/70 mb-2">
+        <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
           <span className="flex items-center gap-1">
-            <Star size={12} className="text-teal fill-teal" />
+            <Star size={12} className="text-primary fill-teal" />
             {teacher.rating.toFixed(1)}
           </span>
           <span>₹{teacher.monthlyFee.toLocaleString('en-IN')}/mo</span>
         </div>
-        <p className="text-xs text-charcoal/50 flex items-center gap-1 mb-3">
+        <p className="text-xs text-muted-foreground flex items-center gap-1 mb-3">
           <MapPin size={12} />
           {teacher.city}
         </p>
@@ -131,7 +131,7 @@ export function MobileFeaturedTeachers({ teachers }: FeaturedTeachersProps) {
             className="shrink-0 w-[5.5rem] flex flex-col items-center gap-2 snap-start cursor-pointer"
           >
             <Avatar src={teacher.photo} name={teacher.name} size={56} />
-            <span className="text-xs font-medium text-charcoal truncate w-full text-center">
+            <span className="text-xs font-medium text-foreground truncate w-full text-center">
               {teacher.name.split(' ')[0]}
             </span>
           </button>

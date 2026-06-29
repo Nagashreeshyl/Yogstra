@@ -22,7 +22,7 @@ export function ChatEphemeralToast({
 
   return (
     <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
-      <div className="px-4 py-2 rounded-full bg-charcoal/90 text-cream text-xs font-medium shadow-lg max-w-[min(90vw,280px)] text-center leading-snug">
+      <div className="px-4 py-2 rounded-full bg-sidebar/90 text-primary-foreground text-xs font-medium shadow-lg max-w-[min(90vw,280px)] text-center leading-snug">
         {message}
       </div>
     </div>

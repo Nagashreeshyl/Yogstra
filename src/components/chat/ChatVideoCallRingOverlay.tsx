@@ -44,24 +44,24 @@ export function ChatVideoCallRingOverlay({
   const isIncoming = mode === 'incoming'
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-charcoal/95 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-sidebar/95 backdrop-blur-sm">
       <div
-        className={`w-full max-w-sm rounded-sm border border-teal/40 bg-charcoal shadow-2xl p-8 text-center ${
+        className={`w-full max-w-sm rounded-sm border border-primary/40 bg-sidebar shadow-2xl p-8 text-center ${
           isIncoming ? 'animate-pulse' : ''
         }`}
       >
         <div className="flex justify-center mb-4">
           <div className="relative">
             <Avatar src={peerPhoto} name={peerName} size={88} />
-            <span className="absolute -bottom-1 -right-1 bg-teal rounded-full p-1.5">
-              <Video size={16} className="text-charcoal" />
+            <span className="absolute -bottom-1 -right-1 bg-primary rounded-full p-1.5">
+              <Video size={16} className="text-foreground" />
             </span>
           </div>
         </div>
-        <p className="text-cream/60 text-sm mb-1">
+        <p className="text-primary-foreground/60 text-sm mb-1">
           {isIncoming ? 'Incoming video call' : 'Calling…'}
         </p>
-        <p className="text-cream text-xl font-semibold mb-6">{peerName}</p>
+        <p className="text-primary-foreground text-xl font-semibold mb-6">{peerName}</p>
         <div className="flex gap-3 justify-center">
           <Button
             variant="secondary"

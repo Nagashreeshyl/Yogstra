@@ -213,9 +213,9 @@ export function WhatsAppChatWindow({
 
   return (
     <>
-      <div className="flex flex-col flex-1 h-full min-h-0 bg-cream-dark md:border md:border-border md:rounded-sm overflow-hidden">
+      <div className="flex flex-col flex-1 h-full min-h-0 bg-muted md:border md:border-border md:rounded-[16px] overflow-hidden">
         <div
-          className={`px-4 py-3 border-b border-cream/10 bg-charcoal shrink-0 flex items-center gap-2 min-w-0 ${
+          className={`px-4 py-3 border-b border-cream/10 bg-sidebar shrink-0 flex items-center gap-2 min-w-0 ${
             onBack ? 'pt-[max(0.75rem,env(safe-area-inset-top))]' : ''
           }`}
         >
@@ -223,7 +223,7 @@ export function WhatsAppChatWindow({
             <button
               type="button"
               onClick={onBack}
-              className="md:hidden p-1.5 -ml-1 text-cream/70 hover:text-cream rounded-sm cursor-pointer shrink-0"
+              className="md:hidden p-1.5 -ml-1 text-primary-foreground/70 hover:text-primary-foreground rounded-[12px] cursor-pointer shrink-0"
               aria-label="Back to conversations"
             >
               <ArrowLeft size={20} />
@@ -232,12 +232,12 @@ export function WhatsAppChatWindow({
           <button
             type="button"
             onClick={() => navigate(profilePath)}
-            className="flex items-center gap-3 min-w-0 flex-1 text-left cursor-pointer rounded-sm hover:bg-cream/5 transition-colors -m-1 p-1 overflow-hidden"
+            className="flex items-center gap-3 min-w-0 flex-1 text-left cursor-pointer rounded-sm hover:bg-elevated/5 transition-colors -m-1 p-1 overflow-hidden"
           >
             <Avatar src={participantAvatar} name={participantName} size={40} />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-semibold truncate text-cream">{participantName}</h2>
+                <h2 className="text-sm font-semibold truncate text-primary-foreground">{participantName}</h2>
                 {participantVerified && (
                   <Badge variant="verified" className="flex items-center gap-1 shrink-0">
                     <BadgeCheck size={10} />
@@ -245,10 +245,10 @@ export function WhatsAppChatWindow({
                   </Badge>
                 )}
                 {threadSettings.muted && (
-                  <span className="text-[10px] text-cream/40 uppercase tracking-wide">Muted</span>
+                  <span className="text-[10px] text-primary-foreground/40 uppercase tracking-wide">Muted</span>
                 )}
               </div>
-              <p className="text-xs text-cream/45 hidden sm:block">Tap to view profile</p>
+              <p className="text-xs text-primary-foreground/45 hidden sm:block">Tap to view profile</p>
             </div>
           </button>
           <div className="flex items-center gap-1 shrink-0">
@@ -257,7 +257,7 @@ export function WhatsAppChatWindow({
                 type="button"
                 onClick={() => void handleVideoCall()}
                 disabled={callBusy || startingCall}
-                className="p-2 text-cream/70 hover:text-teal rounded-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="p-2 text-primary-foreground/70 hover:text-primary rounded-[12px] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 aria-label="Video call"
                 title="Video call"
               >
@@ -287,18 +287,18 @@ export function WhatsAppChatWindow({
         </div>
 
         {showSearch && (
-          <div className="px-4 py-3 shrink-0 bg-cream-dark">
+          <div className="px-4 py-3 shrink-0 bg-muted">
             <div
               className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl shadow-sm"
               style={{ backgroundColor: '#2A3942' }}
             >
-              <Search size={16} className="text-cream/45 shrink-0" />
+              <Search size={16} className="text-primary-foreground/45 shrink-0" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search in chat..."
-                className="flex-1 text-sm bg-transparent outline-none text-cream placeholder:text-cream/40"
+                className="flex-1 text-sm bg-transparent outline-none text-primary-foreground placeholder:text-primary-foreground/40"
                 autoFocus
               />
               <button
@@ -307,7 +307,7 @@ export function WhatsAppChatWindow({
                   setShowSearch(false)
                   setSearchQuery('')
                 }}
-                className="text-cream/45 hover:text-cream cursor-pointer"
+                className="text-primary-foreground/45 hover:text-primary-foreground cursor-pointer"
               >
                 <X size={16} />
               </button>
@@ -321,7 +321,7 @@ export function WhatsAppChatWindow({
           </p>
         )}
 
-        <div className="relative flex-1 min-h-0 overflow-y-auto bg-cream-dark flex flex-col">
+        <div className="relative flex-1 min-h-0 overflow-y-auto bg-muted flex flex-col">
           <div className="mt-auto px-4 sm:px-5 py-4 space-y-4">
           <ChatEphemeralToast
             message={ephemeralNotice}
@@ -329,7 +329,7 @@ export function WhatsAppChatWindow({
           />
           {filteredMessages.length === 0 ? (
             searchQuery ? (
-              <p className="text-sm text-charcoal/50 text-center py-8">
+              <p className="text-sm text-muted-foreground text-center py-8">
                 No messages match your search.
               </p>
             ) : null
@@ -371,10 +371,10 @@ export function WhatsAppChatWindow({
                   <div
                     className={`relative w-fit max-w-[min(72vw,17.5rem)] sm:max-w-[17.5rem] min-w-[4.5rem] rounded-xl ${
                       msg.deleteScope === 'both'
-                        ? 'bg-charcoal/5 border border-dashed border-charcoal/20 text-charcoal/50 italic'
+                        ? 'bg-sidebar/5 border border-dashed border-charcoal/20 text-muted-foreground italic'
                         : isSent
-                          ? 'bg-teal text-cream'
-                          : 'bg-cream border border-border text-charcoal shadow-sm'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-elevated border border-border text-foreground shadow-sm'
                     }`}
                   >
                     <div className="px-3.5 py-2.5">
@@ -390,8 +390,8 @@ export function WhatsAppChatWindow({
                           <span
                             className={`text-[10px] ${
                               isSent && msg.deleteScope !== 'both'
-                                ? 'text-cream/55'
-                                : 'text-charcoal/35'
+                                ? 'text-primary-foreground/55'
+                                : 'text-foreground/35'
                             }`}
                           >
                             {display.meta}
@@ -400,8 +400,8 @@ export function WhatsAppChatWindow({
                         <span
                           className={`text-[11px] shrink-0 ${
                             isSent && msg.deleteScope !== 'both'
-                              ? 'text-cream/65'
-                              : 'text-charcoal/40'
+                              ? 'text-primary-foreground/65'
+                              : 'text-muted-foreground/70'
                           }`}
                         >
                           {formatTime(msg.createdAt)}
@@ -435,21 +435,21 @@ export function WhatsAppChatWindow({
         </div>
 
         {error && (
-          <p className="px-4 py-2 text-xs text-red-600 border-t border-border bg-cream shrink-0">
+          <p className="px-4 py-2 text-xs text-red-600 border-t border-border bg-elevated shrink-0">
             {error}
           </p>
         )}
 
         {replyTo && (
-          <div className="px-3 py-2 border-t border-border bg-cream flex items-center gap-2 shrink-0">
-            <CornerUpLeft size={16} className="text-teal shrink-0" />
-            <p className="flex-1 text-xs text-charcoal/70 truncate border-l-2 border-teal pl-2">
+          <div className="px-3 py-2 border-t border-border bg-elevated flex items-center gap-2 shrink-0">
+            <CornerUpLeft size={16} className="text-primary shrink-0" />
+            <p className="flex-1 text-xs text-muted-foreground truncate border-l-2 border-primary pl-2">
               {replyTo.content}
             </p>
             <button
               type="button"
               onClick={() => setReplyTo(null)}
-              className="text-charcoal/40 hover:text-charcoal cursor-pointer"
+              className="text-muted-foreground/70 hover:text-foreground cursor-pointer"
             >
               <X size={16} />
             </button>
@@ -458,7 +458,7 @@ export function WhatsAppChatWindow({
 
         <form
           onSubmit={handleSubmit}
-          className={`px-3 pt-2.5 border-t border-border bg-cream-dark shrink-0 flex items-center gap-2 ${
+          className={`px-3 pt-2.5 border-t border-border bg-muted shrink-0 flex items-center gap-2 ${
             onBack ? 'pb-[max(0.5rem,env(safe-area-inset-bottom))]' : 'pb-2.5'
           }`}
         >
@@ -468,12 +468,12 @@ export function WhatsAppChatWindow({
             onChange={(e) => setDraft(e.target.value)}
             placeholder={isBlocked ? 'Unblock to message' : 'Type a message'}
             disabled={isBlocked}
-            className="flex-1 min-w-0 px-4 py-2.5 bg-charcoal border border-cream/10 rounded-full text-cream placeholder:text-cream/40 focus:outline-none focus:border-teal transition-colors text-sm disabled:opacity-50"
+            className="flex-1 min-w-0 px-4 py-2.5 bg-sidebar border border-cream/10 rounded-full text-primary-foreground placeholder:text-primary-foreground/40 focus:outline-none focus:border-primary transition-colors text-sm disabled:opacity-50"
           />
           <button
             type="submit"
             disabled={!draft.trim() || sending || isBlocked}
-            className="shrink-0 w-10 h-10 inline-flex items-center justify-center bg-teal text-cream rounded-full hover:bg-teal-dark disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
+            className="shrink-0 w-10 h-10 inline-flex items-center justify-center bg-primary text-primary-foreground rounded-full hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
             aria-label="Send message"
           >
             <Send size={18} />

@@ -4,12 +4,13 @@ import { fetchAllAcademies } from '../../services/academyService'
 import { AdminTable, AdminPagination } from '../../components/admin/AdminTable'
 import { Badge } from '../../components/ui/Badge'
 import { TeacherTableSkeleton } from '../../components/ui/Skeleton'
+import { PageHeader } from '../../components/shell/PageHeader'
 
 const PAGE_SIZE = 10
 
 function statusVariant(status: string) {
   if (status === 'active') return 'verified'
-  if (status === 'inactive') return 'teal'
+  if (status === 'inactive') return 'primary'
   return 'default'
 }
 
@@ -34,8 +35,8 @@ export function AdminAcademiesPage() {
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <h1 className="font-heading text-3xl font-medium mb-8">Academies</h1>
+    <div className="space-y-6">
+      <PageHeader title="Academies" description="Registered yoga academies." />
 
       {loading ? (
         <TeacherTableSkeleton rows={6} />
@@ -64,7 +65,7 @@ export function AdminAcademiesPage() {
           >
             {paginated.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-3 text-sm text-charcoal/50">
+                <td colSpan={5} className="px-4 py-3 text-sm text-muted-foreground">
                   No academies found.
                 </td>
               </tr>
@@ -77,7 +78,7 @@ export function AdminAcademiesPage() {
                   <td className="px-4 py-3">
                     <Badge variant={statusVariant(a.status)}>{a.status}</Badge>
                   </td>
-                  <td className="px-4 py-3 text-charcoal/70">
+                  <td className="px-4 py-3 text-muted-foreground">
                     {new Date(a.createdAt).toLocaleDateString()}
                   </td>
                 </tr>

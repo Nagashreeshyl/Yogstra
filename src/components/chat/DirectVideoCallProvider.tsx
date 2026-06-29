@@ -365,11 +365,11 @@ export function DirectVideoCallProvider({ children }: { children: ReactNode }) {
         )}
 
         {callNotice && !activeCall && !outgoingCall && !incomingCall && (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[210] px-4 py-2 rounded-full bg-charcoal/95 border border-cream/10 text-cream text-sm shadow-lg">
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[210] px-4 py-2 rounded-full bg-sidebar/95 border border-cream/10 text-primary-foreground text-sm shadow-lg">
             {callNotice}
             <button
               type="button"
-              className="ml-3 text-cream/50 hover:text-cream cursor-pointer"
+              className="ml-3 text-primary-foreground/50 hover:text-primary-foreground cursor-pointer"
               onClick={() => setCallNotice(null)}
             >
               ×

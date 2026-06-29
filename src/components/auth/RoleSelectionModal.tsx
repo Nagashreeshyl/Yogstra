@@ -20,28 +20,28 @@ export function RoleSelectionModal() {
     <Modal isOpen={showRoleModal} onClose={() => setShowRoleModal(false)} className="max-w-2xl">
       <div className="text-center mb-8">
         <h2 className="font-heading text-2xl font-medium mb-2">Welcome to Yogstra</h2>
-        <p className="text-charcoal/60">Tell us who you are</p>
+        <p className="text-muted-foreground">Tell us who you are</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <button
           onClick={() => selectRole('student')}
-          className="flex flex-col items-center p-8 border border-border rounded-sm hover:border-teal hover:bg-teal-soft/30 transition-colors cursor-pointer text-left"
+          className="flex flex-col items-center p-8 rounded-[16px] border border-border hover:border-primary hover:bg-primary/10/30 transition-colors cursor-pointer text-left"
         >
-          <GraduationCap size={40} className="text-teal mb-4" strokeWidth={1.5} />
+          <GraduationCap size={40} className="text-primary mb-4" strokeWidth={1.5} />
           <h3 className="font-heading text-lg font-medium mb-2">I am a Student</h3>
-          <p className="text-sm text-charcoal/60 text-center">
+          <p className="text-sm text-muted-foreground text-center">
             Find teachers and track your yoga journey
           </p>
         </button>
 
         <button
           onClick={() => selectRole('teacher')}
-          className="flex flex-col items-center p-8 border border-border rounded-sm hover:border-teal hover:bg-teal-soft/30 transition-colors cursor-pointer text-left"
+          className="flex flex-col items-center p-8 rounded-[16px] border border-border hover:border-primary hover:bg-primary/10/30 transition-colors cursor-pointer text-left"
         >
-          <BookOpen size={40} className="text-teal mb-4" strokeWidth={1.5} />
+          <BookOpen size={40} className="text-primary mb-4" strokeWidth={1.5} />
           <h3 className="font-heading text-lg font-medium mb-2">I am a Teacher</h3>
-          <p className="text-sm text-charcoal/60 text-center">
+          <p className="text-sm text-muted-foreground text-center">
             Share your expertise and grow your students
           </p>
         </button>

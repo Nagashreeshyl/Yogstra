@@ -143,7 +143,7 @@ export function CreateCompetitionWizard({
           <button
             type="button"
             onClick={handleClose}
-            className="rounded-sm p-2 hover:bg-muted"
+            className="rounded-[16px] p-2 hover:bg-muted"
             aria-label="Close wizard"
           >
             <X size={20} />

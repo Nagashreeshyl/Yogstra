@@ -256,8 +256,8 @@ function DirectCallConnectingOverlay({
 function DirectCallHeader({ otherName, ringing }: { otherName: string; ringing?: boolean }) {
   return createPortal(
     <div className="dm-call-header-portal">
-      <p className="text-cream text-sm font-semibold truncate">{otherName}</p>
-      <p className="text-cream/50 text-xs">{ringing ? 'Ringing…' : 'Video call'}</p>
+      <p className="text-primary-foreground text-sm font-semibold truncate">{otherName}</p>
+      <p className="text-primary-foreground/50 text-xs">{ringing ? 'Ringing…' : 'Video call'}</p>
     </div>,
     document.body,
   )
@@ -661,13 +661,13 @@ export function DirectVideoCallRoom({
 
   if (error) {
     return (
-      <div className="fixed inset-0 z-[200] bg-charcoal flex items-center justify-center p-6">
+      <div className="fixed inset-0 z-[200] bg-sidebar flex items-center justify-center p-6">
         <div className="max-w-md text-center">
           <p className="text-red-300 mb-4">{error}</p>
           <button
             type="button"
             onClick={onLeave}
-            className="px-4 py-2 bg-cream text-charcoal rounded-sm font-medium cursor-pointer"
+            className="px-4 py-2 bg-elevated text-foreground rounded-sm font-medium cursor-pointer"
           >
             Go back
           </button>
@@ -678,15 +678,15 @@ export function DirectVideoCallRoom({
 
   if (!connectInfo) {
     return (
-      <div className="fixed inset-0 z-[200] bg-charcoal flex flex-col items-center justify-center gap-3">
-        <Loader2 className="animate-spin text-teal" size={40} />
-        <p className="text-cream/60 text-sm">Joining video call…</p>
+      <div className="fixed inset-0 z-[200] bg-sidebar flex flex-col items-center justify-center gap-3">
+        <Loader2 className="animate-spin text-primary" size={40} />
+        <p className="text-primary-foreground/60 text-sm">Joining video call…</p>
       </div>
     )
   }
 
   return (
-    <div className="fixed inset-0 z-[200] bg-charcoal dm-call-root">
+    <div className="fixed inset-0 z-[200] bg-sidebar dm-call-root">
       <LiveKitRoom
         key={call.id}
         token={connectInfo.token}

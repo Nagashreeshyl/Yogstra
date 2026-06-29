@@ -128,7 +128,7 @@ export function JudgeAssignmentBoard({
                       key={judge.id}
                       draggable
                       onDragStart={() => setDraggingJudgeId(judge.id)}
-                      className="flex items-center gap-2 rounded-sm bg-elevated border border-border px-2 py-1.5 text-sm cursor-grab active:cursor-grabbing"
+                      className="flex items-center gap-2 rounded-[12px] bg-elevated border border-border px-2 py-1.5 text-sm cursor-grab active:cursor-grabbing"
                     >
                       <GripVertical size={14} className="text-muted-foreground" aria-hidden />
                       {judge.userName ?? judge.userId.slice(0, 8)}

@@ -4,6 +4,7 @@ import { useAsyncData } from '../../hooks/useAsyncData'
 import { useLiveDataRefresh } from '../../hooks/useLiveDataRefresh'
 import { fetchAllTeachersAdmin, removeTeacher, updateTeacherStatus } from '../../services/teachers'
 import { AdminTable, AdminPagination } from '../../components/admin/AdminTable'
+import { PageHeader } from '../../components/shell/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Modal } from '../../components/ui/Modal'
@@ -52,14 +53,14 @@ export function AdminTeachersPage() {
 
   const statusVariant = (status: string) => {
     if (status === 'Verified') return 'verified'
-    if (status === 'Pending') return 'teal'
+    if (status === 'Pending') return 'primary'
     if (status === 'Removed') return 'default'
     return 'default'
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <h1 className="font-heading text-3xl font-medium mb-8">Teachers</h1>
+    <div className="space-y-6">
+      <PageHeader title="Teachers" description="Manage teacher profiles and verification." />
 
       {loading ? (
         <TeacherTableSkeleton rows={5} />
@@ -80,14 +81,14 @@ export function AdminTeachersPage() {
             {paginated.map((t) => (
               <tr key={t.id} className="border-b border-border last:border-0">
                 <td className="px-4 py-3 font-medium">{t.name}</td>
-                <td className="px-4 py-3 text-charcoal/70">{t.email || '—'}</td>
-                <td className="px-4 py-3 text-charcoal/70">{t.phone}</td>
+                <td className="px-4 py-3 text-muted-foreground">{t.email || '—'}</td>
+                <td className="px-4 py-3 text-muted-foreground">{t.phone}</td>
                 <td className="px-4 py-3">{t.specializations.join(', ') || '—'}</td>
                 <td className="px-4 py-3">{t.city}</td>
                 <td className="px-4 py-3">
                   <Badge variant={statusVariant(t.status)}>{t.status}</Badge>
                 </td>
-                <td className="px-4 py-3 text-charcoal/70">{t.registeredDate}</td>
+                <td className="px-4 py-3 text-muted-foreground">{t.registeredDate}</td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-1">
                     <Link to={`/teachers/${t.id}`} target="_blank" rel="noreferrer">
@@ -120,7 +121,7 @@ export function AdminTeachersPage() {
 
       <Modal isOpen={!!removeTarget} onClose={() => setRemoveTarget(null)} className="max-w-sm">
         <h2 className="font-heading text-lg font-medium mb-3">Remove Teacher</h2>
-        <p className="text-sm text-charcoal/70 mb-6 leading-relaxed">
+        <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
           Remove <strong>{removeTarget?.name}</strong>? They will lose dashboard access, active bookings
           will be cancelled, and they must request verification again to rejoin.
         </p>

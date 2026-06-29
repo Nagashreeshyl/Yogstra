@@ -128,7 +128,7 @@ export function AcademyTeachersPage() {
           </div>
         </div>
         {inviteError && <p className="text-sm text-red-600">{inviteError}</p>}
-        {inviteSuccess && <p className="text-sm text-teal">{inviteSuccess}</p>}
+        {inviteSuccess && <p className="text-sm text-primary">{inviteSuccess}</p>}
       </form>
 
       {filtered.length === 0 ? (
@@ -149,11 +149,11 @@ export function AcademyTeachersPage() {
               <td className="px-4 py-3 capitalize">{teacher.employmentType.replace('_', ' ')}</td>
               <td className="px-4 py-3">{teacher.isPrimary ? 'Yes' : 'No'}</td>
               <td className="px-4 py-3">
-                <Badge variant={teacher.status === 'active' ? 'teal' : 'default'}>
+                <Badge variant={teacher.status === 'active' ? 'primary' : 'default'}>
                   {teacher.status}
                 </Badge>
               </td>
-              <td className="px-4 py-3 text-charcoal/70">
+              <td className="px-4 py-3 text-muted-foreground">
                 {teacher.startedAt
                   ? new Date(teacher.startedAt).toLocaleDateString('en-IN')
                   : '—'}

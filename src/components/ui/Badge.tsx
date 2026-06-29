@@ -2,22 +2,23 @@ import type { ReactNode } from 'react'
 
 interface BadgeProps {
   children: ReactNode
-  variant?: 'default' | 'teal' | 'v2' | 'verified' | 'mode'
+  variant?: 'default' | 'primary' | 'accent' | 'muted' | 'verified' | 'mode'
   className?: string
 }
 
 const variants = {
-  default: 'bg-cream-dark text-charcoal border-border',
-  teal: 'bg-teal-soft text-charcoal border-teal/30',
-  v2: 'bg-cream-dark text-charcoal/60 border-border text-xs',
-  verified: 'bg-teal-soft text-charcoal border-teal/30',
-  mode: 'bg-cream-dark text-charcoal border-border',
+  default: 'bg-muted text-foreground border-border',
+  primary: 'bg-primary/10 text-primary border-primary/20',
+  accent: 'bg-accent/15 text-accent-foreground border-accent/30',
+  muted: 'bg-muted text-muted-foreground border-border text-xs',
+  verified: 'bg-primary/10 text-primary border-primary/20',
+  mode: 'bg-muted text-foreground border-border',
 }
 
 export function Badge({ children, variant = 'default', className = '' }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 text-xs font-medium border rounded-sm ${variants[variant]} ${className}`}
+      className={`inline-flex items-center rounded-[8px] border px-2 py-0.5 text-xs font-medium ${variants[variant]} ${className}`}
     >
       {children}
     </span>

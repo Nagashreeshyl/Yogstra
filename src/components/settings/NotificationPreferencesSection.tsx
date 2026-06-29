@@ -93,7 +93,7 @@ export function NotificationPreferencesSection() {
       </div>
 
       {saved && (
-        <p role="status" className="text-sm text-teal">
+        <p role="status" className="text-sm text-primary">
           Preferences saved.
         </p>
       )}

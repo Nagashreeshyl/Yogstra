@@ -38,7 +38,7 @@ export function UserDirectory({
 
   if (users.length === 0) {
     return (
-      <div className={`border border-border rounded-sm p-6 text-sm text-charcoal/50 bg-cream md:h-full ${className}`}>
+      <div className={`rounded-[16px] border border-border p-6 text-sm text-muted-foreground bg-elevated md:h-full ${className}`}>
         No {tab} found yet.
       </div>
     )
@@ -46,7 +46,7 @@ export function UserDirectory({
 
   return (
     <div
-      className={`overflow-hidden bg-cream shrink-0 w-full flex flex-col md:border md:border-border md:rounded-sm md:h-full md:w-72 ${className}`}
+      className={`overflow-hidden bg-elevated shrink-0 w-full flex flex-col md:border md:border-border md:rounded-sm md:h-full md:w-72 ${className}`}
     >
       <div className="overflow-y-auto flex-1">
         {users.map((user) => {
@@ -67,8 +67,8 @@ export function UserDirectory({
               key={user.id}
               type="button"
               onClick={() => onSelect(user.id)}
-              className={`w-full text-left px-3 py-3 border-b border-border last:border-b-0 cursor-pointer transition-colors hover:bg-cream-dark flex items-center gap-3 ${
-                selectedUserId === user.id ? 'bg-teal-soft' : hasUnread ? 'bg-cream-dark/40' : ''
+              className={`w-full text-left px-3 py-3 border-b border-border last:border-b-0 cursor-pointer transition-colors hover:bg-muted flex items-center gap-3 ${
+                selectedUserId === user.id ? 'bg-primary/10' : hasUnread ? 'bg-muted/40' : ''
               }`}
             >
               <div className="relative shrink-0">
@@ -76,7 +76,7 @@ export function UserDirectory({
                 {(isIncoming || isOutgoing || hasUnread) && (
                   <span
                     className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-cream ${
-                      hasUnread ? 'bg-teal' : isIncoming ? 'bg-teal' : 'bg-amber-500'
+                      hasUnread ? 'bg-primary' : isIncoming ? 'bg-primary' : 'bg-amber-500'
                     }`}
                   />
                 )}
@@ -85,19 +85,19 @@ export function UserDirectory({
                 <div className="flex items-center justify-between gap-2">
                   <p
                     className={`text-sm truncate ${
-                      hasUnread ? 'font-bold text-charcoal' : 'font-semibold text-charcoal'
+                      hasUnread ? 'font-bold text-foreground' : 'font-semibold text-foreground'
                     }`}
                   >
                     {user.name}
                   </p>
                   <div className="flex items-center gap-1 shrink-0">
                     {hasUnread && (
-                      <span className="min-w-[20px] h-5 px-1.5 inline-flex items-center justify-center rounded-full bg-teal text-cream text-[10px] font-bold">
+                      <span className="min-w-[20px] h-5 px-1.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold">
                         {user.unreadCount! > 99 ? '99+' : user.unreadCount}
                       </span>
                     )}
                     {isIncoming && !hasUnread && (
-                      <span className="text-[10px] font-semibold uppercase tracking-wide text-teal bg-teal-soft px-1.5 py-0.5 rounded-sm">
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-primary bg-primary/10 px-1.5 py-0.5 rounded-sm">
                         New
                       </span>
                     )}
@@ -113,13 +113,13 @@ export function UserDirectory({
                   <>
                     <p
                       className={`text-xs truncate mt-0.5 ${
-                        hasUnread ? 'font-semibold text-charcoal/80' : 'text-charcoal/50'
+                        hasUnread ? 'font-semibold text-muted-foreground' : 'text-muted-foreground'
                       }`}
                     >
                       {user.lastMessage}
                     </p>
                     {user.lastMessageAt && (
-                      <p className="text-[10px] text-charcoal/40 mt-0.5">
+                      <p className="text-[10px] text-muted-foreground/70 mt-0.5">
                         {formatRelativeDate(user.lastMessageAt)}
                       </p>
                     )}
@@ -127,9 +127,9 @@ export function UserDirectory({
                 ) : isOutgoing ? (
                   <p className="text-xs text-amber-700/80 mt-0.5">Waiting for acceptance</p>
                 ) : isIncoming ? (
-                  <p className="text-xs text-teal mt-0.5">Wants to chat with you</p>
+                  <p className="text-xs text-primary mt-0.5">Wants to chat with you</p>
                 ) : (
-                  <p className="text-xs text-charcoal/40 mt-0.5 capitalize">{user.role}</p>
+                  <p className="text-xs text-muted-foreground/70 mt-0.5 capitalize">{user.role}</p>
                 )}
               </div>
             </button>

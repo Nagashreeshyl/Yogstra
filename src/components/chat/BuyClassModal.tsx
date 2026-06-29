@@ -210,13 +210,13 @@ export function BuyClassModal({
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-charcoal/50" onClick={onClose} />
-      <div className="relative bg-cream border border-border rounded-sm w-full max-w-md p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+      <div className="absolute inset-0 bg-foreground/30" onClick={onClose} />
+      <div className="relative bg-elevated rounded-[16px] border border-border w-full max-w-md p-6 shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center gap-2 mb-1">
-          <ShoppingBag size={20} className="text-teal" />
+          <ShoppingBag size={20} className="text-primary" />
           <h3 className="font-heading text-lg font-medium">Buy Online Class</h3>
         </div>
-        <p className="text-sm text-charcoal/55 mb-5">
+        <p className="text-sm text-foreground/55 mb-5">
           Book a session with {teacherName}. Your teacher is notified only after payment succeeds.
         </p>
 
@@ -274,7 +274,7 @@ export function BuyClassModal({
           />
 
           <div>
-            <label className="block text-sm font-medium text-charcoal/80 mb-1.5">
+            <label className="block text-sm font-medium text-muted-foreground mb-1.5">
               Coupon code (optional)
             </label>
             <div className="flex gap-2">
@@ -283,7 +283,7 @@ export function BuyClassModal({
                 value={couponInput}
                 onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
                 placeholder="e.g. YOGA-A1B2C3"
-                className="flex-1 min-w-0 px-3 py-2.5 text-sm border border-border rounded-sm bg-cream focus:outline-none focus:border-teal font-mono uppercase"
+                className="flex-1 min-w-0 px-3 py-2.5 text-sm rounded-[16px] border border-border bg-elevated focus:outline-none focus:border-primary font-mono uppercase"
               />
               <Button
                 type="button"
@@ -295,17 +295,17 @@ export function BuyClassModal({
               </Button>
             </div>
             {appliedCoupon && (
-              <p className="text-xs text-teal mt-1.5 flex items-center gap-1">
+              <p className="text-xs text-primary mt-1.5 flex items-center gap-1">
                 <Tag size={12} />
                 {appliedCoupon.code} applied — {couponHint}
               </p>
             )}
           </div>
 
-          <div className="rounded-sm border border-surface-inset bg-surface-muted px-4 py-3">
-            <p className="text-xs text-charcoal/50 uppercase tracking-wide">Amount due</p>
+          <div className="rounded-sm border border-surface-inset bg-muted px-4 py-3">
+            <p className="text-xs text-muted-foreground uppercase tracking-wide">Amount due</p>
             {appliedCoupon && baseFee > amountDue && (
-              <p className="text-sm text-charcoal/45 line-through mt-0.5">
+              <p className="text-sm text-muted-foreground/70 line-through mt-0.5">
                 ₹{baseFee.toLocaleString('en-IN')}
               </p>
             )}

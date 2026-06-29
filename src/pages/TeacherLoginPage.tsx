@@ -1,6 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useApp } from '../context/AppContext'
+import { PageContainer } from '../components/shell/PageContainer'
+import { PageHeader } from '../components/shell/PageHeader'
 import { Input } from '../components/ui/Input'
 import { PasswordInput } from '../components/ui/PasswordInput'
 import { Button } from '../components/ui/Button'
@@ -39,12 +41,9 @@ export function TeacherLoginPage() {
   }
 
   return (
-    <div className="min-h-full flex flex-col items-center justify-center p-8 bg-cream">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="font-heading text-3xl font-semibold mb-2">Yogstra</h1>
-          <p className="text-charcoal/60 text-sm">Teacher Login</p>
-        </div>
+    <div className="min-h-full flex flex-col items-center justify-center bg-background">
+      <PageContainer width="narrow" className="!py-8">
+        <PageHeader title="Yogstra" description="Teacher Login" className="justify-center text-center [&_h1]:text-center [&_p]:mx-auto" />
 
         {error && (
           <p className="text-sm text-red-600 mb-4 border border-red-200 bg-red-50 px-3 py-2 rounded-sm">
@@ -73,18 +72,18 @@ export function TeacherLoginPage() {
 
         <p className="text-center text-sm mt-6">
           New teacher?{' '}
-          <Link to="/auth/teacher/register" className="text-teal hover:underline">
+          <Link to="/auth/teacher/register" className="text-primary hover:underline">
             Register here
           </Link>
         </p>
 
         <Link
           to="/auth/role"
-          className="block text-center text-sm text-charcoal/50 hover:text-charcoal mt-4"
+          className="block text-center text-sm text-muted-foreground hover:text-foreground mt-4"
         >
           ← Back
         </Link>
-      </div>
+      </PageContainer>
     </div>
   )
 }

@@ -250,12 +250,12 @@ export function MessagesHub() {
         <div className="flex items-center flex-wrap gap-2 mb-4 shrink-0">
           <h1 className="text-xl font-semibold">Messages</h1>
           {unreadTotal > 0 && (
-            <span className="text-xs font-semibold text-cream bg-teal px-2.5 py-1 rounded-full">
+            <span className="text-xs font-semibold text-primary-foreground bg-primary px-2.5 py-1 rounded-full">
               {unreadTotal} unread
             </span>
           )}
           {incomingCount > 0 && (
-            <span className="text-xs font-semibold text-teal bg-teal-soft px-2 py-1 rounded-full">
+            <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-1 rounded-full">
               {incomingCount} new request{incomingCount === 1 ? '' : 's'}
             </span>
           )}
@@ -267,7 +267,7 @@ export function MessagesHub() {
         </div>
 
         {fetchError && (
-          <p className="text-sm text-red-600 mb-4 border border-red-200 bg-cream px-4 py-3 rounded-sm">
+          <p className="text-sm text-red-600 mb-4 border border-red-200 bg-elevated px-4 py-3 rounded-sm">
             {fetchError}
           </p>
         )}
@@ -285,15 +285,15 @@ export function MessagesHub() {
                 onClick={() => handleTabChange(t)}
                 className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold capitalize cursor-pointer border-b-2 -mb-px transition-colors ${
                   tab === t
-                    ? 'border-teal text-charcoal'
-                    : 'border-transparent text-charcoal/45 hover:text-charcoal/70'
+                    ? 'border-primary text-foreground'
+                    : 'border-transparent text-muted-foreground/70 hover:text-muted-foreground'
                 }`}
               >
                 {t}
                 {tabIndicator > 0 && (
                   <span
                     className={`min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center rounded-full text-[10px] font-bold ${
-                      tabUnread > 0 ? 'bg-teal text-cream' : 'bg-amber-500 text-cream'
+                      tabUnread > 0 ? 'bg-primary text-primary-foreground' : 'bg-amber-500 text-primary-foreground'
                     }`}
                   >
                     {tabIndicator > 99 ? '99+' : tabIndicator}
@@ -306,7 +306,7 @@ export function MessagesHub() {
       </div>
 
       {inChatView && fetchError && (
-        <p className="text-sm text-red-600 mb-4 border border-red-200 bg-cream px-4 py-3 rounded-sm shrink-0">
+        <p className="text-sm text-red-600 mb-4 border border-red-200 bg-elevated px-4 py-3 rounded-sm shrink-0">
           {fetchError}
         </p>
       )}
@@ -331,7 +331,7 @@ export function MessagesHub() {
           <div
             className={
               inChatView
-                ? 'fixed inset-0 z-[55] flex flex-col h-[100dvh] max-h-[100dvh] overflow-hidden bg-cream md:static md:z-auto md:inset-auto md:h-auto md:max-h-none md:flex-1 md:min-h-0'
+                ? 'fixed inset-0 z-[55] flex flex-col h-[100dvh] max-h-[100dvh] overflow-hidden bg-elevated md:static md:z-auto md:inset-auto md:h-auto md:max-h-none md:flex-1 md:min-h-0'
                 : 'hidden md:block flex-1 min-h-0'
             }
           >
@@ -341,7 +341,7 @@ export function MessagesHub() {
           <div
             className={
               inChatView
-                ? 'fixed inset-0 z-[55] flex flex-col h-[100dvh] max-h-[100dvh] overflow-hidden bg-cream md:static md:z-auto md:inset-auto md:h-auto md:max-h-none md:flex-1 md:min-h-0'
+                ? 'fixed inset-0 z-[55] flex flex-col h-[100dvh] max-h-[100dvh] overflow-hidden bg-elevated md:static md:z-auto md:inset-auto md:h-auto md:max-h-none md:flex-1 md:min-h-0'
                 : 'hidden md:flex flex-1 min-h-0 flex-col'
             }
           >
@@ -363,7 +363,7 @@ export function MessagesHub() {
           </div>
         ) : (
           !loading && (
-            <div className="flex-1 hidden md:flex items-center justify-center border border-border rounded-sm text-sm text-charcoal/50 bg-cream min-h-[200px]">
+            <div className="flex-1 hidden md:flex items-center justify-center rounded-[16px] border border-border text-sm text-muted-foreground bg-elevated min-h-[200px]">
               Select someone to start chatting
             </div>
           )

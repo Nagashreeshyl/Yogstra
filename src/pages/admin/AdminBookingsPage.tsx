@@ -3,6 +3,7 @@ import { useAsyncData } from '../../hooks/useAsyncData'
 import { useLiveDataRefresh } from '../../hooks/useLiveDataRefresh'
 import { fetchBookings } from '../../services/bookings'
 import { AdminTable, AdminPagination } from '../../components/admin/AdminTable'
+import { PageHeader } from '../../components/shell/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { TeacherTableSkeleton } from '../../components/ui/Skeleton'
@@ -28,8 +29,8 @@ export function AdminBookingsPage() {
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <h1 className="font-heading text-3xl font-medium mb-8">Bookings</h1>
+    <div className="space-y-6">
+      <PageHeader title="Bookings" description="Review active and historical bookings." />
 
       {loading ? (
         <TeacherTableSkeleton rows={5} />
@@ -48,7 +49,7 @@ export function AdminBookingsPage() {
                 <td className="px-4 py-3">₹{b.monthlyFee.toLocaleString('en-IN')}</td>
                 <td className="px-4 py-3"><Badge>{b.status}</Badge></td>
                 <td className="px-4 py-3">
-                  <Badge variant={b.paymentStatus === 'Paid' ? 'verified' : 'teal'}>{b.paymentStatus}</Badge>
+                  <Badge variant={b.paymentStatus === 'Paid' ? 'verified' : 'primary'}>{b.paymentStatus}</Badge>
                 </td>
                 <td className="px-4 py-3">
                   <Button size="sm" variant="ghost">View Details</Button>

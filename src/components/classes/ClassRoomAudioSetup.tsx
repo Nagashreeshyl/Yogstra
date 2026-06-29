@@ -35,17 +35,17 @@ export function ClassRoomAudioSetup() {
 
   return (
     <div className="absolute inset-x-0 top-4 z-[200] flex justify-center px-4 pointer-events-none">
-      <div className="pointer-events-auto flex items-center gap-3 rounded-sm border border-teal/50 bg-charcoal/95 px-4 py-3 shadow-lg max-w-md">
-        <Volume2 size={20} className="text-teal shrink-0" />
+      <div className="pointer-events-auto flex items-center gap-3 rounded-sm border border-primary/50 bg-sidebar/95 px-4 py-3 shadow-lg max-w-md">
+        <Volume2 size={20} className="text-primary shrink-0" />
         <div className="min-w-0">
-          <p className="text-cream text-sm font-medium">Sound is blocked by your browser</p>
-          <p className="text-cream/55 text-xs mt-0.5">
+          <p className="text-primary-foreground text-sm font-medium">Sound is blocked by your browser</p>
+          <p className="text-primary-foreground/55 text-xs mt-0.5">
             Tap below to hear the other person. You can also click anywhere in the room.
           </p>
         </div>
         <StartAudio
           label="Enable sound"
-          className="shrink-0 rounded-sm bg-teal px-3 py-2 text-sm font-medium text-charcoal cursor-pointer hover:bg-teal-dark transition-colors"
+          className="shrink-0 rounded-[12px] bg-primary px-3 py-2 text-sm font-medium text-foreground cursor-pointer hover:bg-primary-hover transition-colors"
         />
       </div>
     </div>

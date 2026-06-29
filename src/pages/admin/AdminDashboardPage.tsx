@@ -11,6 +11,7 @@ import {
 import { fetchStudentCount } from '../../services/students'
 import { fetchRecentActivity, subscribeToAdminDashboard } from '../../services/admin'
 import { AdminTable, StatCard } from '../../components/admin/AdminTable'
+import { PageHeader } from '../../components/shell/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { AdminDashboardSkeleton } from '../../components/ui/Skeleton'
@@ -54,8 +55,8 @@ export function AdminDashboardPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <h1 className="font-heading text-3xl font-medium mb-8">Dashboard</h1>
+    <div className="space-y-6">
+      <PageHeader title="Dashboard" description="Platform overview and pending actions." />
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         <StatCard label="Total Teachers" value={teacherCount ?? 0} />
@@ -68,14 +69,14 @@ export function AdminDashboardPage() {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         <div>
           <h2 className="font-heading text-lg font-medium mb-4">Recent Activity</h2>
-          <div className="border border-border rounded-sm divide-y divide-border">
+          <div className="rounded-[16px] border border-border divide-y divide-border">
             {(activities ?? []).length === 0 ? (
-              <p className="px-4 py-3 text-sm text-charcoal/50">No recent activity.</p>
+              <p className="px-4 py-3 text-sm text-muted-foreground">No recent activity.</p>
             ) : (
               activities!.map((a) => (
                 <div key={a.id} className="px-4 py-3 flex justify-between gap-4">
                   <span className="text-sm">{a.text}</span>
-                  <span className="text-xs text-charcoal/50 shrink-0">{a.time}</span>
+                  <span className="text-xs text-muted-foreground shrink-0">{a.time}</span>
                 </div>
               ))
             )}
@@ -87,15 +88,15 @@ export function AdminDashboardPage() {
           <AdminTable headers={['Name', 'Email', 'City', 'Status', 'Actions']}>
             {(pending ?? []).length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-3 text-sm text-charcoal/50">No pending verifications.</td>
+                <td colSpan={5} className="px-4 py-3 text-sm text-muted-foreground">No pending verifications.</td>
               </tr>
             ) : (
               pending!.map((t) => (
                 <tr key={t.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-3">{t.name}</td>
-                  <td className="px-4 py-3 text-charcoal/70">{t.email || '—'}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{t.email || '—'}</td>
                   <td className="px-4 py-3">{t.city}</td>
-                  <td className="px-4 py-3"><Badge variant="teal">{t.status}</Badge></td>
+                  <td className="px-4 py-3"><Badge variant="primary">{t.status}</Badge></td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
                       <Button size="sm" onClick={() => handleApprove(t.id)}>Approve</Button>

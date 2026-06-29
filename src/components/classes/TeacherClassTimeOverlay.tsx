@@ -48,15 +48,15 @@ export function TeacherClassTimeOverlay({
 
   return (
     <div className="fixed top-4 right-4 z-[95] w-full max-w-sm px-4 sm:px-0 pointer-events-none">
-      <div className="pointer-events-auto rounded-sm border border-teal/50 bg-charcoal shadow-2xl p-4">
+      <div className="pointer-events-auto rounded-sm border border-primary/50 bg-sidebar shadow-2xl p-4">
         <div className="flex items-start gap-3">
           <Avatar src={studentPhoto} name={studentName} size={48} />
           <div className="min-w-0 flex-1">
-            <p className="text-cream/55 text-xs mb-0.5">Class time</p>
-            <p className="text-cream text-sm font-semibold leading-snug">
+            <p className="text-primary-foreground/55 text-xs mb-0.5">Class time</p>
+            <p className="text-primary-foreground text-sm font-semibold leading-snug">
               It&apos;s time for {studentName}&apos;s class
             </p>
-            <p className="text-cream/45 text-xs mt-1">{formatSessionTimeLabel(sessionTime)}</p>
+            <p className="text-primary-foreground/45 text-xs mt-1">{formatSessionTimeLabel(sessionTime)}</p>
           </div>
           <button
             type="button"
@@ -64,7 +64,7 @@ export function TeacherClassTimeOverlay({
               stopRing()
               onDismiss()
             }}
-            className="text-cream/45 hover:text-cream shrink-0 cursor-pointer"
+            className="text-primary-foreground/45 hover:text-primary-foreground shrink-0 cursor-pointer"
             aria-label="Dismiss"
           >
             <X size={16} />

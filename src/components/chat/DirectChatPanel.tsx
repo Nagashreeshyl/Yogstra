@@ -236,16 +236,16 @@ export function DirectChatPanel({
   }
 
   return (
-    <div className="flex flex-col h-full min-h-0 flex-1 bg-cream md:border md:border-border md:rounded-sm overflow-hidden">
+    <div className="flex flex-col h-full min-h-0 flex-1 bg-elevated md:border md:border-border md:rounded-[16px] overflow-hidden">
       <ChatMobileBackBar onBack={onBack} />
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 text-center min-h-0 overflow-y-auto">
         <Avatar src={localUser.avatar} name={localUser.name} size={80} />
         <h2 className="text-base font-semibold mt-4">{localUser.name}</h2>
-        <p className="text-sm text-charcoal/50 capitalize mt-0.5">{localUser.role}</p>
+        <p className="text-sm text-muted-foreground capitalize mt-0.5">{localUser.role}</p>
 
         {needsRequest && hasNoThread && (
           <>
-            <p className="text-sm text-charcoal/60 mt-6 max-w-xs leading-relaxed">
+            <p className="text-sm text-muted-foreground mt-6 max-w-xs leading-relaxed">
               Send a chat request. {localUser.name.split(' ')[0]} must accept before you can message
               each other.
             </p>
@@ -266,7 +266,7 @@ export function DirectChatPanel({
               <Clock size={16} />
               Request sent
             </div>
-            <p className="text-sm text-charcoal/45 mt-3 max-w-xs">
+            <p className="text-sm text-muted-foreground/70 mt-3 max-w-xs">
               Waiting for {localUser.name.split(' ')[0]} to accept your request.
             </p>
           </>
@@ -274,11 +274,11 @@ export function DirectChatPanel({
 
         {isIncoming && (
           <>
-            <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-teal bg-teal-soft px-3 py-1.5 rounded-full">
+            <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary bg-primary/10 px-3 py-1.5 rounded-full">
               <MessageCircle size={16} />
               New chat request
             </div>
-            <p className="text-sm text-charcoal/60 mt-3 max-w-xs leading-relaxed">
+            <p className="text-sm text-muted-foreground mt-3 max-w-xs leading-relaxed">
               {localUser.name} wants to chat with you.
             </p>
             <div className="flex gap-3 mt-6">
@@ -298,7 +298,7 @@ export function DirectChatPanel({
 
         {isRejected && (
           <>
-            <p className="text-sm text-charcoal/50 mt-6 max-w-xs">
+            <p className="text-sm text-muted-foreground mt-6 max-w-xs">
               Chat request was declined. You can send a new request.
             </p>
             <Button

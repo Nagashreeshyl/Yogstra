@@ -111,14 +111,14 @@ export function AcademySettingsPage() {
         className="rounded-[16px] border border-border bg-elevated p-5 sm:p-6 space-y-6"
       >
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="timezone" className="text-sm font-medium text-charcoal">
+          <label htmlFor="timezone" className="text-sm font-medium text-foreground">
             Timezone
           </label>
           <select
             id="timezone"
             value={timezone}
             onChange={(e) => setTimezone(e.target.value)}
-            className="w-full px-4 py-2.5 text-sm bg-cream border border-border rounded-sm focus:outline-none focus:border-teal"
+            className="w-full px-4 py-2.5 text-sm bg-elevated rounded-[16px] border border-border focus:outline-none focus:border-primary"
           >
             {TIMEZONE_OPTIONS.map((tz) => (
               <option key={tz} value={tz}>
@@ -129,14 +129,14 @@ export function AcademySettingsPage() {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="currency" className="text-sm font-medium text-charcoal">
+          <label htmlFor="currency" className="text-sm font-medium text-foreground">
             Currency
           </label>
           <select
             id="currency"
             value={currency}
             onChange={(e) => setCurrency(e.target.value)}
-            className="w-full px-4 py-2.5 text-sm bg-cream border border-border rounded-sm focus:outline-none focus:border-teal"
+            className="w-full px-4 py-2.5 text-sm bg-elevated rounded-[16px] border border-border focus:outline-none focus:border-primary"
           >
             {CURRENCY_OPTIONS.map((c) => (
               <option key={c} value={c}>
@@ -147,7 +147,7 @@ export function AcademySettingsPage() {
         </div>
 
         <fieldset className="space-y-3">
-          <legend className="text-sm font-medium text-charcoal mb-2">Notification preferences</legend>
+          <legend className="text-sm font-medium text-foreground mb-2">Notification preferences</legend>
           <label className="flex items-center gap-3 text-sm">
             <input
               type="checkbox"
@@ -169,7 +169,7 @@ export function AcademySettingsPage() {
         </fieldset>
 
         {saveError && <p className="text-sm text-red-600">{saveError}</p>}
-        {saveSuccess && <p className="text-sm text-teal">Settings saved successfully.</p>}
+        {saveSuccess && <p className="text-sm text-primary">Settings saved successfully.</p>}
 
         <Button type="submit" disabled={saving}>
           {saving ? 'Saving…' : 'Save settings'}

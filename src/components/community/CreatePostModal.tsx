@@ -177,10 +177,10 @@ export function CreatePostModal({ isOpen, onClose, onPost, showPinOption = false
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-charcoal/20" onClick={handleClose} />
+      <div className="absolute inset-0 bg-foreground/20" onClick={handleClose} />
 
       <div
-        className="relative bg-cream border border-border rounded-sm w-full max-w-[900px] max-h-[90vh] overflow-hidden flex flex-col"
+        className="relative bg-elevated rounded-[16px] border border-border w-full max-w-[900px] max-h-[90vh] overflow-hidden flex flex-col"
         style={{ boxShadow: '0 4px 24px rgba(28, 28, 28, 0.08)' }}
       >
         {/* Header — Instagram-style top bar */}
@@ -188,7 +188,7 @@ export function CreatePostModal({ isOpen, onClose, onPost, showPinOption = false
           <button
             type="button"
             onClick={handleClose}
-            className="text-sm text-charcoal/60 hover:text-charcoal cursor-pointer"
+            className="text-sm text-muted-foreground hover:text-foreground cursor-pointer"
           >
             Cancel
           </button>
@@ -197,7 +197,7 @@ export function CreatePostModal({ isOpen, onClose, onPost, showPinOption = false
             type="button"
             onClick={handlePost}
             disabled={!canPost}
-            className="text-sm font-medium text-teal hover:text-teal-dark disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            className="text-sm font-medium text-primary hover:text-primary-dark disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
             Post
           </button>
@@ -208,7 +208,7 @@ export function CreatePostModal({ isOpen, onClose, onPost, showPinOption = false
           {/* Media preview / upload zone */}
           <div
             className={`md:w-[55%] md:border-r border-border flex items-center justify-center min-h-[280px] md:min-h-[400px] relative ${
-              isDragging ? 'bg-teal-soft' : 'bg-cream-dark'
+              isDragging ? 'bg-primary/10' : 'bg-muted'
             }`}
             onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
             onDragLeave={() => setIsDragging(false)}
@@ -235,7 +235,7 @@ export function CreatePostModal({ isOpen, onClose, onPost, showPinOption = false
                     URL.revokeObjectURL(media.url)
                     setMedia(null)
                   }}
-                  className="absolute top-3 right-3 p-1.5 bg-cream/90 border border-border rounded-full text-charcoal/60 hover:text-charcoal cursor-pointer"
+                  className="absolute top-3 right-3 p-1.5 bg-elevated/90 border border-border rounded-full text-muted-foreground hover:text-foreground cursor-pointer"
                   aria-label="Remove media"
                 >
                   <X size={16} />
@@ -243,7 +243,7 @@ export function CreatePostModal({ isOpen, onClose, onPost, showPinOption = false
               </div>
             ) : (
               <div className="flex flex-col items-center gap-4 p-8 text-center">
-                <div className="flex gap-3 text-teal">
+                <div className="flex gap-3 text-primary">
                   <ImagePlus size={48} strokeWidth={1.25} />
                   <Film size={48} strokeWidth={1.25} />
                 </div>
@@ -269,7 +269,7 @@ export function CreatePostModal({ isOpen, onClose, onPost, showPinOption = false
               {user?.avatar ? (
                 <img src={user.avatar} alt="" className="w-9 h-9 rounded-full object-cover" />
               ) : (
-                <div className="w-9 h-9 rounded-full bg-teal-soft flex items-center justify-center text-xs font-medium">
+                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium">
                   {user?.name?.charAt(0) ?? 'S'}
                 </div>
               )}
@@ -284,7 +284,7 @@ export function CreatePostModal({ isOpen, onClose, onPost, showPinOption = false
             />
 
             {showPinOption && (
-              <label className="mt-4 flex items-start gap-3 rounded-sm border border-border bg-cream-dark/40 px-3 py-3 cursor-pointer">
+              <label className="mt-4 flex items-start gap-3 rounded-sm border border-border bg-muted/40 px-3 py-3 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={pinned}
@@ -292,8 +292,8 @@ export function CreatePostModal({ isOpen, onClose, onPost, showPinOption = false
                   className="mt-0.5 accent-teal"
                 />
                 <span>
-                  <span className="block text-sm font-medium text-charcoal">Pin to top</span>
-                  <span className="block text-xs text-charcoal/55 mt-0.5">
+                  <span className="block text-sm font-medium text-foreground">Pin to top</span>
+                  <span className="block text-xs text-foreground/55 mt-0.5">
                     Pinned posts stay at the top of the community feed.
                   </span>
                 </span>
@@ -304,7 +304,7 @@ export function CreatePostModal({ isOpen, onClose, onPost, showPinOption = false
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="mt-4 text-sm text-teal hover:underline cursor-pointer text-left"
+                className="mt-4 text-sm text-primary hover:underline cursor-pointer text-left"
               >
                 Change photo or video
               </button>
@@ -323,13 +323,13 @@ export function CreatePostModal({ isOpen, onClose, onPost, showPinOption = false
       </div>
 
       {showCropModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-charcoal/80 p-4">
-          <div className="bg-cream border border-border rounded-sm w-full max-w-md p-5 sm:p-6 shadow-xl">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-sidebar/80 p-4">
+          <div className="bg-elevated rounded-[16px] border border-border w-full max-w-md p-5 sm:p-6 shadow-xl">
             <h3 className="font-heading text-lg font-medium mb-1 text-center">Crop Your Photo</h3>
-            <p className="text-xs text-charcoal/50 text-center mb-4">
+            <p className="text-xs text-muted-foreground text-center mb-4">
               Portrait format — drag to adjust
             </p>
-            <div className="flex justify-center mb-5 max-h-[70vh] overflow-hidden rounded-sm bg-charcoal/5 px-2">
+            <div className="flex justify-center mb-5 max-h-[70vh] overflow-hidden rounded-[12px] bg-sidebar/5 px-2">
               <ReactCrop
                 crop={crop}
                 onChange={(pixelCrop, percentCrop) => {

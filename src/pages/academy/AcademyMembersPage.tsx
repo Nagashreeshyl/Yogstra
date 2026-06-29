@@ -150,14 +150,14 @@ export function AcademyMembersPage() {
             placeholder="user@example.com"
           />
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="invite-role" className="text-sm font-medium text-charcoal">
+            <label htmlFor="invite-role" className="text-sm font-medium text-foreground">
               Role
             </label>
             <select
               id="invite-role"
               value={inviteRole}
               onChange={(e) => setInviteRole(e.target.value as AcademyMemberRole)}
-              className="w-full px-4 py-2.5 text-sm bg-cream border border-border rounded-sm focus:outline-none focus:border-teal"
+              className="w-full px-4 py-2.5 text-sm bg-elevated rounded-[16px] border border-border focus:outline-none focus:border-primary"
             >
               {ROLE_OPTIONS.map((role) => (
                 <option key={role} value={role}>
@@ -204,7 +204,7 @@ export function AcademyMembersPage() {
                     void handleRoleChange(member.id, e.target.value as AcademyMemberRole)
                   }
                   disabled={member.role === 'owner'}
-                  className="px-2 py-1 text-sm bg-cream border border-border rounded-sm focus:outline-none focus:border-teal"
+                  className="px-2 py-1 text-sm bg-elevated rounded-[16px] border border-border focus:outline-none focus:border-primary"
                 >
                   {ROLE_OPTIONS.map((role) => (
                     <option key={role} value={role}>
@@ -214,11 +214,11 @@ export function AcademyMembersPage() {
                 </select>
               </td>
               <td className="px-4 py-3">
-                <Badge variant={member.status === 'active' ? 'teal' : 'default'}>
+                <Badge variant={member.status === 'active' ? 'primary' : 'default'}>
                   {member.status}
                 </Badge>
               </td>
-              <td className="px-4 py-3 text-charcoal/70">
+              <td className="px-4 py-3 text-muted-foreground">
                 {member.joinedAt
                   ? new Date(member.joinedAt).toLocaleDateString('en-IN')
                   : member.status === 'invited'

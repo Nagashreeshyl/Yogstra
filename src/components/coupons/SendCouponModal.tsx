@@ -106,55 +106,55 @@ export function SendCouponModal({
   return (
     <Modal isOpen={isOpen} onClose={handleClose} className="max-w-lg p-6">
       <h2 className="font-heading text-lg font-medium mb-1">Send coupon</h2>
-      <p className="text-sm text-charcoal/55 mb-1">
-        Code <span className="font-mono font-semibold text-teal">{coupon.code}</span>
+      <p className="text-sm text-foreground/55 mb-1">
+        Code <span className="font-mono font-semibold text-primary">{coupon.code}</span>
       </p>
-      <p className="text-xs text-charcoal/45 mb-4">
+      <p className="text-xs text-muted-foreground/70 mb-4">
         {formatCouponSummary(coupon)}
         <span className="block mt-0.5">{formatCouponLimits(coupon)}</span>
       </p>
 
       <div className="relative mb-3">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-charcoal/40" />
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70" />
         <input
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search students..."
-          className="w-full pl-9 pr-3 py-2.5 text-sm border border-border rounded-sm bg-cream focus:outline-none focus:border-teal"
+          className="w-full pl-9 pr-3 py-2.5 text-sm rounded-[16px] border border-border bg-elevated focus:outline-none focus:border-primary"
         />
       </div>
 
       <div className="flex items-center justify-between mb-2">
-        <p className="text-xs text-charcoal/50">
+        <p className="text-xs text-muted-foreground">
           {selected.size} selected · {filtered.length} shown
         </p>
         {filtered.length > 0 && (
           <button
             type="button"
             onClick={toggleAllVisible}
-            className="text-xs font-semibold text-teal hover:text-teal-dark cursor-pointer"
+            className="text-xs font-semibold text-primary hover:text-primary-dark cursor-pointer"
           >
             {allVisibleSelected ? 'Deselect all' : 'Select all'}
           </button>
         )}
       </div>
 
-      <div className="border border-border rounded-sm max-h-64 overflow-y-auto divide-y divide-border">
+      <div className="rounded-[16px] border border-border max-h-64 overflow-y-auto divide-y divide-border">
         {loading ? (
           <div className="p-4">
             <TeacherTableSkeleton rows={4} />
           </div>
         ) : filtered.length === 0 ? (
-          <p className="text-sm text-charcoal/50 p-4 text-center">No students match your search.</p>
+          <p className="text-sm text-muted-foreground p-4 text-center">No students match your search.</p>
         ) : (
           filtered.map((student) => {
             const checked = selected.has(student.id)
             return (
               <label
                 key={student.id}
-                className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-cream-dark/60 ${
-                  checked ? 'bg-teal-soft/50' : ''
+                className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-muted/60 ${
+                  checked ? 'bg-primary/10/50' : ''
                 }`}
               >
                 <input
@@ -167,7 +167,7 @@ export function SendCouponModal({
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium truncate">{student.name}</p>
                   {student.phone && (
-                    <p className="text-xs text-charcoal/45 truncate">{student.phone}</p>
+                    <p className="text-xs text-muted-foreground/70 truncate">{student.phone}</p>
                   )}
                 </div>
               </label>

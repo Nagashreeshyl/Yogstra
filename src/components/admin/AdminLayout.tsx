@@ -1,5 +1,5 @@
 import { Link, Outlet } from 'react-router-dom'
-import { AppShell, adminNavItems } from '../shell'
+import { AppShell, adminNavItems, PageContainer } from '../shell'
 
 const adminFooter = (
   <Link
@@ -18,7 +18,9 @@ export function AdminLayout() {
       navItems={adminNavItems}
       footer={adminFooter}
     >
-      <Outlet />
+      <PageContainer width="wide">
+        <Outlet />
+      </PageContainer>
     </AppShell>
   )
 }

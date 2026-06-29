@@ -11,6 +11,10 @@ import {
   getCouponAvailability,
   type TeacherCoupon,
 } from '../../services/coupons'
+import { PageContainer } from '../../components/shell/PageContainer'
+import { PageHeader } from '../../components/shell/PageHeader'
+import { EmptyState } from '../../components/shell/EmptyState'
+import { DashboardCard } from '../../components/student/dashboard/DashboardCard'
 import { SendCouponModal } from '../../components/coupons/SendCouponModal'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -45,13 +49,13 @@ function availabilityLabel(coupon: TeacherCoupon) {
 function availabilityClass(coupon: TeacherCoupon) {
   switch (getCouponAvailability(coupon)) {
     case 'active':
-      return 'bg-teal-soft text-teal'
+      return 'bg-primary/10 text-primary'
     case 'expired':
-      return 'bg-charcoal/10 text-charcoal/60'
+      return 'bg-sidebar/10 text-muted-foreground'
     case 'depleted':
       return 'bg-amber-100 text-amber-900'
     default:
-      return 'bg-charcoal/10 text-charcoal/50'
+      return 'bg-sidebar/10 text-muted-foreground'
   }
 }
 
@@ -135,15 +139,14 @@ export function TeacherCouponsPage() {
     <>
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      <div className="p-4 sm:p-8 max-w-2xl">
-        <div className="flex items-center gap-2 mb-6">
-          <Tag size={22} className="text-teal" />
-          <h1 className="text-xl font-semibold">Coupon Codes</h1>
-        </div>
+      <PageContainer width="narrow">
+        <div className="space-y-6">
+          <PageHeader
+            title="Coupon Codes"
+            description="Create discount codes for your students to use when booking classes."
+          />
 
-        <section className="border border-border rounded-sm bg-cream p-5 mb-8">
-          <h2 className="text-sm font-semibold mb-4">Create a new coupon</h2>
-
+          <DashboardCard title="Create a new coupon">
           <div className="grid sm:grid-cols-2 gap-4 mb-4">
             <Select
               label="Class type"
@@ -196,7 +199,7 @@ export function TeacherCouponsPage() {
             onChange={(e) => setMaxUses(e.target.value)}
             placeholder="Unlimited — e.g. 5 for first 5 enrollees"
           />
-          <p className="text-xs text-charcoal/45 mt-1.5">
+          <p className="text-xs text-muted-foreground/70 mt-1.5">
             Coupon stops working after the validity period ends or when the redemption limit is reached.
           </p>
 
@@ -209,21 +212,21 @@ export function TeacherCouponsPage() {
           </Button>
 
           {generated && (
-            <div className="mt-6 border border-teal/30 bg-teal-soft/40 rounded-sm p-4">
-              <p className="text-xs text-charcoal/50 uppercase tracking-wide mb-1">Your new code</p>
+            <div className="mt-6 border border-primary/20 bg-primary/10/40 rounded-[16px] p-4">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Your new code</p>
               <div className="flex flex-wrap items-center gap-3">
-                <p className="font-mono text-lg font-bold text-teal tracking-wide">{generated.code}</p>
+                <p className="font-mono text-lg font-bold text-primary tracking-wide">{generated.code}</p>
                 <button
                   type="button"
                   onClick={() => void copyCode(generated.code)}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-charcoal/60 hover:text-teal cursor-pointer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-primary cursor-pointer"
                 >
                   <Copy size={14} />
                   Copy
                 </button>
               </div>
-              <p className="text-sm text-charcoal/70 mt-2">{formatCouponSummary(generated)}</p>
-              <p className="text-xs text-charcoal/50 mt-1">{formatCouponLimits(generated)}</p>
+              <p className="text-sm text-muted-foreground mt-2">{formatCouponSummary(generated)}</p>
+              <p className="text-xs text-muted-foreground mt-1">{formatCouponLimits(generated)}</p>
               <Button
                 className="mt-4 gap-1.5"
                 onClick={() => setSendTarget(generated)}
@@ -233,13 +236,17 @@ export function TeacherCouponsPage() {
               </Button>
             </div>
           )}
-        </section>
+          </DashboardCard>
 
-        <section>
-          <h2 className="text-sm font-semibold text-charcoal/70 mb-3">Your coupons</h2>
-          {!coupons?.length ? (
-            <p className="text-sm text-charcoal/50">No coupons yet. Generate one above.</p>
-          ) : (
+          <section>
+            <h2 className="text-sm font-semibold text-muted-foreground mb-3">Your coupons</h2>
+            {!coupons?.length ? (
+              <EmptyState
+                icon={<Tag size={24} />}
+                title="No coupons yet"
+                description="Generate one above to share with your students."
+              />
+            ) : (
             <ul className="space-y-3">
               {coupons.map((c) => {
                 const status = availabilityLabel(c)
@@ -248,13 +255,13 @@ export function TeacherCouponsPage() {
                 return (
                   <li
                     key={c.id}
-                    className={`border rounded-sm p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                    className={`rounded-[16px] border border-border p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                       isActive ? 'border-border' : 'border-border/60 opacity-80'
                     }`}
                   >
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-mono font-semibold text-teal">{c.code}</p>
+                        <p className="font-mono font-semibold text-primary">{c.code}</p>
                         {status && (
                           <span
                             className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full ${availabilityClass(c)}`}
@@ -263,9 +270,9 @@ export function TeacherCouponsPage() {
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-charcoal/70 mt-0.5">{formatCouponSummary(c)}</p>
-                      <p className="text-xs text-charcoal/50 mt-1">{formatCouponLimits(c)}</p>
-                      <p className="text-xs text-charcoal/45 mt-0.5">
+                      <p className="text-sm text-muted-foreground mt-0.5">{formatCouponSummary(c)}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{formatCouponLimits(c)}</p>
+                      <p className="text-xs text-muted-foreground/70 mt-0.5">
                         Created {formatRelativeDate(c.createdAt)}
                         {typeof c.sentCount === 'number' && c.sentCount > 0
                           ? ` · Sent to ${c.sentCount} student${c.sentCount === 1 ? '' : 's'}`
@@ -292,8 +299,9 @@ export function TeacherCouponsPage() {
               })}
             </ul>
           )}
-        </section>
-      </div>
+          </section>
+        </div>
+      </PageContainer>
 
       <SendCouponModal
         isOpen={Boolean(sendTarget)}

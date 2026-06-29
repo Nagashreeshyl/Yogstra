@@ -18,7 +18,7 @@ export function Toast({ message, type = 'success', onClose }: ToastProps) {
       ? 'bg-red-50 border-red-200 text-red-800'
       : type === 'info'
         ? 'bg-amber-50 border-amber-200 text-amber-900'
-        : 'bg-cream border-border text-charcoal'
+        : 'bg-elevated border-border text-foreground'
 
   return (
     <div
@@ -28,7 +28,7 @@ export function Toast({ message, type = 'success', onClose }: ToastProps) {
       <button
         type="button"
         onClick={onClose}
-        className="text-charcoal/50 hover:text-charcoal cursor-pointer"
+        className="text-muted-foreground hover:text-foreground cursor-pointer"
         aria-label="Dismiss"
       >
         <X size={16} />

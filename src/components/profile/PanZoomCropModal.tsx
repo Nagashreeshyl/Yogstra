@@ -134,9 +134,9 @@ export function PanZoomCropModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="bg-cream rounded-lg p-6 max-w-md w-full">
+      <div className="bg-elevated rounded-lg p-6 max-w-md w-full">
         <h3 className="font-heading text-lg font-medium mb-2 text-center">{title}</h3>
-        <p className="text-xs text-charcoal/60 text-center mb-4">{hint}</p>
+        <p className="text-xs text-muted-foreground text-center mb-4">{hint}</p>
 
         <div className="flex justify-center mb-4">
           <div
@@ -176,7 +176,7 @@ export function PanZoomCropModal({
           </div>
         </div>
 
-        <label className="block text-sm text-charcoal/70 mb-1">Zoom</label>
+        <label className="block text-sm text-muted-foreground mb-1">Zoom</label>
         <input
           type="range"
           min={minScale}

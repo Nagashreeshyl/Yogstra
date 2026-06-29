@@ -3,6 +3,9 @@ import { useEffect, useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { getPostLoginPath } from '../utils/authRouting'
 import { reapplyAsTeacher } from '../services/teachers'
+import { PageContainer } from '../components/shell/PageContainer'
+import { PageHeader } from '../components/shell/PageHeader'
+import { ErrorState } from '../components/shell/ErrorState'
 import { Button } from '../components/ui/Button'
 import { SimplePageSkeleton } from '../components/ui/Skeleton'
 import { PublicFooter } from '../components/layout/PublicFooter'
@@ -25,7 +28,7 @@ export function TeacherPendingPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-full flex items-center justify-center bg-cream">
+      <div className="min-h-full flex items-center justify-center bg-elevated">
         <SimplePageSkeleton />
       </div>
     )
@@ -33,11 +36,13 @@ export function TeacherPendingPage() {
 
   if (!user) {
     return (
-      <div className="min-h-full flex flex-col items-center justify-center p-8 bg-cream text-center">
-        <p className="text-charcoal/60 mb-4">Please log in to view your account status.</p>
-        <Link to="/auth/teacher">
-          <Button>Teacher Login</Button>
-        </Link>
+      <div className="min-h-full flex flex-col items-center justify-center bg-background">
+        <PageContainer width="narrow" className="text-center !py-8">
+          <PageHeader title="Account status" description="Please log in to view your account status." />
+          <Link to="/auth/teacher">
+            <Button>Teacher Login</Button>
+          </Link>
+        </PageContainer>
       </div>
     )
   }
@@ -69,27 +74,29 @@ export function TeacherPendingPage() {
   }
 
   return (
-    <div className="min-h-full flex flex-col bg-cream">
-      <div className="flex-1 flex flex-col items-center justify-center p-8">
-      <div className="max-w-md text-center border border-border rounded-sm p-8 bg-cream">
-        <h1 className="font-heading text-2xl font-medium mb-4">
-          {isRemoved
-            ? 'Teacher Account Removed'
-            : isRejected
-              ? 'Application Not Approved'
-              : 'Account Under Verification'}
-        </h1>
-        <p className="text-charcoal/70 leading-relaxed mb-6">
-          {isRemoved
-            ? 'Your teacher account was removed by an admin. You no longer have dashboard access. You can request verification again to rejoin Yogstra as a teacher.'
-            : isRejected
-              ? 'Your teacher application was not approved. Please contact Yogstra support if you believe this is an error.'
-              : 'Your teacher account is under verification. We will verify your credentials and contact you within 12–24 hours on your registered phone number. You will receive full dashboard access once verified.'}
-        </p>
-        {reapplyError && (
-          <p className="text-sm text-red-600 mb-4">{reapplyError}</p>
-        )}
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+    <div className="min-h-full flex flex-col bg-elevated">
+      <div className="flex-1 flex flex-col items-center justify-center">
+        <PageContainer width="narrow" className="!py-8">
+          <div className="rounded-[16px] border border-border p-8 bg-elevated text-center space-y-6">
+            <PageHeader
+              title={
+                isRemoved
+                  ? 'Teacher Account Removed'
+                  : isRejected
+                    ? 'Application Not Approved'
+                    : 'Account Under Verification'
+              }
+              description={
+                isRemoved
+                  ? 'Your teacher account was removed by an admin. You no longer have dashboard access. You can request verification again to rejoin Yogstra as a teacher.'
+                  : isRejected
+                    ? 'Your teacher application was not approved. Please contact Yogstra support if you believe this is an error.'
+                    : 'Your teacher account is under verification. We will verify your credentials and contact you within 12–24 hours on your registered phone number. You will receive full dashboard access once verified.'
+              }
+              className="justify-center [&_h1]:text-center [&_p]:mx-auto"
+            />
+            {reapplyError && <ErrorState message={reapplyError} />}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
           {isRemoved && (
             <Button onClick={() => void handleReapply()} disabled={reapplying}>
               {reapplying ? 'Submitting...' : 'Request Again'}
@@ -99,8 +106,9 @@ export function TeacherPendingPage() {
             <Button variant="secondary">Browse Yogstra</Button>
           </Link>
           <Button onClick={() => logout()}>Logout</Button>
-        </div>
-      </div>
+            </div>
+          </div>
+        </PageContainer>
       </div>
       <PublicFooter />
     </div>

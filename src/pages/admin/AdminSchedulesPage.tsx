@@ -6,6 +6,7 @@ import { fetchSchedulesByTeacher } from '../../services/schedules'
 import { Select } from '../../components/ui/Select'
 import { Badge } from '../../components/ui/Badge'
 import { ScheduleCalendarSkeleton } from '../../components/ui/Skeleton'
+import { PageHeader } from '../../components/shell/PageHeader'
 
 export function AdminSchedulesPage() {
   const { data: teachers, refetch: refetchTeachers } = useAsyncData(() => fetchAllTeachersAdmin())
@@ -27,8 +28,8 @@ export function AdminSchedulesPage() {
   useLiveDataRefresh(refreshAll, ['schedules', 'teachers'])
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <h1 className="font-heading text-3xl font-medium mb-8">Schedules</h1>
+    <div className="space-y-6">
+      <PageHeader title="Schedules" description="Class schedules across the platform." />
 
       <div className="max-w-xs mb-8">
         <Select
@@ -43,22 +44,22 @@ export function AdminSchedulesPage() {
       </div>
 
       {teacher && (
-        <p className="text-sm text-charcoal/60 mb-4">
-          Calendar for <span className="font-medium text-charcoal">{teacher.name}</span>
+        <p className="text-sm text-muted-foreground mb-4">
+          Calendar for <span className="font-medium text-foreground">{teacher.name}</span>
         </p>
       )}
 
       {loading ? (
         <ScheduleCalendarSkeleton />
       ) : (schedules ?? []).length === 0 ? (
-        <p className="text-charcoal/50">No scheduled classes for this teacher.</p>
+        <p className="text-muted-foreground">No scheduled classes for this teacher.</p>
       ) : (
-        <div className="border border-border rounded-sm divide-y divide-border">
+        <div className="rounded-[16px] border border-border divide-y divide-border">
           {schedules!.map((cls) => (
             <div key={cls.id} className="px-4 py-3 flex items-center justify-between gap-4">
               <div>
                 <p className="font-medium text-sm">{cls.date} · {cls.time}</p>
-                <p className="text-xs text-charcoal/50">{cls.studentNames.join(', ')}</p>
+                <p className="text-xs text-muted-foreground">{cls.studentNames.join(', ')}</p>
               </div>
               <Badge variant="mode">{cls.type}</Badge>
             </div>

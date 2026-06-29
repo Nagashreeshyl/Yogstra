@@ -3,6 +3,8 @@ import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useLiveDataRefresh } from '../../hooks/useLiveDataRefresh'
 import { fetchTeacherSchedulesForMonth } from '../../services/classOrders'
+import { PageContainer } from '../../components/shell/PageContainer'
+import { PageHeader } from '../../components/shell/PageHeader'
 import { TeacherScheduleCalendar } from '../../components/schedule/TeacherScheduleCalendar'
 
 export function TeacherSchedulePage() {
@@ -30,17 +32,19 @@ export function TeacherSchedulePage() {
   }, [])
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
-      <h1 className="font-heading text-3xl font-medium mb-2">Schedule</h1>
-      <p className="text-sm text-charcoal/50 mb-8">
-        Your calendar updates automatically when students book and pay for classes.
-      </p>
+    <PageContainer>
+      <div className="space-y-6">
+        <PageHeader
+          title="Schedule"
+          description="Your calendar updates automatically when students book and pay for classes."
+        />
 
-      <TeacherScheduleCalendar
-        schedules={schedules ?? []}
-        loading={loading}
-        onMonthChange={handleMonthChange}
-      />
-    </div>
+        <TeacherScheduleCalendar
+          schedules={schedules ?? []}
+          loading={loading}
+          onMonthChange={handleMonthChange}
+        />
+      </div>
+    </PageContainer>
   )
 }

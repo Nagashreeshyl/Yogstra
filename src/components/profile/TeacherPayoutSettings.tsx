@@ -49,14 +49,14 @@ export function TeacherPayoutSettings() {
   }
 
   if (loading && !payout) {
-    return <p className="text-charcoal/50">Loading payout settings…</p>
+    return <p className="text-muted-foreground">Loading payout settings…</p>
   }
 
   return (
     <div className="space-y-4 max-w-lg">
       <div>
         <h2 className="font-heading text-lg font-medium mb-1">Receive via UPI</h2>
-        <p className="text-sm text-charcoal/55">
+        <p className="text-sm text-foreground/55">
           Add your UPI ID. Yogstra admin pays teachers manually via GPay, PhonePe, Paytm, etc.
         </p>
       </div>

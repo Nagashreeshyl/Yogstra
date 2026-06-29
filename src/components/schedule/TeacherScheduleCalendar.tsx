@@ -63,12 +63,12 @@ export function TeacherScheduleCalendar({ schedules, loading, onMonthChange }: T
   }
 
   return (
-    <div className="border border-border rounded-sm bg-cream overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-surface-muted">
+    <div className="rounded-[16px] border border-border bg-elevated overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted">
         <button
           type="button"
           onClick={() => setViewDate(new Date(year, month - 1, 1))}
-          className="p-1.5 rounded-sm hover:bg-surface-elevated cursor-pointer text-charcoal/60"
+          className="p-1.5 rounded-sm hover:bg-elevated cursor-pointer text-muted-foreground"
           aria-label="Previous month"
         >
           <ChevronLeft size={18} />
@@ -77,7 +77,7 @@ export function TeacherScheduleCalendar({ schedules, loading, onMonthChange }: T
         <button
           type="button"
           onClick={() => setViewDate(new Date(year, month + 1, 1))}
-          className="p-1.5 rounded-sm hover:bg-surface-elevated cursor-pointer text-charcoal/60"
+          className="p-1.5 rounded-sm hover:bg-elevated cursor-pointer text-muted-foreground"
           aria-label="Next month"
         >
           <ChevronRight size={18} />
@@ -86,13 +86,13 @@ export function TeacherScheduleCalendar({ schedules, loading, onMonthChange }: T
 
       <div className="grid grid-cols-7 gap-px bg-border p-px">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
-          <div key={d} className="bg-cream text-center text-[10px] font-semibold text-charcoal/45 py-2">
+          <div key={d} className="bg-elevated text-center text-[10px] font-semibold text-muted-foreground/70 py-2">
             {d}
           </div>
         ))}
         {cells.map((day, idx) => {
           if (!day) {
-            return <div key={`empty-${idx}`} className="bg-cream min-h-[72px]" />
+            return <div key={`empty-${idx}`} className="bg-elevated min-h-[72px]" />
           }
           const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
           const items = byDate.get(dateKey) ?? []
@@ -105,13 +105,13 @@ export function TeacherScheduleCalendar({ schedules, loading, onMonthChange }: T
               key={dateKey}
               type="button"
               onClick={() => setSelectedDay(isSelected ? null : dateKey)}
-              className={`bg-cream min-h-[72px] p-1.5 text-left cursor-pointer transition-colors hover:bg-surface-muted ${
-                isSelected ? 'ring-2 ring-inset ring-teal bg-teal-soft/40' : ''
+              className={`bg-elevated min-h-[72px] p-1.5 text-left cursor-pointer transition-colors hover:bg-muted ${
+                isSelected ? 'ring-2 ring-inset ring-teal bg-primary/10/40' : ''
               }`}
             >
               <span
                 className={`inline-flex w-6 h-6 items-center justify-center rounded-full text-xs font-medium ${
-                  isToday ? 'bg-teal text-cream' : 'text-charcoal'
+                  isToday ? 'bg-primary text-primary-foreground' : 'text-foreground'
                 }`}
               >
                 {day}
@@ -121,7 +121,7 @@ export function TeacherScheduleCalendar({ schedules, loading, onMonthChange }: T
                   {items.slice(0, 2).map((item) => (
                     <div
                       key={item.id}
-                      className="text-[9px] leading-tight truncate bg-teal/15 text-teal-dark px-1 py-0.5 rounded-sm"
+                      className="text-[9px] leading-tight truncate bg-primary/15 text-primary-dark px-1 py-0.5 rounded-sm"
                     >
                       {new Date(item.scheduled_at).toLocaleTimeString('en-IN', {
                         hour: '2-digit',
@@ -130,7 +130,7 @@ export function TeacherScheduleCalendar({ schedules, loading, onMonthChange }: T
                     </div>
                   ))}
                   {items.length > 2 && (
-                    <p className="text-[9px] text-charcoal/45">+{items.length - 2} more</p>
+                    <p className="text-[9px] text-muted-foreground/70">+{items.length - 2} more</p>
                   )}
                 </div>
               )}
@@ -140,7 +140,7 @@ export function TeacherScheduleCalendar({ schedules, loading, onMonthChange }: T
       </div>
 
       {selectedDay && (
-        <div className="border-t border-border p-4 bg-surface-muted/50">
+        <div className="border-t border-border p-4 bg-muted/50">
           <p className="text-sm font-semibold mb-3">
             {new Date(selectedDay).toLocaleDateString('en-IN', {
               weekday: 'long',
@@ -149,7 +149,7 @@ export function TeacherScheduleCalendar({ schedules, loading, onMonthChange }: T
             })}
           </p>
           {selectedItems.length === 0 ? (
-            <p className="text-sm text-charcoal/50">No bookings on this date.</p>
+            <p className="text-sm text-muted-foreground">No bookings on this date.</p>
           ) : (
             <div className="space-y-2">
               {selectedItems
@@ -157,7 +157,7 @@ export function TeacherScheduleCalendar({ schedules, loading, onMonthChange }: T
                 .map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between gap-3 bg-cream border border-border rounded-sm px-3 py-2.5"
+                    className="flex items-center justify-between gap-3 bg-elevated rounded-[16px] border border-border px-3 py-2.5"
                   >
                     <div>
                       <p className="text-sm font-medium">
@@ -166,7 +166,7 @@ export function TeacherScheduleCalendar({ schedules, loading, onMonthChange }: T
                           minute: '2-digit',
                         })}
                       </p>
-                      <p className="text-xs text-charcoal/55 mt-0.5">
+                      <p className="text-xs text-foreground/55 mt-0.5">
                         {getStudentName(item.student)}
                       </p>
                     </div>

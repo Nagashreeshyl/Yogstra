@@ -5,6 +5,7 @@ import { fetchAllTeachersAdmin } from '../../services/teachers'
 import { fetchStudents } from '../../services/students'
 import { AdminTable, AdminPagination } from '../../components/admin/AdminTable'
 import { Badge } from '../../components/ui/Badge'
+import { PageHeader } from '../../components/shell/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { TeacherTableSkeleton } from '../../components/ui/Skeleton'
 
@@ -76,8 +77,8 @@ export function AdminUsersPage() {
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <h1 className="font-heading text-3xl font-medium mb-8">Users</h1>
+    <div className="space-y-6">
+      <PageHeader title="Users" description="Cross-role user management." />
 
       {loading ? (
         <TeacherTableSkeleton rows={6} />
@@ -105,7 +106,7 @@ export function AdminUsersPage() {
           >
             {paginated.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-3 text-sm text-charcoal/50">
+                <td colSpan={8} className="px-4 py-3 text-sm text-muted-foreground">
                   No users found.
                 </td>
               </tr>
@@ -114,13 +115,13 @@ export function AdminUsersPage() {
                 <tr key={`${u.role}-${u.id}`} className="border-b border-border last:border-0">
                   <td className="px-4 py-3 font-medium">{u.name}</td>
                   <td className="px-4 py-3 capitalize">
-                    <Badge variant={u.role === 'teacher' ? 'teal' : 'verified'}>{u.role}</Badge>
+                    <Badge variant={u.role === 'teacher' ? 'primary' : 'verified'}>{u.role}</Badge>
                   </td>
-                  <td className="px-4 py-3 text-charcoal/70">{u.email || '—'}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{u.email || '—'}</td>
                   <td className="px-4 py-3">{u.phone || '—'}</td>
                   <td className="px-4 py-3">{u.city}</td>
                   <td className="px-4 py-3">{u.status}</td>
-                  <td className="px-4 py-3 text-charcoal/70">{u.registeredDate}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{u.registeredDate}</td>
                   <td className="px-4 py-3">
                     <Link
                       to={u.role === 'teacher' ? `/teachers/${u.id}` : `/students/${u.id}`}

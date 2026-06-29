@@ -62,11 +62,11 @@ export function ClassHourTimeUpNotice({
 
   return (
     <div className="absolute inset-x-0 top-4 z-[110] flex justify-center px-4 pointer-events-none">
-      <div className="pointer-events-auto max-w-sm rounded-sm border border-amber-400/45 bg-charcoal/95 px-4 py-3 shadow-lg flex items-start gap-3">
+      <div className="pointer-events-auto max-w-sm rounded-sm border border-amber-400/45 bg-sidebar/95 px-4 py-3 shadow-lg flex items-start gap-3">
         <Clock size={18} className="text-amber-300 shrink-0 mt-0.5" />
         <div className="min-w-0 flex-1 text-left">
-          <p className="text-cream text-sm font-medium">Time&apos;s up</p>
-          <p className="text-cream/55 text-xs mt-1">
+          <p className="text-primary-foreground text-sm font-medium">Time&apos;s up</p>
+          <p className="text-primary-foreground/55 text-xs mt-1">
             {role === 'teacher'
               ? `Your 1-hour slot with ${label} has ended. This is only a reminder — the call stays open until you end the class.`
               : `Your scheduled hour with ${label} has ended. Please stay on the call until your teacher ends the class.`}
@@ -75,7 +75,7 @@ export function ClassHourTimeUpNotice({
         <button
           type="button"
           onClick={() => setVisible(false)}
-          className="text-cream/45 hover:text-cream shrink-0 cursor-pointer"
+          className="text-primary-foreground/45 hover:text-primary-foreground shrink-0 cursor-pointer"
           aria-label="Dismiss"
         >
           <X size={16} />

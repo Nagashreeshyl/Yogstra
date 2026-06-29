@@ -101,13 +101,13 @@ export function AcademyStudentsPage() {
           {filtered.map((student) => (
             <tr key={student.studentId} className="border-b border-border last:border-0">
               <td className="px-4 py-3 font-medium">{student.studentName ?? 'Student'}</td>
-              <td className="px-4 py-3 text-charcoal/70">{student.batches.join(', ')}</td>
+              <td className="px-4 py-3 text-muted-foreground">{student.batches.join(', ')}</td>
               <td className="px-4 py-3">
-                <Badge variant={student.status === 'active' ? 'teal' : 'default'}>
+                <Badge variant={student.status === 'active' ? 'primary' : 'default'}>
                   {student.status}
                 </Badge>
               </td>
-              <td className="px-4 py-3 text-charcoal/70">
+              <td className="px-4 py-3 text-muted-foreground">
                 {new Date(student.enrolledAt).toLocaleDateString('en-IN')}
               </td>
               <td className="px-4 py-3">

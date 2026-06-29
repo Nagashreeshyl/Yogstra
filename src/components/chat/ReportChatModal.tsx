@@ -53,13 +53,13 @@ export function ReportChatModal({
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-charcoal/50" onClick={onClose} />
-      <div className="relative bg-cream border border-border rounded-sm w-full max-w-md p-6 shadow-xl">
+      <div className="absolute inset-0 bg-foreground/30" onClick={onClose} />
+      <div className="relative bg-elevated rounded-[16px] border border-border w-full max-w-md p-6 shadow-xl">
         <div className="flex items-center gap-2 mb-2">
           <Flag size={18} className="text-red-600" />
           <h3 className="font-heading text-lg font-medium">Report conversation</h3>
         </div>
-        <p className="text-sm text-charcoal/60 mb-4">
+        <p className="text-sm text-muted-foreground mb-4">
           Tell us why you are reporting your chat with {participantName}. A full snapshot is saved
           for admin review — even deleted messages.
         </p>
@@ -158,7 +158,7 @@ export function ChatHeaderMenu({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-9 h-9 inline-flex items-center justify-center rounded-full text-cream/70 hover:text-cream hover:bg-cream/10 cursor-pointer transition-colors"
+        className="w-9 h-9 inline-flex items-center justify-center rounded-full text-primary-foreground/70 hover:text-primary-foreground hover:bg-elevated/10 cursor-pointer transition-colors"
         aria-label="Chat options"
       >
         <MoreVertical size={20} />
@@ -177,7 +177,7 @@ export function ChatHeaderMenu({
                 handlers[key]()
               }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer text-left transition-colors ${
-                danger ? 'text-red-300 hover:bg-white/5' : 'text-cream hover:bg-white/5'
+                danger ? 'text-red-300 hover:bg-white/5' : 'text-primary-foreground hover:bg-white/5'
               }`}
             >
               <Icon size={16} className="opacity-80" />

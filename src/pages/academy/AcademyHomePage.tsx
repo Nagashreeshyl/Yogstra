@@ -89,7 +89,7 @@ export function AcademyHomePage() {
         title={academy?.name ?? data.academy.name}
         description={data.academy.description ?? 'Daily command center for academy owners and managers.'}
         actions={
-          <Badge variant="teal">{data.academy.status}</Badge>
+          <Badge variant="primary">{data.academy.status}</Badge>
         }
       />
 
@@ -130,7 +130,7 @@ export function AcademyHomePage() {
                       {batch.teacherName ? `Teacher: ${batch.teacherName}` : 'No teacher assigned'}
                     </p>
                   </div>
-                  <Badge variant={batch.status === 'active' ? 'teal' : 'default'}>{batch.status}</Badge>
+                  <Badge variant={batch.status === 'active' ? 'primary' : 'default'}>{batch.status}</Badge>
                 </li>
               ))}
             </ul>

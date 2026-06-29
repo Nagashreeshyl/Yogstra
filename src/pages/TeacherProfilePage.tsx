@@ -8,6 +8,8 @@ import { fetchTeacherById } from '../services/teachers'
 import { requestTeacherWithIntro } from '../services/teacherRequest'
 import { ensureDirectChat, formatChatError } from '../services/directChat'
 import { useApp } from '../context/AppContext'
+import { PageContainer } from '../components/shell/PageContainer'
+import { EmptyState } from '../components/shell/EmptyState'
 import { Avatar } from '../components/ui/Avatar'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
@@ -50,10 +52,13 @@ export function TeacherProfilePage() {
 
   if (!teacher) {
     return (
-      <div className="p-4 sm:p-6 lg:p-8 text-center">
-        <p className="text-charcoal/50 mb-4">Teacher not found.</p>
-        <Button onClick={() => navigate('/teachers')}>Back to Teachers</Button>
-      </div>
+      <PageContainer>
+        <EmptyState
+          title="Teacher not found"
+          description="This teacher profile may have been removed."
+          action={<Button onClick={() => navigate('/teachers')}>Back to Teachers</Button>}
+        />
+      </PageContainer>
     )
   }
 
@@ -124,8 +129,8 @@ export function TeacherProfilePage() {
 
   return (
     <>
-      <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
-        <div className="flex flex-col sm:flex-row gap-8 mb-8 pb-8 border-b border-border">
+      <PageContainer width="default">
+      <div className="flex flex-col sm:flex-row gap-8 mb-8 pb-8 border-b border-border">
           <Avatar src={teacher.photo} name={teacher.name} size={160} />
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
@@ -144,21 +149,21 @@ export function TeacherProfilePage() {
             <StarRating rating={teacher.rating} size={16} />
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 text-sm">
               <div>
-                <p className="text-charcoal/50 text-xs">Experience</p>
+                <p className="text-muted-foreground text-xs">Experience</p>
                 <p className="font-medium">{teacher.experienceYears} years</p>
               </div>
               <div>
-                <p className="text-charcoal/50 text-xs">Students</p>
+                <p className="text-muted-foreground text-xs">Students</p>
                 <p className="font-medium flex items-center gap-1">
                   <Users size={14} /> {teacher.totalStudents}
                 </p>
               </div>
               <div>
-                <p className="text-charcoal/50 text-xs">Monthly Fee</p>
+                <p className="text-muted-foreground text-xs">Monthly Fee</p>
                 <p className="font-medium">₹{teacher.monthlyFee.toLocaleString('en-IN')}</p>
               </div>
               <div>
-                <p className="text-charcoal/50 text-xs">Location</p>
+                <p className="text-muted-foreground text-xs">Location</p>
                 <p className="font-medium flex items-center gap-1">
                   <MapPin size={14} /> {teacher.city}
                 </p>
@@ -189,12 +194,12 @@ export function TeacherProfilePage() {
               )}
             </div>
             {requestError && (
-              <p className="text-sm text-red-600 mt-3 border border-red-200 bg-red-50 px-3 py-2 rounded-sm max-w-md">
+              <p className="text-sm text-red-600 mt-3 border border-red-200 bg-red-50 px-3 py-2 rounded-[16px] max-w-md">
                 {requestError}
               </p>
             )}
             {requestNotice && (
-              <p className="text-sm text-teal mt-3 border border-teal/30 bg-teal-soft px-3 py-2 rounded-sm max-w-md">
+              <p className="text-sm text-primary mt-3 border border-primary/20 bg-primary/10 px-3 py-2 rounded-[16px] max-w-md">
                 {requestNotice}
               </p>
             )}
@@ -209,8 +214,8 @@ export function TeacherProfilePage() {
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2.5 text-sm transition-colors cursor-pointer border-b-2 -mb-px whitespace-nowrap ${
                 activeTab === tab
-                  ? 'border-teal text-charcoal font-medium'
-                  : 'border-transparent text-charcoal/50 hover:text-charcoal'
+                  ? 'border-primary text-foreground font-medium'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
               }`}
             >
               {tab}
@@ -220,27 +225,27 @@ export function TeacherProfilePage() {
 
         <div className="prose-sm max-w-none">
           {activeTab === 'About' && (
-            <p className="text-charcoal/80 leading-relaxed">{teacher.bio}</p>
+            <p className="text-muted-foreground leading-relaxed">{teacher.bio}</p>
           )}
           {activeTab === 'Teaching Style' && (
-            <p className="text-charcoal/80 leading-relaxed">{teacher.teachingStyle}</p>
+            <p className="text-muted-foreground leading-relaxed">{teacher.teachingStyle}</p>
           )}
           {activeTab === 'Achievements' && (
             <ul className="space-y-2">
               {teacher.achievements.map((a) => (
-                <li key={a} className="text-charcoal/80 flex items-start gap-2">
-                  <span className="text-teal mt-1">•</span> {a}
+                <li key={a} className="text-muted-foreground flex items-start gap-2">
+                  <span className="text-primary mt-1">•</span> {a}
                 </li>
               ))}
             </ul>
           )}
           {activeTab === 'Pricing' && (
             <div className="grid sm:grid-cols-2 gap-6 max-w-xl">
-              <div className="border border-border rounded-sm p-4 bg-cream">
+              <div className="rounded-[16px] border border-border p-4 bg-elevated">
                 <h3 className="font-medium mb-3">1-on-1 classes</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-charcoal/60">1 week</span>
+                    <span className="text-muted-foreground">1 week</span>
                     <span className="font-medium">
                       {teacher.pricing.oneOnOneWeek > 0
                         ? `₹${teacher.pricing.oneOnOneWeek.toLocaleString('en-IN')}`
@@ -248,7 +253,7 @@ export function TeacherProfilePage() {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-charcoal/60">1 month</span>
+                    <span className="text-muted-foreground">1 month</span>
                     <span className="font-medium">
                       {teacher.pricing.oneOnOneMonth > 0
                         ? `₹${teacher.pricing.oneOnOneMonth.toLocaleString('en-IN')}`
@@ -257,11 +262,11 @@ export function TeacherProfilePage() {
                   </div>
                 </div>
               </div>
-              <div className="border border-border rounded-sm p-4 bg-cream">
+              <div className="rounded-[16px] border border-border p-4 bg-elevated">
                 <h3 className="font-medium mb-3">Group classes</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-charcoal/60">1 week</span>
+                    <span className="text-muted-foreground">1 week</span>
                     <span className="font-medium">
                       {teacher.pricing.groupWeek > 0
                         ? `₹${teacher.pricing.groupWeek.toLocaleString('en-IN')}`
@@ -269,7 +274,7 @@ export function TeacherProfilePage() {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-charcoal/60">1 month</span>
+                    <span className="text-muted-foreground">1 month</span>
                     <span className="font-medium">
                       {teacher.pricing.groupMonth > 0
                         ? `₹${teacher.pricing.groupMonth.toLocaleString('en-IN')}`
@@ -287,10 +292,10 @@ export function TeacherProfilePage() {
             </div>
           )}
           {activeTab === 'Reviews' && (
-            <p className="text-charcoal/50 text-sm">Reviews will appear here once students leave feedback.</p>
+            <p className="text-muted-foreground text-sm">Reviews will appear here once students leave feedback.</p>
           )}
         </div>
-      </div>
+      </PageContainer>
 
       {isStudent && user && buyThreadId && (
         <BuyClassModal

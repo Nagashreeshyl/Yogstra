@@ -62,34 +62,34 @@ export function AcademyFinancePage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <Card className="p-5">
-          <div className="flex items-center gap-2 mb-2 text-charcoal/50">
-            <IndianRupee size={16} className="text-teal" />
+          <div className="flex items-center gap-2 mb-2 text-muted-foreground">
+            <IndianRupee size={16} className="text-primary" />
             <span className="text-xs">Total collected</span>
           </div>
           <p className="font-heading text-2xl font-medium">
             ₹{data.totalCollected.toLocaleString('en-IN')}
           </p>
-          <p className="text-xs text-charcoal/45 mt-1">Paid class orders</p>
+          <p className="text-xs text-muted-foreground/70 mt-1">Paid class orders</p>
         </Card>
         <Card className="p-5">
-          <div className="flex items-center gap-2 mb-2 text-charcoal/50">
-            <TrendingUp size={16} className="text-teal" />
+          <div className="flex items-center gap-2 mb-2 text-muted-foreground">
+            <TrendingUp size={16} className="text-primary" />
             <span className="text-xs">Pending collections</span>
           </div>
           <p className="font-heading text-2xl font-medium">
             ₹{data.pendingCollections.toLocaleString('en-IN')}
           </p>
-          <p className="text-xs text-charcoal/45 mt-1">Unpaid class orders</p>
+          <p className="text-xs text-muted-foreground/70 mt-1">Unpaid class orders</p>
         </Card>
         <Card className="p-5">
-          <div className="flex items-center gap-2 mb-2 text-charcoal/50">
-            <Wallet size={16} className="text-teal" />
+          <div className="flex items-center gap-2 mb-2 text-muted-foreground">
+            <Wallet size={16} className="text-primary" />
             <span className="text-xs">Teacher payouts</span>
           </div>
           <p className="font-heading text-2xl font-medium">
             ₹{data.teacherPayouts.toLocaleString('en-IN')}
           </p>
-          <p className="text-xs text-charcoal/45 mt-1">Completed payouts to teachers</p>
+          <p className="text-xs text-muted-foreground/70 mt-1">Completed payouts to teachers</p>
         </Card>
       </div>
 
@@ -101,12 +101,12 @@ export function AcademyFinancePage() {
           description="Class payments from academy teachers will appear here once students purchase coaching."
         />
       ) : (
-        <div className="border border-border rounded-sm overflow-x-auto">
+        <div className="rounded-[16px] border border-border overflow-x-auto">
           <table className="w-full text-sm min-w-[640px]">
             <thead>
-              <tr className="bg-cream-dark border-b border-border">
+              <tr className="bg-muted border-b border-border">
                 {['Date', 'Description', 'Teacher', 'Amount', 'Status'].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left font-medium text-charcoal/70">
+                  <th key={h} className="px-4 py-3 text-left font-medium text-muted-foreground">
                     {h}
                   </th>
                 ))}
@@ -115,12 +115,12 @@ export function AcademyFinancePage() {
             <tbody>
               {data.transactions.map((tx) => (
                 <tr key={tx.id} className="border-b border-border last:border-0">
-                  <td className="px-4 py-3 text-charcoal/70">{formatRelativeDate(tx.createdAt)}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{formatRelativeDate(tx.createdAt)}</td>
                   <td className="px-4 py-3">{tx.description}</td>
                   <td className="px-4 py-3">{tx.counterpartyName ?? '—'}</td>
                   <td className="px-4 py-3 font-medium">₹{tx.amountInr.toLocaleString('en-IN')}</td>
                   <td className="px-4 py-3">
-                    <Badge variant={tx.status === 'paid' ? 'teal' : 'default'}>{tx.status}</Badge>
+                    <Badge variant={tx.status === 'paid' ? 'primary' : 'default'}>{tx.status}</Badge>
                   </td>
                 </tr>
               ))}

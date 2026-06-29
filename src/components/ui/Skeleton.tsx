@@ -5,7 +5,7 @@ interface SkeletonProps {
 export function Skeleton({ className = '' }: SkeletonProps) {
   return (
     <div
-      className={`animate-pulse rounded-sm bg-surface-inset/80 ${className}`}
+      className={`animate-pulse rounded-[12px] bg-muted/80 ${className}`}
       aria-hidden
     />
   )
@@ -50,7 +50,7 @@ export function ProfilePageSkeleton() {
 
 export function TeacherCardSkeleton() {
   return (
-    <div className="border border-border rounded-sm overflow-hidden bg-cream h-[440px] flex flex-col">
+    <div className="rounded-[16px] border border-border overflow-hidden bg-elevated h-[440px] flex flex-col">
       <Skeleton className="w-full h-[280px] rounded-none" />
       <div className="p-4 space-y-3 flex-1">
         <Skeleton className="h-5 w-3/4" />
@@ -74,7 +74,7 @@ export function TeacherGridSkeleton({ count = 6 }: { count?: number }) {
 
 export function UserDirectorySkeleton() {
   return (
-    <div className="border border-border rounded-sm overflow-hidden bg-cream shrink-0 w-full md:w-72 h-full">
+    <div className="rounded-[16px] border border-border overflow-hidden bg-elevated shrink-0 w-full md:w-72 h-full">
       {Array.from({ length: 6 }).map((_, i) => (
         <div key={i} className="flex items-center gap-3 px-3 py-3 border-b border-border">
           <Skeleton className="w-11 h-11 rounded-full shrink-0" />
@@ -90,15 +90,15 @@ export function UserDirectorySkeleton() {
 
 export function ChatWindowSkeleton() {
   return (
-    <div className="flex flex-col h-full min-h-[420px] bg-cream-dark border border-border rounded-sm overflow-hidden">
-      <div className="px-4 py-3 border-b border-border bg-charcoal flex items-center gap-3">
-        <Skeleton className="w-10 h-10 rounded-full bg-cream/20" />
+    <div className="flex flex-col h-full min-h-[420px] bg-muted rounded-[16px] border border-border overflow-hidden">
+      <div className="px-4 py-3 border-b border-border bg-sidebar flex items-center gap-3">
+        <Skeleton className="w-10 h-10 rounded-full bg-elevated/20" />
         <div className="flex-1 space-y-2">
-          <Skeleton className="h-4 w-32 bg-cream/20" />
-          <Skeleton className="h-3 w-24 bg-cream/10" />
+          <Skeleton className="h-4 w-32 bg-elevated/20" />
+          <Skeleton className="h-3 w-24 bg-elevated/10" />
         </div>
       </div>
-      <div className="flex-1 p-4 space-y-3 bg-cream-dark">
+      <div className="flex-1 p-4 space-y-3 bg-muted">
         <div className="flex justify-start">
           <Skeleton className="h-12 w-48 rounded-2xl" />
         </div>
@@ -121,7 +121,7 @@ export function PostFeedSkeleton({ count = 3 }: { count?: number }) {
   return (
     <div className="space-y-6 max-w-[470px]">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="border border-border rounded-sm bg-cream overflow-hidden">
+        <div key={i} className="rounded-[16px] border border-border bg-elevated overflow-hidden">
           <div className="flex items-center gap-3 p-3 border-b border-border">
             <Skeleton className="w-9 h-9 rounded-full" />
             <Skeleton className="h-4 w-28" />
@@ -140,7 +140,7 @@ export function PostFeedSkeleton({ count = 3 }: { count?: number }) {
 export function AdminChatSkeleton() {
   return (
     <div className="flex gap-6 h-[calc(100vh-220px)]">
-      <div className="w-80 shrink-0 border border-border rounded-sm bg-cream p-2 space-y-2">
+      <div className="w-80 shrink-0 rounded-[16px] border border-border bg-elevated p-2 space-y-2">
         {Array.from({ length: 4 }).map((_, i) => (
           <Skeleton key={i} className="h-20 w-full" />
         ))}
@@ -161,7 +161,7 @@ export function PageHeaderSkeleton() {
 
 export function ScheduleCalendarSkeleton() {
   return (
-    <div className="border border-border rounded-sm overflow-hidden">
+    <div className="rounded-[16px] border border-border overflow-hidden">
       <Skeleton className="h-12 w-full rounded-none" />
       <div className="grid grid-cols-7 gap-px bg-border p-px">
         {Array.from({ length: 35 }).map((_, i) => (
@@ -174,7 +174,7 @@ export function ScheduleCalendarSkeleton() {
 
 export function TeacherTableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
-    <div className="border border-border rounded-sm divide-y divide-border">
+    <div className="rounded-[16px] border border-border divide-y divide-border">
       {Array.from({ length: rows }).map((_, i) => (
         <Skeleton key={i} className="h-14 w-full rounded-none" />
       ))}
@@ -205,7 +205,7 @@ export function NotificationsListSkeleton({ count = 4 }: { count?: number }) {
       </div>
       <ul className="space-y-3">
         {Array.from({ length: count }).map((_, i) => (
-          <li key={i} className="border border-border rounded-sm p-4 bg-cream space-y-3">
+          <li key={i} className="rounded-[16px] border border-border p-4 bg-elevated space-y-3">
             <Skeleton className="h-4 w-40" />
             <Skeleton className="h-3 w-24" />
             <Skeleton className="h-16 w-full" />
