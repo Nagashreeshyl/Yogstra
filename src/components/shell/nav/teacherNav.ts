@@ -9,6 +9,7 @@ import {
   Ticket,
   IndianRupee,
   Settings,
+  Trophy,
 } from 'lucide-react'
 import type { ShellNavItem } from '../types'
 
@@ -40,6 +41,7 @@ export const teacherNavItems: ShellNavItem[] = [
   },
   { to: '/dashboard/teacher/coupons', label: 'Coupons', icon: Ticket, placement: ['sidebar', 'more'] },
   { to: '/dashboard/teacher/earnings', label: 'Earnings', icon: IndianRupee, placement: ['sidebar', 'more'] },
+  { to: '/dashboard/teacher/competitions', label: 'Competitions', icon: Trophy, placement: ['sidebar', 'more'] },
   {
     to: '/dashboard/teacher/settings',
     label: 'Settings',

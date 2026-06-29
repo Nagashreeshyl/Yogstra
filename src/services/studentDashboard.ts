@@ -7,6 +7,7 @@ import { fetchStudentCoachingTeachers, type StudentCoachingTeacher } from './liv
 import { fetchStudentSessionCount } from './schedules'
 import { fetchStudentScheduleChangeRequests } from './scheduleChangeRequests'
 import { fetchMessagingUsers, fetchDirectMessages } from './directChat'
+import { fetchStudentMonthlyAttendance } from './attendanceService'
 
 export type StudentDashboardCoach = {
   id: string
@@ -244,41 +245,6 @@ async function fetchNextStudentSchedule(studentId: string) {
   }
 }
 
-async function fetchMonthlyAttendance(studentId: string): Promise<StudentDashboardAttendance> {
-  const now = new Date()
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
-
-  const { data, error } = await supabase
-    .from('schedules')
-    .select('scheduled_at')
-    .eq('student_id', studentId)
-    .gte('scheduled_at', monthStart.toISOString())
-    .lte('scheduled_at', monthEnd.toISOString())
-    .order('scheduled_at', { ascending: true })
-
-  if (error) throw error
-
-  const rows = data ?? []
-  const past = rows.filter((row) => new Date(row.scheduled_at as string) <= now).length
-  const total = rows.length
-  const percentage = total === 0 ? null : Math.round((past / total) * 100)
-
-  const weeklyBuckets = [0, 0, 0, 0]
-  for (const row of rows) {
-    const date = new Date(row.scheduled_at as string)
-    if (date > now) continue
-    const weekIndex = Math.min(3, Math.floor((date.getDate() - 1) / 7))
-    weeklyBuckets[weekIndex] += 1
-  }
-
-  return {
-    percentage,
-    monthlyCounts: weeklyBuckets,
-    monthLabel: now.toLocaleDateString('en-IN', { month: 'long' }),
-  }
-}
-
 async function fetchWeeklySessionCounts(studentId: string): Promise<number[]> {
   const end = new Date()
   const start = new Date()
@@ -392,7 +358,7 @@ export async function fetchStudentDashboard(studentId: string): Promise<StudentD
     fetchNextStudentSchedule(studentId),
     fetchStudentSessionCount(studentId),
     fetchStudentScheduleChangeRequests(studentId),
-    fetchMonthlyAttendance(studentId),
+    fetchStudentMonthlyAttendance(studentId),
     fetchWeeklySessionCounts(studentId),
     estimateStreakWeeks(studentId),
     pickNextCompetition(studentId),

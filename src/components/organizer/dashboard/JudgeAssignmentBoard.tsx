@@ -8,6 +8,7 @@ import { EmptyState } from '../../shell/EmptyState'
 import type { OrganizerJudgeSummary } from '../../../services/organizerDashboard'
 import {
   assignJudgeToCompetition,
+  lockCompetitionCategory,
   updateJudgeCategory,
 } from '../../../services/organizerOperations'
 
@@ -46,6 +47,16 @@ export function JudgeAssignmentBoard({
     try {
       await assignJudgeToCompetition(competitionId, userId.trim(), organizerId)
       setUserId('')
+      onUpdated()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleLockCategory(categoryId: string) {
+    setBusy(true)
+    try {
+      await lockCompetitionCategory(competitionId, categoryId)
       onUpdated()
     } finally {
       setBusy(false)
@@ -99,7 +110,17 @@ export function JudgeAssignmentBoard({
                 onDrop={() => void handleAssign(category.id)}
                 className="rounded-[12px] border border-dashed border-border bg-muted/30 p-3 min-h-[100px]"
               >
-                <p className="text-sm font-medium text-foreground">{category.name}</p>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <p className="text-sm font-medium text-foreground">{category.name}</p>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={busy}
+                    onClick={() => void handleLockCategory(category.id)}
+                  >
+                    Lock category
+                  </Button>
+                </div>
                 <p className="text-xs text-muted-foreground mb-2">Drop a judge here</p>
                 <ul className="space-y-1">
                   {categoryJudges.map((judge) => (

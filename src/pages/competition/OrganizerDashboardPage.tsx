@@ -3,8 +3,9 @@ import { Trophy } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { fetchOrganizerDashboard } from '../../services/organizerDashboard'
-import { publishAllApprovedResults, publishCompetition } from '../../services/organizerOperations'
+import { publishAllApprovedResults, publishEventSchedule } from '../../services/organizerOperations'
 import { issueCertificate } from '../../services/certificateService'
+import { fetchCompetitionParticipants } from '../../services/registrationService'
 import { PageHeader } from '../../components/shell/PageHeader'
 import { ErrorState } from '../../components/shell/ErrorState'
 import { EmptyState } from '../../components/shell/EmptyState'
@@ -20,6 +21,7 @@ import { AnnouncementComposer } from '../../components/organizer/dashboard/Annou
 import { AnalyticsCards } from '../../components/organizer/dashboard/AnalyticsCards'
 import { CertificateQueue } from '../../components/organizer/dashboard/CertificateQueue'
 import { ResultApprovalTable } from '../../components/organizer/dashboard/ResultApprovalTable'
+import { ParticipantDocumentsPanel } from '../../components/organizer/dashboard/ParticipantDocumentsPanel'
 import { OrganizerQuickActions } from '../../components/organizer/dashboard/OrganizerQuickActions'
 import { OrganizerDashboardSkeleton } from '../../components/organizer/dashboard/OrganizerDashboardSkeleton'
 import { CreateCompetitionWizard } from '../../components/organizer/CreateCompetitionWizard'
@@ -40,6 +42,17 @@ export function OrganizerDashboardPage() {
         : Promise.reject(new Error('Not signed in')),
     [userId, selectedCompetitionId],
     { enabled: Boolean(userId) },
+  )
+
+  const competitionId = data?.selectedCompetition?.id ?? null
+
+  const { data: participants, refetch: refetchParticipants } = useAsyncData(
+    () =>
+      competitionId
+        ? fetchCompetitionParticipants(competitionId)
+        : Promise.resolve([]),
+    [competitionId],
+    { enabled: Boolean(competitionId) },
   )
 
   const handleSelectCompetition = useCallback((id: string) => {
@@ -100,7 +113,7 @@ export function OrganizerDashboardPage() {
 
   async function handlePublishSchedule() {
     if (!competition) return
-    await publishCompetition(competition.id, competition.status === 'registration_open')
+    await publishEventSchedule(competition.id)
     void refetch()
   }
 
@@ -177,6 +190,11 @@ export function OrganizerDashboardPage() {
             {competition && (
               <>
                 <RegistrationTable summary={data.registrations} onUpdated={() => void refetch()} />
+
+                <ParticipantDocumentsPanel
+                  participants={participants ?? []}
+                  onUpdated={() => void refetchParticipants()}
+                />
 
                 <div ref={judgesRef}>
                   <JudgeAssignmentBoard

@@ -16,6 +16,7 @@ import {
   updateOfflineScoreError,
 } from '../utils/judgeOfflineQueue'
 import { fetchJudgeSession } from './judgeDashboard'
+import { aggregateResultsFromScores } from './resultsAggregationService'
 
 export type SubmitJudgeScoreInput = {
   userId: string
@@ -189,7 +190,9 @@ async function persistScore(params: {
       .single()
 
     if (error) throw error
-    return mapCompetitionScore(data)
+    const score = mapCompetitionScore(data)
+    void aggregateResultsFromScores(params.competitionId, params.categoryId).catch(() => undefined)
+    return score
   }
 
   const { data, error } = await supabase
@@ -205,7 +208,9 @@ async function persistScore(params: {
     throw error
   }
 
-  return mapCompetitionScore(data)
+  const score = mapCompetitionScore(data)
+  void aggregateResultsFromScores(params.competitionId, params.categoryId).catch(() => undefined)
+  return score
 }
 
 export async function updateJudgeScoreDraft(

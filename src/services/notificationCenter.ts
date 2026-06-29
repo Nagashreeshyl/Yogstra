@@ -8,8 +8,8 @@ import {
 import {
   buildStudentCompetitionNotifications,
   fetchStudentCompetitionHome,
+  DEFAULT_COMPETITION_FILTERS,
 } from './studentCompetitionExperience'
-import { DEFAULT_COMPETITION_FILTERS } from './studentCompetitionExperience'
 
 export type AppNotification = {
   id: string
@@ -61,13 +61,58 @@ export function saveNotificationPreferences(prefs: NotificationPreferences) {
   localStorage.setItem(PREFS_KEY, JSON.stringify(prefs))
 }
 
+async function fetchJudgeAssignmentNotifications(userId: string): Promise<AppNotification[]> {
+  const { data, error } = await supabase
+    .from('competition_judges')
+    .select('id, competition_id, status, created_at, competition:competitions!competition_id(name)')
+    .eq('user_id', userId)
+    .in('status', ['invited', 'active'])
+    .order('created_at', { ascending: false })
+    .limit(10)
+
+  if (error) return []
+
+  const readIds = loadJudgeNotificationReadIds(userId)
+
+  return (data ?? []).map((row) => {
+    const competition = Array.isArray(row.competition) ? row.competition[0] : row.competition
+    const competitionName = (competition as { name?: string })?.name ?? 'Competition'
+    const id = `judge-${row.id}`
+    return {
+      id,
+      title: 'Judge assignment',
+      body: `You were assigned to judge ${competitionName}.`,
+      href: '/dashboard/judge',
+      createdAt: row.created_at as string,
+      read: readIds.has(id),
+      source: 'competition' as const,
+    }
+  })
+}
+
+function loadJudgeNotificationReadIds(userId: string): Set<string> {
+  try {
+    const raw = localStorage.getItem(`yogstra-judge-notif-read:${userId}`)
+    return new Set(raw ? (JSON.parse(raw) as string[]) : [])
+  } catch {
+    return new Set()
+  }
+}
+
+function saveJudgeNotificationReadIds(userId: string, ids: Set<string>) {
+  localStorage.setItem(`yogstra-judge-notif-read:${userId}`, JSON.stringify([...ids]))
+}
+
 export async function fetchNotificationsForUser(
   userId: string,
   role: 'student' | 'teacher' | 'admin',
 ): Promise<AppNotification[]> {
   if (role === 'teacher' || role === 'admin') {
-    const rows = await fetchTeacherNotifications(userId)
-    return rows.map((n) => ({
+    const [rows, judgeNotes] = await Promise.all([
+      fetchTeacherNotifications(userId),
+      fetchJudgeAssignmentNotifications(userId),
+    ])
+    const teacherNotes = rows.map((n) => ({
       id: n.id,
       title: n.title,
       body: n.body,
@@ -76,6 +121,9 @@ export async function fetchNotificationsForUser(
       read: n.readAt !== null,
       source: 'teacher' as const,
     }))
+    return [...judgeNotes, ...teacherNotes].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    )
   }
 
   const home = await fetchStudentCompetitionHome(userId, DEFAULT_COMPETITION_FILTERS)
@@ -112,6 +160,12 @@ export async function markNotificationReadForUser(
   notificationId: string,
 ) {
   if (role === 'teacher' || role === 'admin') {
+    if (notificationId.startsWith('judge-')) {
+      const ids = loadJudgeNotificationReadIds(userId)
+      ids.add(notificationId)
+      saveJudgeNotificationReadIds(userId, ids)
+      return
+    }
     await markNotificationRead(notificationId)
     return
   }
@@ -127,6 +181,8 @@ export async function markAllNotificationsReadForUser(
 ) {
   if (role === 'teacher' || role === 'admin') {
     await markAllNotificationsRead(userId)
+    const notes = await fetchNotificationsForUser(userId, role)
+    saveJudgeNotificationReadIds(userId, new Set(notes.filter((n) => n.id.startsWith('judge-')).map((n) => n.id)))
     return
   }
 

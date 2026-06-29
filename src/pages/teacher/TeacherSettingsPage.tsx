@@ -19,6 +19,7 @@ import { Toast } from '../../components/ui/Toast'
 import { ProfilePageSkeleton } from '../../components/ui/Skeleton'
 import { SettingsPageLayout } from '../../components/layout/FeedPageLayout'
 import { NotificationPreferencesSection } from '../../components/settings/NotificationPreferencesSection'
+import { TeacherAcademyInvitesSection } from '../../components/teacher/TeacherAcademyInvitesSection'
 import { TeacherPayoutSettings } from '../../components/profile/TeacherPayoutSettings'
 import { formatIndianNumber, parseIndianNumber } from '../../utils/format'
 import {
@@ -345,6 +346,9 @@ export function TeacherSettingsPage() {
 
         {settingsTab === 'profile' && (
           <>
+        <div className="mb-6">
+          <TeacherAcademyInvitesSection />
+        </div>
         <h1 className="text-xl font-semibold mb-2">Edit profile</h1>
         {profilePercent < 100 && (
           <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-sm px-3 py-2 mb-6">

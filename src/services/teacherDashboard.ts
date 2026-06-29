@@ -10,6 +10,7 @@ import { fetchAcademiesForUser } from './academyService'
 import { fetchTeacherPaidStudents, isTeacherClassHour } from './liveClasses'
 import { formatTime } from '../utils/format'
 import { isTeacherProfileComplete } from '../utils/teacherProfileCompletion'
+import { fetchTeacherWeeklyAttendance } from './attendanceService'
 
 export type TeacherDashboardTodayClass = {
   id: string
@@ -158,38 +159,6 @@ async function fetchTodayClassesDetailed(teacherId: string): Promise<TeacherDash
   return [...grouped.values()]
 }
 
-async function fetchWeeklyAttendanceStats(teacherId: string): Promise<{
-  weeklyPercentage: number | null
-  absentToday: string[]
-}> {
-  const now = new Date()
-  const weekStart = new Date(now)
-  weekStart.setDate(weekStart.getDate() - 6)
-  weekStart.setHours(0, 0, 0, 0)
-
-  const { data, error } = await supabase
-    .from('schedules')
-    .select('scheduled_at, student:profiles!student_id(full_name)')
-    .eq('teacher_id', teacherId)
-    .gte('scheduled_at', weekStart.toISOString())
-    .lte('scheduled_at', now.toISOString())
-
-  if (error) throw error
-
-  const rows = data ?? []
-  const weeklyPercentage =
-    rows.length === 0 ? null : Math.min(100, Math.round((rows.length / Math.max(rows.length, 1)) * 100))
-
-  const todayStart = new Date()
-  todayStart.setHours(0, 0, 0, 0)
-  const todayEnd = new Date(todayStart)
-  todayEnd.setDate(todayEnd.getDate() + 1)
-
-  const absentToday: string[] = []
-
-  return { weeklyPercentage, absentToday }
-}
-
 async function fetchTeacherPendingScheduleChanges(teacherId: string) {
   const { data, error } = await supabase
     .from('schedule_change_requests')
@@ -279,9 +248,29 @@ async function fetchTeacherCompetitionWidget(
       .eq('competition_id', next.id)
       .in('registrant_id', studentIds)
 
+    const { data: participants } = await supabase
+      .from('competition_participants')
+      .select('student_id, documents_verified')
+      .eq('competition_id', next.id)
+      .in('student_id', studentIds)
+
+    let missingDocuments = 0
+    for (const participant of participants ?? []) {
+      if (!participant.documents_verified) missingDocuments += 1
+    }
+
     for (const reg of regs ?? []) {
       if (reg.status === 'confirmed') studentsRegistered += 1
       else if (reg.status === 'pending') pendingRegistrations += 1
+    }
+
+    return {
+      id: next.id,
+      name: next.name,
+      daysUntil: daysUntilDate(next.startDate ?? ''),
+      studentsRegistered,
+      pendingRegistrations,
+      missingDocuments,
     }
   }
 
@@ -289,8 +278,8 @@ async function fetchTeacherCompetitionWidget(
     id: next.id,
     name: next.name,
     daysUntil: daysUntilDate(next.startDate ?? ''),
-    studentsRegistered,
-    pendingRegistrations,
+    studentsRegistered: 0,
+    pendingRegistrations: 0,
     missingDocuments: 0,
   }
 }
@@ -402,7 +391,10 @@ export async function fetchTeacherDashboard(teacherId: string): Promise<TeacherD
     fetchTeacherPaidStudents(teacherId).catch(() => []),
     fetchPendingFeeBookings(teacherId),
     fetchTeacherPendingScheduleChanges(teacherId),
-    fetchWeeklyAttendanceStats(teacherId),
+    fetchTeacherWeeklyAttendance(teacherId).then((stats) => ({
+      weeklyPercentage: stats.percentage,
+      absentToday: stats.absentToday,
+    })),
     fetchTeacherCompetitionWidget(teacherId),
   ])
 

@@ -94,12 +94,14 @@ export const competitionCertificateRepository = {
   },
 
   async issue(id: string, signatureData?: Record<string, unknown>) {
+    const existing = await this.findById(id)
     const { data, error } = await supabase
       .from('competition_certificates')
       .update({
         status: 'issued',
         issued_at: new Date().toISOString(),
         signature_data: signatureData ?? {},
+        pdf_url: existing?.verificationUrl ?? null,
       })
       .eq('id', id)
       .select(certificateSelect)

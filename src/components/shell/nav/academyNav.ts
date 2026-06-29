@@ -5,6 +5,9 @@ import {
   Layers,
   IndianRupee,
   UserCog,
+  Calendar,
+  ClipboardCheck,
+  Trophy,
   Settings,
 } from 'lucide-react'
 import type { ShellNavItem } from '../types'
@@ -34,6 +37,24 @@ export const academyNavItems: ShellNavItem[] = [
     label: 'Batches',
     icon: Layers,
     placement: ['sidebar', 'tab'],
+  },
+  {
+    to: '/dashboard/academy/timetable',
+    label: 'Timetable',
+    icon: Calendar,
+    placement: ['sidebar', 'tab'],
+  },
+  {
+    to: '/dashboard/academy/attendance',
+    label: 'Attendance',
+    icon: ClipboardCheck,
+    placement: ['sidebar', 'more'],
+  },
+  {
+    to: '/dashboard/academy/competitions',
+    label: 'Competitions',
+    icon: Trophy,
+    placement: ['sidebar', 'more'],
   },
   {
     to: '/dashboard/academy/finance',

@@ -11,7 +11,10 @@ import { competitionRepository } from '../repositories/competitionRepository'
 import { createCompetition } from './competitionService'
 import { assignJudge } from './judgeService'
 import { createCertificateDraft, issueCertificate } from './certificateService'
+import { recordRankingEntry } from './rankingService'
+import { aggregateResultsFromScores } from './resultsAggregationService'
 import { mapCompetitionAnnouncement } from '../utils/competitionMappers'
+import { defaultCompetitionSettings } from '../utils/defaultScoringCriteria'
 
 export async function updateCompetitionStatus(competitionId: string, status: CompetitionStatus) {
   const { error } = await supabase
@@ -210,22 +213,156 @@ export async function updateResultStatus(resultId: string, status: CompetitionRe
     updates.approved_at = new Date().toISOString()
   }
 
-  const { error } = await supabase
+  const { data: result, error } = await supabase
     .from('competition_results')
     .update(updates)
     .eq('id', resultId)
+    .select('competition_id, status')
+    .single()
 
   if (error) throw error
+
+  if (status === 'published' && result) {
+    await syncRankingsAndCertificates(result.competition_id as string)
+  }
+}
+
+export async function computeResultsFromScores(competitionId: string, categoryId?: string) {
+  return aggregateResultsFromScores(competitionId, categoryId)
+}
+
+export async function confirmRegistrationPayment(registrationId: string, amountInr?: number) {
+  const { error } = await supabase
+    .from('competition_registrations')
+    .update({
+      payment_status: 'paid',
+      payment_amount: amountInr ?? null,
+    })
+    .eq('id', registrationId)
+
+  if (error) throw error
+}
+
+export async function lockCompetitionCategory(competitionId: string, categoryId: string) {
+  const { data: competition, error: fetchError } = await supabase
+    .from('competitions')
+    .select('settings')
+    .eq('id', competitionId)
+    .single()
+
+  if (fetchError) throw fetchError
+
+  const settings = (competition.settings as Record<string, unknown>) ?? {}
+  const locked = new Set(
+    Array.isArray(settings.lockedCategories) ? (settings.lockedCategories as string[]) : [],
+  )
+  locked.add(categoryId)
+
+  const { error } = await supabase
+    .from('competitions')
+    .update({ settings: { ...settings, lockedCategories: [...locked] } })
+    .eq('id', competitionId)
+
+  if (error) throw error
+
+  const { error: scoreLockError } = await supabase
+    .from('competition_scores')
+    .update({ status: 'locked' })
+    .eq('competition_id', competitionId)
+    .eq('category_id', categoryId)
+    .eq('status', 'submitted')
+
+  if (scoreLockError) throw scoreLockError
+}
+
+export async function publishEventSchedule(competitionId: string) {
+  const { error: eventError } = await supabase
+    .from('competition_events')
+    .update({ status: 'in_progress' })
+    .eq('competition_id', competitionId)
+    .eq('status', 'scheduled')
+
+  if (eventError) throw eventError
+
+  await updateCompetitionStatus(competitionId, 'in_progress')
+}
+
+async function syncRankingsAndCertificates(competitionId: string) {
+  const { data: results, error } = await supabase
+    .from('competition_results')
+    .select(
+      `
+      id,
+      rank,
+      total_score,
+      medal,
+      category_id,
+      participant:competition_participants!participant_id(
+        id,
+        student_id,
+        display_name
+      )
+    `,
+    )
+    .eq('competition_id', competitionId)
+    .eq('status', 'published')
+
+  if (error) throw error
+
+  const season = new Date().getFullYear().toString()
+
+  for (const result of results ?? []) {
+    const participant = Array.isArray(result.participant) ? result.participant[0] : result.participant
+    const studentId = (participant as { student_id?: string })?.student_id
+    if (!studentId || !result.rank) continue
+
+    await recordRankingEntry({
+      competitionId,
+      scope: 'student',
+      subjectType: 'student',
+      subjectId: studentId,
+      categoryId: result.category_id as string,
+      rank: result.rank as number,
+      points: Number(result.total_score ?? 0),
+      season,
+      metadata: { medal: result.medal },
+    })
+  }
+
+  const recipientPayload = (results ?? [])
+    .map((result) => {
+      const participant = Array.isArray(result.participant) ? result.participant[0] : result.participant
+      const studentId = (participant as { student_id?: string })?.student_id
+      const displayName = (participant as { display_name?: string })?.display_name ?? 'Participant'
+      if (!studentId) return null
+      return {
+        recipientId: studentId,
+        title: `${displayName} — Competition Certificate`,
+        participantId: (participant as { id?: string })?.id,
+        resultId: result.id as string,
+      }
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null)
+
+  if (recipientPayload.length > 0) {
+    await generateCertificatesForResults(competitionId, recipientPayload)
+  }
 }
 
 export async function publishAllApprovedResults(competitionId: string) {
   const { error } = await supabase
     .from('competition_results')
-    .update({ status: 'published' })
+    .update({ status: 'published', approved_at: new Date().toISOString() })
     .eq('competition_id', competitionId)
     .eq('status', 'approved')
 
   if (error) throw error
+
+  await syncRankingsAndCertificates(competitionId)
+}
+
+export async function recalculateRankings(competitionId: string) {
+  await syncRankingsAndCertificates(competitionId)
 }
 
 export async function publishCompetition(competitionId: string, openRegistration: boolean) {
@@ -246,6 +383,12 @@ export async function createAndPublishCompetition(
   },
 ) {
   const competition = await createCompetition(input, createdBy)
+
+  await supabase
+    .from('competitions')
+    .update({ settings: defaultCompetitionSettings() })
+    .eq('id', competition.id)
+
   const categoryIds: string[] = []
 
   for (const [index, category] of extras.categories.entries()) {
@@ -301,8 +444,19 @@ export async function generateCertificatesForResults(
   competitionId: string,
   recipientIds: { recipientId: string; title: string; participantId?: string; resultId?: string }[],
 ) {
+  const { data: existingCerts } = await supabase
+    .from('competition_certificates')
+    .select('result_id')
+    .eq('competition_id', competitionId)
+
+  const existingResultIds = new Set(
+    (existingCerts ?? []).map((row) => row.result_id as string).filter(Boolean),
+  )
+
   const issued = []
   for (const item of recipientIds) {
+    if (item.resultId && existingResultIds.has(item.resultId)) continue
+
     const draft = await createCertificateDraft({
       competitionId,
       recipientId: item.recipientId,

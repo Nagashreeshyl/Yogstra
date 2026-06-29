@@ -12,7 +12,7 @@ import { QuickStats } from '../../components/student/dashboard/StatCard'
 import { DashboardCard } from '../../components/student/dashboard/DashboardCard'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
-import { Building2 } from 'lucide-react'
+import { AcademyCreateSection } from './AcademyCreateSection'
 
 export function AcademyHomePage() {
   const { academyId, academy, academies, loading: contextLoading, error: contextError, refetch: refetchContext } =
@@ -40,16 +40,7 @@ export function AcademyHomePage() {
   }
 
   if (!academies.length) {
-    return (
-      <PageContainer width="wide">
-        <PageHeader title="Academy" description="Manage your yoga academy from one place." />
-        <EmptyState
-          icon={<Building2 size={24} />}
-          title="No academy linked"
-          description="You are not a member of any academy yet. Contact your academy owner or platform admin for access."
-        />
-      </PageContainer>
-    )
+    return <AcademyCreateSection />
   }
 
   if (error || !data) {

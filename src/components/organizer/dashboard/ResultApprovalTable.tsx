@@ -6,6 +6,7 @@ import type { OrganizerResultsSummary } from '../../../services/organizerDashboa
 import {
   publishAllApprovedResults,
   updateResultStatus,
+  computeResultsFromScores,
 } from '../../../services/organizerOperations'
 
 interface ResultApprovalTableProps {
@@ -31,6 +32,16 @@ export function ResultApprovalTable({
     }
   }
 
+  async function handleComputeFromScores() {
+    setBusy(true)
+    try {
+      await computeResultsFromScores(competitionId)
+      onUpdated()
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function handlePublishAll() {
     setBusy(true)
     try {
@@ -46,9 +57,14 @@ export function ResultApprovalTable({
       title="Results"
       description={`${summary.pendingApprovals} pending approval · ${summary.completedCategories} categories · ${summary.published} published`}
       action={
-        <Button size="sm" disabled={busy} onClick={() => void handlePublishAll()}>
-          Publish approved
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="secondary" disabled={busy} onClick={() => void handleComputeFromScores()}>
+            Compute from scores
+          </Button>
+          <Button size="sm" disabled={busy} onClick={() => void handlePublishAll()}>
+            Publish approved
+          </Button>
+        </div>
       }
     >
       <div className="grid grid-cols-3 gap-3 mb-4">

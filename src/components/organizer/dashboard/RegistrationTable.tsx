@@ -6,6 +6,7 @@ import { EmptyState } from '../../shell/EmptyState'
 import type { OrganizerRegistrationSummary } from '../../../services/organizerDashboard'
 import {
   bulkUpdateRegistrationStatus,
+  confirmRegistrationPayment,
   exportRegistrationsCsv,
   updateRegistrationStatus,
 } from '../../../services/organizerOperations'
@@ -23,6 +24,16 @@ export function RegistrationTable({ summary, onUpdated }: RegistrationTableProps
     () => summary.registrations.length > 0 && selected.size === summary.registrations.length,
     [selected.size, summary.registrations.length],
   )
+
+  async function handleConfirmPayment(id: string) {
+    setBusy(true)
+    try {
+      await confirmRegistrationPayment(id)
+      onUpdated()
+    } finally {
+      setBusy(false)
+    }
+  }
 
   async function handleStatus(id: string, status: 'confirmed' | 'rejected') {
     setBusy(true)
@@ -128,28 +139,40 @@ export function RegistrationTable({ summary, onUpdated }: RegistrationTableProps
                   <td className="px-2 py-3 capitalize">{registration.status}</td>
                   <td className="px-2 py-3 capitalize">{registration.paymentStatus}</td>
                   <td className="px-2 py-3">
-                    {registration.status === 'pending' && (
-                      <div className="flex gap-1">
-                        <button
-                          type="button"
+                    <div className="flex flex-wrap gap-1">
+                      {registration.paymentStatus !== 'paid' && (
+                        <Button
+                          size="sm"
+                          variant="secondary"
                           disabled={busy}
-                          onClick={() => void handleStatus(registration.id, 'confirmed')}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-sm border border-border hover:bg-muted"
-                          aria-label="Approve"
+                          onClick={() => void handleConfirmPayment(registration.id)}
                         >
-                          <Check size={14} />
-                        </button>
-                        <button
-                          type="button"
-                          disabled={busy}
-                          onClick={() => void handleStatus(registration.id, 'rejected')}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-sm border border-border hover:bg-muted"
-                          aria-label="Reject"
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    )}
+                          Mark paid
+                        </Button>
+                      )}
+                      {registration.status === 'pending' && (
+                        <>
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => void handleStatus(registration.id, 'confirmed')}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-sm border border-border hover:bg-muted"
+                            aria-label="Approve"
+                          >
+                            <Check size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => void handleStatus(registration.id, 'rejected')}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-sm border border-border hover:bg-muted"
+                            aria-label="Reject"
+                          >
+                            <X size={14} />
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

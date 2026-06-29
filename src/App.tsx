@@ -69,6 +69,11 @@ const AcademyBatchesPage = lazy(() => import('./pages/academy/academyPages').the
 const AcademyFinancePage = lazy(() => import('./pages/academy/academyPages').then((m) => ({ default: m.AcademyFinancePage })))
 const AcademyMembersPage = lazy(() => import('./pages/academy/academyPages').then((m) => ({ default: m.AcademyMembersPage })))
 const AcademySettingsPage = lazy(() => import('./pages/academy/academyPages').then((m) => ({ default: m.AcademySettingsPage })))
+const AcademyCompetitionsPage = lazy(() => import('./pages/academy/academyPages').then((m) => ({ default: m.AcademyCompetitionsPage })))
+const AcademyTimetablePage = lazy(() => import('./pages/academy/academyPages').then((m) => ({ default: m.AcademyTimetablePage })))
+const AcademyAttendancePage = lazy(() => import('./pages/academy/academyPages').then((m) => ({ default: m.AcademyAttendancePage })))
+const TeacherCompetitionsPage = lazy(() => import('./pages/teacher/TeacherCompetitionsPage').then((m) => ({ default: m.TeacherCompetitionsPage })))
+const VerifyCertificatePage = lazy(() => import('./pages/VerifyCertificatePage').then((m) => ({ default: m.VerifyCertificatePage })))
 const CompetitionHomePage = lazy(() => import('./pages/competition/competitionPages').then((m) => ({ default: m.CompetitionHomePage })))
 const CompetitionDetailPage = lazy(() => import('./pages/competition/competitionPages').then((m) => ({ default: m.CompetitionDetailPage })))
 const JudgeHomePage = lazy(() => import('./pages/competition/competitionPages').then((m) => ({ default: m.JudgeHomePage })))
@@ -155,6 +160,7 @@ export default function App() {
                 <Route path="privacy-policy" element={<PrivacyPolicyPage />} />
                 <Route path="terms-of-service" element={<TermsOfServicePage />} />
                 <Route path="refund-policy" element={<RefundPolicyPage />} />
+                <Route path="verify/certificate/:token" element={<VerifyCertificatePage />} />
               </Route>
 
               <Route
@@ -215,6 +221,7 @@ export default function App() {
                   <Route path="notifications" element={<TeacherNotificationsPage />} />
                   <Route path="coupons" element={<TeacherCouponsPage />} />
                   <Route path="earnings" element={<TeacherEarningsPage />} />
+                  <Route path="competitions" element={<TeacherCompetitionsPage />} />
                   <Route path="settings" element={<TeacherSettingsPage />} />
                 </Route>
                 <Route path="teacher/messages" element={<Navigate to="/dashboard/teacher/messages" replace />} />
@@ -227,6 +234,9 @@ export default function App() {
                   <Route path="students" element={<AcademyStudentsPage />} />
                   <Route path="batches" element={<AcademyBatchesPage />} />
                   <Route path="finance" element={<AcademyFinancePage />} />
+                  <Route path="timetable" element={<AcademyTimetablePage />} />
+                  <Route path="attendance" element={<AcademyAttendancePage />} />
+                  <Route path="competitions" element={<AcademyCompetitionsPage />} />
                   <Route path="members" element={<AcademyMembersPage />} />
                   <Route path="settings" element={<AcademySettingsPage />} />
                 </Route>
