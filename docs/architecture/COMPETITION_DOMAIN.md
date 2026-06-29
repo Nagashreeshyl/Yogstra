@@ -2,7 +2,8 @@
 
 **Module:** V2 Core — Competition Foundation  
 **Status:** Phase 1 (schema + services + reserved routes)  
-**Migration:** `supabase/competition-foundation.sql`
+**Migration:** `supabase/competition-foundation.sql`  
+**PRD:** [`../../../docs/PRD/10_COMPETITIONS.md`](../../../docs/PRD/10_COMPETITIONS.md)
 
 ---
 
@@ -35,7 +36,31 @@ Platform (Yogstra)
 | Judge | Score only | `competition_judges` assignment |
 | Admin | Platform control | `is_admin()` bypass |
 
-Academy-hosted competitions link via `competitions.academy_id`. Team registrations can reference `batches` via `competition_registrations.batch_id`.
+Academy-hosted competitions link via `competitions.academy_id`. Team registrations can reference `batches` via `competition_registrations.batch_id`. See [Academy Domain](./ACADEMY_DOMAIN.md) for academy/batch relationships.
+
+---
+
+## Entity relationships
+
+```
+competitions
+  ├── competition_events
+  ├── competition_categories
+  │     └── competition_divisions
+  ├── competition_registrations ──► competition_participants
+  ├── competition_judges ──► competition_scores
+  ├── competition_results
+  ├── competition_certificates
+  ├── competition_rankings
+  └── competition_announcements
+
+Foreign keys to existing domain:
+  competitions.academy_id              → academies
+  competition_registrations.academy_id → academies
+  competition_registrations.batch_id   → batches
+  competitions.organizer_id            → profiles
+  competition_participants.student_id  → profiles
+```
 
 ---
 
@@ -67,7 +92,7 @@ draft → published → registration_open → registration_closed
   → in_progress → scoring → results_pending → completed → archived
 ```
 
-Status enums in SQL `check` constraints match TypeScript `CompetitionStatus`.
+Status enums in SQL `check` constraints match TypeScript `CompetitionStatus` in `src/domain/competition/models.ts`.
 
 ---
 
@@ -119,6 +144,31 @@ src/utils/competitionMappers.ts
 ```
 
 **Do not duplicate** existing `bookings.ts`, `teachers.ts`, or dashboard services. Competition services compose with academy and auth when future modules integrate.
+
+---
+
+## Source file map
+
+| Path | Role |
+|---|---|
+| `supabase/competition-foundation.sql` | Schema, indexes, RLS, triggers |
+| `src/domain/competition/models.ts` | Entity interfaces + input DTOs |
+| `src/domain/competition/permissions.ts` | Client-side permission helpers |
+| `src/domain/competition/index.ts` | Barrel exports |
+| `src/utils/competitionMappers.ts` | DB row → domain mapping |
+| `src/repositories/competitionRepository.ts` | Competitions, events, categories, announcements |
+| `src/repositories/competitionRegistrationRepository.ts` | Registrations + participants |
+| `src/repositories/competitionJudgeRepository.ts` | Judges, scores, results |
+| `src/repositories/competitionRankingRepository.ts` | Rankings |
+| `src/repositories/competitionCertificateRepository.ts` | Certificates |
+| `src/services/competitionService.ts` | Competition CRUD + summary |
+| `src/services/registrationService.ts` | Registration workflow |
+| `src/services/judgeService.ts` | Judge assignment + scoring |
+| `src/services/rankingService.ts` | Rankings by scope |
+| `src/services/certificateService.ts` | Certificate issue + QR verify |
+| `src/components/auth/RequireCompetitionFoundationAccess.tsx` | Route guard |
+| `src/components/competition/CompetitionRouteLayout.tsx` | Placeholder layout |
+| `src/pages/competition/competitionPages.tsx` | Reserved route pages |
 
 ---
 
@@ -209,7 +259,7 @@ Access during foundation phase: authenticated **student**, **teacher**, or **adm
 ## Migration instructions
 
 1. Apply all prior Supabase SQL migrations (including `academy-foundation.sql`).
-2. Run `supabase/competition-foundation.sql` once in the Supabase SQL Editor.
+2. Run `competition-foundation.sql` once in the Supabase SQL Editor.
 3. Verify tables exist and RLS is enabled.
 4. No application restart required — new code is backward compatible until competition data is created.
 
@@ -224,7 +274,7 @@ Access during foundation phase: authenticated **student**, **teacher**, or **adm
 | Digital Judging UI | `judgeService` + realtime scores |
 | Certificate PDF + QR page | `certificateService` |
 | Rankings UI | `rankingService` |
-| Student/Teacher dashboard widgets | Replace constants in `lib/constants.ts` |
+| Student/Teacher dashboard widgets | Replace constants in `src/lib/constants.ts` |
 
 ---
 

@@ -1,4 +1,5 @@
 import { CompetitionPlaceholderPage } from './CompetitionPlaceholderPage'
+import { OrganizerDashboardPage } from './OrganizerDashboardPage'
 
 export function CompetitionHomePage() {
   return (
@@ -28,12 +29,7 @@ export function JudgeHomePage() {
 }
 
 export function OrganizerHomePage() {
-  return (
-    <CompetitionPlaceholderPage
-      title="Organizer Portal"
-      description="Create, publish, and manage competitions."
-    />
-  )
+  return <OrganizerDashboardPage />
 }
 
 export function CompetitionResultsPage() {

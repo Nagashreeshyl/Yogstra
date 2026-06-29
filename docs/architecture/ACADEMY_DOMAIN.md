@@ -94,6 +94,27 @@ src/utils/academyMappers.ts
 
 ---
 
+## Source file map
+
+| Path | Role |
+|---|---|
+| `supabase/academy-foundation.sql` | Schema, indexes, RLS, triggers |
+| `src/domain/academy/models.ts` | Entity interfaces + input DTOs |
+| `src/domain/academy/permissions.ts` | Client-side permission helpers |
+| `src/domain/academy/index.ts` | Barrel exports |
+| `src/utils/academyMappers.ts` | DB row → domain mapping |
+| `src/repositories/academyRepository.ts` | Academies + settings |
+| `src/repositories/academyMemberRepository.ts` | Members + teacher affiliations |
+| `src/repositories/batchRepository.ts` | Batches + enrollments |
+| `src/services/academyService.ts` | Academy orchestration |
+| `src/services/academyMemberService.ts` | Member + teacher linking |
+| `src/services/batchService.ts` | Batch operations |
+| `src/components/auth/RequireAcademyFoundationAccess.tsx` | Route guard |
+| `src/components/academy/AcademyRouteLayout.tsx` | Placeholder layout |
+| `src/pages/academy/academyPages.tsx` | Reserved route pages |
+
+---
+
 ## Reserved routes (placeholders)
 
 | Route | Purpose |
