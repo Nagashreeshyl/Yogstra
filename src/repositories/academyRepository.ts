@@ -57,6 +57,14 @@ export const academyRepository = {
 
     if (teacherError) throw teacherError
 
+    const { data: ownedRows, error: ownedError } = await supabase
+      .from('academies')
+      .select(academySelect)
+      .eq('created_by', userId)
+      .neq('status', 'archived')
+
+    if (ownedError) throw ownedError
+
     const academies = new Map<string, ReturnType<typeof mapAcademy>>()
 
     for (const row of memberRows ?? []) {
@@ -70,6 +78,12 @@ export const academyRepository = {
       const academy = Array.isArray(row.academies) ? row.academies[0] : row.academies
       if (academy && academy.status !== 'archived') {
         academies.set(academy.id as string, mapAcademy(academy))
+      }
+    }
+
+    for (const row of ownedRows ?? []) {
+      if (row.status !== 'archived') {
+        academies.set(row.id as string, mapAcademy(row))
       }
     }
 

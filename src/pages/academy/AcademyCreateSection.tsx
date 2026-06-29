@@ -4,6 +4,7 @@ import { useApp } from '../../context/AppContext'
 import { useAcademyContext } from '../../hooks/useAcademyContext'
 import { createAcademy } from '../../services/academyService'
 import { indianStates } from '../../lib/constants'
+import { formatUserFacingError } from '../../utils/format'
 import { PageContainer } from '../../components/shell/PageContainer'
 import { EmptyState } from '../../components/shell/EmptyState'
 import { DashboardWorkspaceHeader } from '../../components/shell/DashboardWorkspaceHeader'
@@ -34,7 +35,7 @@ export function AcademyCreateForm({ onCreated }: { onCreated: (academyId: string
       )
       onCreated(academy.id)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not create academy.')
+      setError(formatUserFacingError(err, 'Could not create academy.'))
     } finally {
       setBusy(false)
     }

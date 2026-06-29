@@ -5,6 +5,7 @@ import {
   markNotificationRead,
   subscribeToTeacherNotifications,
 } from './teacherNotifications'
+import { fetchUserCertificates } from './certificateService'
 import {
   buildStudentCompetitionNotifications,
   fetchStudentCompetitionHome,
@@ -126,8 +127,18 @@ export async function fetchNotificationsForUser(
     )
   }
 
-  const home = await fetchStudentCompetitionHome(userId, DEFAULT_COMPETITION_FILTERS)
-  const competitionNotes = buildStudentCompetitionNotifications(home.all, home.registrations)
+  const [home, certificates] = await Promise.all([
+    fetchStudentCompetitionHome(userId, DEFAULT_COMPETITION_FILTERS),
+    fetchUserCertificates(userId),
+  ])
+  const issuedCertificateCompetitionIds = new Set(
+    certificates.filter((c) => c.status === 'issued' && !c.revokedAt).map((c) => c.competitionId),
+  )
+  const competitionNotes = buildStudentCompetitionNotifications(
+    home.all,
+    home.registrations,
+    issuedCertificateCompetitionIds,
+  )
   const readIds = loadStudentReadNotificationIds(userId)
 
   return competitionNotes.map((n) => ({

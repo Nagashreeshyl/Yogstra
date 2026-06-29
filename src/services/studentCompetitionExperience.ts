@@ -504,6 +504,7 @@ export async function fetchStudentRankingsPage(userId: string) {
 export function buildStudentCompetitionNotifications(
   items: StudentCompetitionListItem[],
   registrations: CompetitionRegistration[],
+  issuedCertificateCompetitionIds?: Set<string>,
 ): StudentCompetitionNotification[] {
   const notifications: StudentCompetitionNotification[] = []
 
@@ -586,14 +587,16 @@ export function buildStudentCompetitionNotifications(
         href: `/dashboard/student/results`,
         createdAt: new Date().toISOString(),
       })
-      notifications.push({
-        id: `cert-${competition.id}`,
-        title: 'Certificate ready',
-        body: `Download your certificate for ${competition.name}.`,
-        type: 'certificate',
-        href: `/dashboard/student/certificates`,
-        createdAt: new Date().toISOString(),
-      })
+      if (issuedCertificateCompetitionIds?.has(competition.id)) {
+        notifications.push({
+          id: `cert-${competition.id}`,
+          title: 'Certificate ready',
+          body: `Download your certificate for ${competition.name}.`,
+          type: 'certificate',
+          href: `/dashboard/student/certificates`,
+          createdAt: new Date().toISOString(),
+        })
+      }
     }
   }
 

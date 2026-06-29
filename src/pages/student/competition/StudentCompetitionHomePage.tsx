@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Bell, Search, Sparkles } from 'lucide-react'
 import { useApp } from '../../../context/AppContext'
 import { useAsyncData } from '../../../hooks/useAsyncData'
+import { fetchUserCertificates } from '../../../services/certificateService'
 import {
   buildStudentCompetitionNotifications,
   DEFAULT_COMPETITION_FILTERS,
@@ -29,7 +30,17 @@ export const StudentCompetitionHomePage = memo(function StudentCompetitionHomePa
   const { data, loading, error, refetch } = useAsyncData(
     () =>
       userId
-        ? fetchStudentCompetitionHome(userId, filters)
+        ? Promise.all([
+            fetchStudentCompetitionHome(userId, filters),
+            fetchUserCertificates(userId),
+          ]).then(([home, certificates]) => ({
+            ...home,
+            issuedCertificateCompetitionIds: new Set(
+              certificates
+                .filter((c) => c.status === 'issued' && !c.revokedAt)
+                .map((c) => c.competitionId),
+            ),
+          }))
         : Promise.reject(new Error('Not signed in')),
     [userId, filters],
     { enabled: Boolean(userId) },
@@ -37,7 +48,11 @@ export const StudentCompetitionHomePage = memo(function StudentCompetitionHomePa
 
   const notifications = useMemo(() => {
     if (!data) return []
-    return buildStudentCompetitionNotifications(data.all, data.registrations)
+    return buildStudentCompetitionNotifications(
+      data.all,
+      data.registrations,
+      data.issuedCertificateCompetitionIds,
+    )
   }, [data])
 
   const visibleUpcoming = useMemo(

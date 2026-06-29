@@ -10,7 +10,7 @@ import {
 import { useApp } from '../context/AppContext'
 import { useAsyncData } from './useAsyncData'
 import type { Academy, AcademyMemberRole } from '../domain/academy/models'
-import { fetchAcademiesForUser, fetchAllAcademies } from '../services/academyService'
+import { fetchAcademiesForUser, fetchAllAcademies, ensureAcademyBootstrap } from '../services/academyService'
 import { isPlatformAdmin } from '../utils/platformAdmin'
 import { saveProfilePreferences } from '../services/profilePreferencesService'
 import { getUserAcademyRole } from '../services/academyMemberService'
@@ -54,6 +54,16 @@ export function AcademyContextProvider({ children }: { children: ReactNode }) {
   const [academyId, setAcademyIdState] = useState<string | null>(() =>
     localStorage.getItem(STORAGE_KEY),
   )
+
+  useEffect(() => {
+    if (academiesLoading || !userId || !academies?.length) return
+
+    for (const academy of academies) {
+      if (academy.createdBy === userId) {
+        void ensureAcademyBootstrap(academy.id, userId)
+      }
+    }
+  }, [academies, academiesLoading, userId])
 
   useEffect(() => {
     if (academiesLoading) return

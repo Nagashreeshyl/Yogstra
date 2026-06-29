@@ -40,6 +40,34 @@ export async function fetchAcademyBranches(parentAcademyId: string) {
   return academyRepository.listBranches(parentAcademyId)
 }
 
+/** Ensures owner membership and settings exist for academies the user created. */
+export async function ensureAcademyBootstrap(academyId: string, userId: string) {
+  const academy = await academyRepository.findById(academyId)
+  if (!academy || academy.createdBy !== userId) return
+
+  const membership = await academyMemberRepository.findMembership(academyId, userId)
+  if (!membership || membership.status !== 'active') {
+    try {
+      await academyMemberRepository.addMember({
+        academyId,
+        userId,
+        role: 'owner',
+      })
+    } catch {
+      /* membership may already exist from a concurrent request */
+    }
+  }
+
+  const settings = await academyRepository.getSettings(academyId)
+  if (!settings) {
+    try {
+      await academyRepository.createDefaultSettings(academyId)
+    } catch {
+      /* settings may already exist */
+    }
+  }
+}
+
 /** Creates an academy and bootstraps owner membership + default settings. */
 export async function createAcademy(input: CreateAcademyInput, createdBy: string) {
   const baseSlug = slugifyAcademyName(input.slug ?? input.name)
@@ -51,13 +79,23 @@ export async function createAcademy(input: CreateAcademyInput, createdBy: string
     createdBy,
   })
 
-  await academyRepository.createDefaultSettings(academy.id)
+  try {
+    await academyMemberRepository.addMember({
+      academyId: academy.id,
+      userId: createdBy,
+      role: 'owner',
+    })
+  } catch (memberErr) {
+    const existing = await academyMemberRepository.findMembership(academy.id, createdBy)
+    if (!existing || existing.status !== 'active') throw memberErr
+  }
 
-  await academyMemberRepository.addMember({
-    academyId: academy.id,
-    userId: createdBy,
-    role: 'owner',
-  })
+  try {
+    await academyRepository.createDefaultSettings(academy.id)
+  } catch (settingsErr) {
+    const existing = await academyRepository.getSettings(academy.id)
+    if (!existing) throw settingsErr
+  }
 
   if (input.parentAcademyId) {
     return academy
