@@ -11,7 +11,7 @@
 |------|-------|
 | Repository | [https://github.com/Nagashreeshyl/Yogstra](https://github.com/Nagashreeshyl/Yogstra) |
 | Default branch | `main` |
-| Latest commit | `18a5e6c` — docs: update README for Yogstra MVP production deployment |
+| Latest commit | `955ba6b` — docs: add production deployment report |
 | Branches pushed | `main`, `feature/v2-app-shell` |
 | Description | Premium yoga ecosystem — teachers, academies, competitions, and live classes |
 | Topics | yoga, react, supabase, vercel, razorpay |
@@ -110,6 +110,10 @@
 - Navigation links work
 - 404 page renders content
 
+### Playwright (production, protected routes)
+
+**56/56 passed** — unauthenticated users are redirected from all dashboard and admin routes
+
 ### Health & SEO
 
 | Check | Result |
@@ -149,4 +153,4 @@
 
 ## Summary
 
-Yogstra MVP is **live at https://yogstra.vercel.app**. Code is on GitHub (`main` at `18a5e6c`), Vercel production deployment is **Ready**, public routes pass smoke tests, and core environment variables are configured.
+Yogstra MVP is **live at https://yogstra.vercel.app**. Code is on GitHub (`main` at `955ba6b`), Vercel production deployment is **Ready**, public routes and auth guards pass smoke tests (74 Playwright tests total), and core environment variables are configured.
