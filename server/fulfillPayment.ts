@@ -107,16 +107,20 @@ async function redeemCouponForOrder(
   if (!coupon) return
   if (coupon.max_uses != null && Number(coupon.use_count) >= Number(coupon.max_uses)) return
 
-  await supabase
+  const { error: deliveryError } = await supabase
     .from('coupon_deliveries')
     .update({ used_at: new Date().toISOString(), order_id: order.id as string })
     .eq('id', delivery.id)
     .is('used_at', null)
 
-  await supabase
+  if (deliveryError) throw deliveryError
+
+  const { error: couponError } = await supabase
     .from('teacher_coupons')
     .update({ use_count: Number(coupon.use_count) + 1 })
     .eq('id', couponId)
+
+  if (couponError) throw couponError
 }
 
 async function upsertBookingForOrder(
@@ -135,7 +139,7 @@ async function upsertBookingForOrder(
     .maybeSingle()
 
   if (existingBooking) {
-    await supabase
+    const { error } = await supabase
       .from('bookings')
       .update({
         status: 'active',
@@ -144,10 +148,11 @@ async function upsertBookingForOrder(
         start_date: startDate,
       })
       .eq('id', existingBooking.id)
+    if (error) throw new Error(`Failed to activate booking: ${error.message}`)
     return
   }
 
-  await supabase.from('bookings').insert({
+  const { error } = await supabase.from('bookings').insert({
     student_id: order.student_id,
     teacher_id: order.teacher_id,
     status: 'active',
@@ -155,6 +160,7 @@ async function upsertBookingForOrder(
     monthly_fee: gross,
     start_date: startDate,
   })
+  if (error) throw new Error(`Failed to create booking: ${error.message}`)
 }
 
 async function enrollInAcademyBatchIfApplicable(
@@ -204,19 +210,29 @@ async function enrollInAcademyBatchIfApplicable(
 
   const { data: existing } = await supabase
     .from('batch_students')
-    .select('id')
+    .select('id, status')
     .eq('batch_id', batchId)
     .eq('student_id', studentId)
-    .neq('status', 'removed')
     .maybeSingle()
 
-  if (!existing) {
-    await supabase.from('batch_students').insert({
+  if (existing) {
+    if (existing.status === 'removed') {
+      const { error } = await supabase
+        .from('batch_students')
+        .update({ status: 'active', enrollment_type: 'academy' })
+        .eq('id', existing.id)
+      if (error) throw new Error(`Failed to re-enroll batch student: ${error.message}`)
+    }
+  } else {
+    const { error } = await supabase.from('batch_students').insert({
       batch_id: batchId,
       student_id: studentId,
-      enrollment_type: 'paid',
+      enrollment_type: 'academy',
       status: 'active',
     })
+    if (error && error.code !== '23505') {
+      throw new Error(`Failed to enroll batch student: ${error.message}`)
+    }
   }
 
   return { academyId: affiliation.academy_id as string, batchId }
@@ -267,7 +283,7 @@ async function notifyEnrollmentParties(
     .maybeSingle()
 
   if (!existingTeacherNotif) {
-    await supabase.from('teacher_notifications').insert({
+    const { error } = await supabase.from('teacher_notifications').insert({
       teacher_id: teacherId,
       student_id: studentId,
       order_id: orderId,
@@ -275,6 +291,7 @@ async function notifyEnrollmentParties(
       title: 'New student enrolled',
       body: `${studentName} enrolled · ₹${gross.toLocaleString('en-IN')} (your share ₹${teacherAmount.toLocaleString('en-IN')})`,
     })
+    if (error) throw error
   }
 
   await insertEnrollmentNotification(supabase, {
@@ -327,9 +344,145 @@ async function notifyEnrollmentParties(
       role: 'admin',
       title: 'New paid enrollment',
       body: `${studentName} paid ₹${gross.toLocaleString('en-IN')} for ${teacherName}.`,
-      href: '/dashboard/admin/bookings',
+      href: '/admin/bookings',
     })
   }
+}
+
+async function ensureScheduleForOrder(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  order: ClassOrderRow,
+) {
+  let scheduleId = order.schedule_id as string | null
+
+  if (scheduleId) return scheduleId
+
+  const { data: schedule, error: scheduleError } = await supabase
+    .from('schedules')
+    .insert({
+      teacher_id: order.teacher_id,
+      student_id: order.student_id,
+      class_type: order.class_type,
+      scheduled_at: order.scheduled_at,
+      duration_minutes: 60,
+    })
+    .select('id')
+    .single()
+
+  if (scheduleError) throw scheduleError
+  scheduleId = schedule.id as string
+
+  const { error: linkError } = await supabase
+    .from('class_orders')
+    .update({ schedule_id: scheduleId })
+    .eq('id', order.id)
+    .is('schedule_id', null)
+
+  if (linkError) throw linkError
+  return scheduleId
+}
+
+async function ensurePayoutForOrder(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  order: ClassOrderRow,
+  params: { razorpayPaymentId: string; transferId?: string | null },
+) {
+  const gross = Number(order.gross_amount ?? order.amount ?? 0)
+  const platformFee = Number(order.platform_fee ?? 0)
+  const teacherAmount = Number(order.teacher_amount ?? gross - platformFee)
+  const payoutStatus = params.transferId ? 'paid' : 'pending'
+
+  const { data: existingPayout } = await supabase
+    .from('payouts')
+    .select('id')
+    .eq('class_order_id', order.id)
+    .maybeSingle()
+
+  if (existingPayout) return
+
+  const { data: studentProfile } = await supabase
+    .from('profiles')
+    .select('full_name')
+    .eq('id', order.student_id)
+    .maybeSingle()
+
+  const studentName = studentProfile?.full_name ?? 'Student'
+  const periodLabel = new Date(order.created_at as string).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+
+  const { error: payoutError } = await supabase.from('payouts').insert({
+    teacher_id: order.teacher_id,
+    class_order_id: order.id,
+    student_id: order.student_id,
+    gross_amount: gross,
+    commission_amount: platformFee,
+    teacher_amount: teacherAmount,
+    amount: teacherAmount,
+    period: `${studentName} · ${periodLabel}`,
+    status: payoutStatus,
+    razorpay_payment_id: params.razorpayPaymentId,
+    razorpay_transfer_id: params.transferId ?? null,
+  })
+  if (payoutError) throw payoutError
+}
+
+/** Idempotent side effects after order is marked paid — safe to re-run on webhook retry. */
+async function completePaidOrderSideEffects(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  order: ClassOrderRow,
+  params: { razorpayPaymentId: string; transferId?: string | null },
+) {
+  await ensureScheduleForOrder(supabase, order)
+  await ensurePayoutForOrder(supabase, order, params)
+
+  const gross = Number(order.gross_amount ?? order.amount ?? 0)
+  const platformFee = Number(order.platform_fee ?? 0)
+  const teacherAmount = Number(order.teacher_amount ?? gross - platformFee)
+
+  const [{ data: studentProfile }, { data: teacherProfile }] = await Promise.all([
+    supabase.from('profiles').select('full_name').eq('id', order.student_id).maybeSingle(),
+    supabase.from('profiles').select('full_name').eq('id', order.teacher_id).maybeSingle(),
+  ])
+
+  const studentName = studentProfile?.full_name ?? 'Student'
+  const teacherName = teacherProfile?.full_name ?? 'Coach'
+
+  await redeemCouponForOrder(supabase, order)
+  await upsertBookingForOrder(supabase, order, gross)
+
+  const academyLink = await enrollInAcademyBatchIfApplicable(supabase, order)
+
+  if (order.thread_id) {
+    const { data: existingMessage } = await supabase
+      .from('direct_messages')
+      .select('id')
+      .eq('thread_id', order.thread_id)
+      .ilike('content', `%${params.razorpayPaymentId.slice(0, 14)}%`)
+      .maybeSingle()
+
+    if (!existingMessage) {
+      const input = orderToInput(order, studentName)
+      const { error: messageError } = await supabase.from('direct_messages').insert({
+        thread_id: order.thread_id,
+        sender_id: order.student_id,
+        content: buildBookingMessage(input, params.razorpayPaymentId),
+      })
+      if (messageError) throw new Error(`Failed to post booking message: ${messageError.message}`)
+    }
+  }
+
+  await notifyEnrollmentParties(
+    supabase,
+    order,
+    studentName,
+    teacherName,
+    gross,
+    teacherAmount,
+    academyLink,
+  )
 }
 
 export async function createPendingClassOrder(
@@ -385,140 +538,49 @@ export async function fulfillPaidClassOrder(params: {
     throw new Error('Booking order not found for this payment.')
   }
 
-  if (order.payment_status === 'paid') {
-    return { orderId: order.id as string, alreadyFulfilled: true }
-  }
+  const wasAlreadyPaid = order.payment_status === 'paid'
+  let paidOrder = order
 
-  const transferStatus = params.transferId ? 'transferred' : 'not_applicable'
+  if (!wasAlreadyPaid) {
+    const transferStatus = params.transferId ? 'transferred' : 'not_applicable'
 
-  const { data: claimed, error: claimError } = await supabase
-    .from('class_orders')
-    .update({
-      payment_status: 'paid',
-      razorpay_payment_id: params.razorpayPaymentId,
-      transfer_status: transferStatus,
-    })
-    .eq('id', order.id)
-    .eq('payment_status', 'pending')
-    .select('*')
-    .maybeSingle()
-
-  if (claimError) throw claimError
-
-  if (!claimed) {
-    const { data: refreshed } = await supabase
+    const { data: claimed, error: claimError } = await supabase
       .from('class_orders')
-      .select('id, payment_status')
+      .update({
+        payment_status: 'paid',
+        razorpay_payment_id: params.razorpayPaymentId,
+        transfer_status: transferStatus,
+      })
       .eq('id', order.id)
+      .eq('payment_status', 'pending')
+      .select('*')
       .maybeSingle()
 
-    if (refreshed?.payment_status === 'paid') {
-      return { orderId: order.id as string, alreadyFulfilled: true }
-    }
+    if (claimError) throw claimError
 
-    throw new Error('Could not complete enrollment for this payment.')
-  }
+    if (claimed) {
+      paidOrder = claimed
+    } else {
+      const { data: refreshed, error: refreshError } = await supabase
+        .from('class_orders')
+        .select('*')
+        .eq('id', order.id)
+        .maybeSingle()
 
-  let scheduleId = claimed.schedule_id as string | null
-
-  if (!scheduleId) {
-    const { data: schedule, error: scheduleError } = await supabase
-      .from('schedules')
-      .insert({
-        teacher_id: claimed.teacher_id,
-        student_id: claimed.student_id,
-        class_type: claimed.class_type,
-        scheduled_at: claimed.scheduled_at,
-        duration_minutes: 60,
-      })
-      .select('id')
-      .single()
-
-    if (scheduleError) throw scheduleError
-    scheduleId = schedule.id as string
-
-    await supabase
-      .from('class_orders')
-      .update({ schedule_id: scheduleId })
-      .eq('id', claimed.id)
-  }
-
-  const gross = Number(claimed.gross_amount ?? claimed.amount ?? 0)
-  const platformFee = Number(claimed.platform_fee ?? 0)
-  const teacherAmount = Number(claimed.teacher_amount ?? gross - platformFee)
-  const payoutStatus = params.transferId ? 'paid' : 'pending'
-
-  const [{ data: studentProfile }, { data: teacherProfile }] = await Promise.all([
-    supabase.from('profiles').select('full_name').eq('id', claimed.student_id).maybeSingle(),
-    supabase.from('profiles').select('full_name').eq('id', claimed.teacher_id).maybeSingle(),
-  ])
-
-  const studentName = studentProfile?.full_name ?? 'Student'
-  const teacherName = teacherProfile?.full_name ?? 'Coach'
-
-  const { data: existingPayout } = await supabase
-    .from('payouts')
-    .select('id')
-    .eq('class_order_id', claimed.id)
-    .maybeSingle()
-
-  if (!existingPayout) {
-    const periodLabel = new Date(claimed.created_at as string).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    })
-
-    const { error: payoutError } = await supabase.from('payouts').insert({
-      teacher_id: claimed.teacher_id,
-      class_order_id: claimed.id,
-      student_id: claimed.student_id,
-      gross_amount: gross,
-      commission_amount: platformFee,
-      teacher_amount: teacherAmount,
-      amount: teacherAmount,
-      period: `${studentName} · ${periodLabel}`,
-      status: payoutStatus,
-      razorpay_payment_id: params.razorpayPaymentId,
-      razorpay_transfer_id: params.transferId ?? null,
-    })
-    if (payoutError) throw payoutError
-  }
-
-  await redeemCouponForOrder(supabase, claimed)
-  await upsertBookingForOrder(supabase, claimed, gross)
-
-  const academyLink = await enrollInAcademyBatchIfApplicable(supabase, claimed)
-
-  if (claimed.thread_id) {
-    const { data: existingMessage } = await supabase
-      .from('direct_messages')
-      .select('id')
-      .eq('thread_id', claimed.thread_id)
-      .ilike('content', `%${params.razorpayPaymentId.slice(0, 14)}%`)
-      .maybeSingle()
-
-    if (!existingMessage) {
-      const input = orderToInput(claimed, studentName)
-      await supabase.from('direct_messages').insert({
-        thread_id: claimed.thread_id,
-        sender_id: claimed.student_id,
-        content: buildBookingMessage(input, params.razorpayPaymentId),
-      })
+      if (refreshError) throw refreshError
+      if (refreshed?.payment_status !== 'paid') {
+        throw new Error('Could not complete enrollment for this payment.')
+      }
+      paidOrder = refreshed
     }
   }
 
-  await notifyEnrollmentParties(
-    supabase,
-    claimed,
-    studentName,
-    teacherName,
-    gross,
-    teacherAmount,
-    academyLink,
-  )
+  await completePaidOrderSideEffects(supabase, paidOrder, params)
 
-  return { orderId: claimed.id as string, alreadyFulfilled: false }
+  return {
+    orderId: paidOrder.id as string,
+    alreadyFulfilled: wasAlreadyPaid || paidOrder.payment_status === 'paid',
+  }
 }
 
 export async function getTeacherLinkedAccountId(teacherId: string) {

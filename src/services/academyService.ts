@@ -4,16 +4,24 @@ import { academyMemberRepository } from '../repositories/academyMemberRepository
 import { batchRepository } from '../repositories/batchRepository'
 import { slugifyAcademyName } from '../utils/academyMappers'
 
+function isUniqueViolation(err: unknown): boolean {
+  if (typeof err !== 'object' || err === null) return false
+  const e = err as { code?: string; status?: number }
+  return e.code === '23505' || e.status === 409
+}
+
 async function ensureUniqueSlug(baseSlug: string): Promise<string> {
-  let slug = baseSlug || 'academy'
+  const slug = baseSlug || 'academy'
   let suffix = 0
 
-  while (true) {
+  while (suffix < 50) {
     const candidate = suffix === 0 ? slug : `${slug}-${suffix}`
-    const existing = await academyRepository.findBySlug(candidate)
-    if (!existing) return candidate
+    const taken = await academyRepository.isSlugTaken(candidate)
+    if (!taken) return candidate
     suffix += 1
   }
+
+  return `${slug}-${Date.now()}`
 }
 
 export async function fetchAcademyById(id: string) {
@@ -66,18 +74,39 @@ export async function ensureAcademyBootstrap(academyId: string, userId: string) 
       /* settings may already exist */
     }
   }
+
+  if (academy.status === 'inactive') {
+    try {
+      await academyRepository.updateStatus(academyId, 'active')
+    } catch {
+      /* non-owners cannot reactivate; creator bootstrap should succeed */
+    }
+  }
 }
 
 /** Creates an academy and bootstraps owner membership + default settings. */
 export async function createAcademy(input: CreateAcademyInput, createdBy: string) {
   const baseSlug = slugifyAcademyName(input.slug ?? input.name)
-  const slug = await ensureUniqueSlug(baseSlug)
+  let slug = await ensureUniqueSlug(baseSlug)
 
-  const academy = await academyRepository.create({
-    ...input,
-    slug,
-    createdBy,
-  })
+  let academy
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    try {
+      academy = await academyRepository.create({
+        ...input,
+        slug,
+        createdBy,
+      })
+      break
+    } catch (err) {
+      if (!isUniqueViolation(err) || attempt === 4) throw err
+      slug = await ensureUniqueSlug(`${baseSlug}-${attempt + 1}`)
+    }
+  }
+
+  if (!academy) {
+    throw new Error('Could not create academy.')
+  }
 
   try {
     await academyMemberRepository.addMember({

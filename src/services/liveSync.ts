@@ -85,6 +85,7 @@ export const subscribeToSchedules = createLiveChannel('live:schedules', [
   { table: 'class_orders' },
   { table: 'schedule_change_requests' },
   { table: 'enrollment_notifications' },
+  { table: 'batch_students' },
 ])
 
 /** Payout records for teacher earnings. */

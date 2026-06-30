@@ -31,3 +31,10 @@ dist-ssr
 *.sw?
 .vercel
 .env*.local
+
+# Playwright QA artifacts
+qa-artifacts/
+test-results/
+playwright-report/
+blob-report/
+/playwright/.cache/

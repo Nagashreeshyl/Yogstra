@@ -32,6 +32,7 @@ const OrganizerSignupPage = lazy(() =>
 )
 const AboutPage = lazy(() => import('./pages/public/AboutPage').then((m) => ({ default: m.AboutPage })))
 const HelpCenterPage = lazy(() => import('./pages/public/HelpCenterPage').then((m) => ({ default: m.HelpCenterPage })))
+const NotFoundPage = lazy(() => import('./pages/public/NotFoundPage').then((m) => ({ default: m.NotFoundPage })))
 const AcademiesPage = lazy(() => import('./pages/public/AcademiesPage').then((m) => ({ default: m.AcademiesPage })))
 const AcademyProfilePage = lazy(() => import('./pages/public/AcademyProfilePage').then((m) => ({ default: m.AcademyProfilePage })))
 const ExplorePage = lazy(() => import('./pages/ExplorePage').then((m) => ({ default: m.ExplorePage })))
@@ -328,6 +329,8 @@ export default function App() {
                   <Route path="settings" element={<AdminSettingsPage />} />
                 </Route>
               </Route>
+
+              <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </Suspense>
         </BrowserRouter>

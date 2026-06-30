@@ -40,6 +40,19 @@ export const academyRepository = {
     return data ? mapAcademy(data) : null
   },
 
+  /** Checks slug across all academy statuses (bypasses RLS via security definer RPC). */
+  async isSlugTaken(slug: string) {
+    const { data, error } = await supabase.rpc('academy_slug_taken', { p_slug: slug })
+    if (error) {
+      if (error.code === 'PGRST202') {
+        const existing = await this.findBySlug(slug)
+        return Boolean(existing)
+      }
+      throw error
+    }
+    return Boolean(data)
+  },
+
   async listForUser(userId: string) {
     const { data: memberRows, error: memberError } = await supabase
       .from('academy_members')

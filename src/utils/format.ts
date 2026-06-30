@@ -85,6 +85,10 @@ export function formatUserFacingError(
 
   if (!raw.trim()) return fallback
 
+  if (/duplicate key|already exists|409/i.test(raw)) {
+    return 'An academy with this name already exists. Refresh the page to continue setup.'
+  }
+
   if (
     /PGRST\d+|JWT|row.level security|permission denied|violates|Run supabase\//i.test(raw) ||
     /^\d{3}\s|Unprocessable Entity|Internal Server Error|NetworkError|Failed to fetch/i.test(raw)
