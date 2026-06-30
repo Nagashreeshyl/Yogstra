@@ -9,15 +9,7 @@
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600;700&display=swap"
       rel="stylesheet"
-      media="print"
-      onload="this.media='all'"
     />
-    <noscript>
-      <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600;700&display=swap"
-        rel="stylesheet"
-      />
-    </noscript>
     <title>Yogstra — Yoga Teachers, Classes & Competitions</title>
     <meta name="description" content="Find yoga teachers, join live classes, enroll in programs, and compete on Yogstra — India's yoga platform." />
     <meta name="theme-color" content="#1c1c1c" />
@@ -120,18 +112,22 @@
 
         var meta = document.querySelector('meta[name="yogstra-build"]')
         var buildId = meta && meta.getAttribute('content')
-        var storedBuild = sessionStorage.getItem(BUILD_KEY)
-        if (buildId && storedBuild && buildId !== storedBuild) {
-          hardReload()
-          return
+        if (buildId) {
+          var storedBuild = sessionStorage.getItem(BUILD_KEY)
+          sessionStorage.setItem(BUILD_KEY, buildId)
+          if (storedBuild && storedBuild !== buildId) {
+            hardReload()
+          }
         }
-        if (buildId) sessionStorage.setItem(BUILD_KEY, buildId)
 
         fetch('/build-id.txt', { cache: 'no-store' })
           .then(function (r) { return r.ok ? r.text() : '' })
           .then(function (serverId) {
             serverId = (serverId || '').trim()
-            if (serverId && buildId && serverId !== buildId) hardReload()
+            if (serverId && buildId && serverId !== buildId) {
+              sessionStorage.setItem(BUILD_KEY, serverId)
+              hardReload()
+            }
           })
           .catch(function () {})
       })()
