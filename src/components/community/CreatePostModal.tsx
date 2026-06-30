@@ -35,6 +35,8 @@ export function CreatePostModal({ isOpen, onClose, onPost, showPinOption = false
   const [pinned, setPinned] = useState(false)
   const [media, setMedia] = useState<MediaPreview | null>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [showCropModal, setShowCropModal] = useState(false)
   const [cropImage, setCropImage] = useState<string>('')
   const [crop, setCrop] = useState<Crop>()
@@ -63,6 +65,8 @@ export function CreatePostModal({ isOpen, onClose, onPost, showPinOption = false
   const reset = useCallback(() => {
     setCaption('')
     setPinned(false)
+    setSubmitError(null)
+    setIsSubmitting(false)
     setMedia((prev) => {
       if (prev) URL.revokeObjectURL(prev.url)
       return null
@@ -160,18 +164,27 @@ export function CreatePostModal({ isOpen, onClose, onPost, showPinOption = false
     if (file) handleFile(file)
   }
 
-  const handlePost = () => {
+  const handlePost = async () => {
     if (!caption.trim() && !media) return
+    if (isSubmitting) return
 
-    onPost({
-      text: caption.trim(),
-      file: media?.file,
-      pinned: showPinOption ? pinned : undefined,
-    })
-    reset()
+    setSubmitError(null)
+    setIsSubmitting(true)
+    try {
+      await onPost({
+        text: caption.trim(),
+        file: media?.file,
+        pinned: showPinOption ? pinned : undefined,
+      })
+      reset()
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Could not create post.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
-  const canPost = caption.trim().length > 0 || media !== null
+  const canPost = (caption.trim().length > 0 || media !== null) && !isSubmitting
 
   if (!isOpen) return null
 
@@ -195,11 +208,11 @@ export function CreatePostModal({ isOpen, onClose, onPost, showPinOption = false
           <h2 className="font-heading text-base font-medium">Create Post</h2>
           <button
             type="button"
-            onClick={handlePost}
+            onClick={() => void handlePost()}
             disabled={!canPost}
             className="text-sm font-medium text-primary hover:text-primary-dark disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
-            Post
+            {isSubmitting ? 'Posting…' : 'Post'}
           </button>
         </div>
 
@@ -283,6 +296,12 @@ export function CreatePostModal({ isOpen, onClose, onPost, showPinOption = false
               className="flex-1 min-h-[120px] md:min-h-[200px] border-0 px-0 focus:border-0 resize-none"
             />
 
+            {submitError && (
+              <p className="mt-3 text-sm text-destructive" role="alert">
+                {submitError}
+              </p>
+            )}
+
             {showPinOption && (
               <label className="mt-4 flex items-start gap-3 rounded-sm border border-border bg-muted/40 px-3 py-3 cursor-pointer">
                 <input
@@ -310,12 +329,21 @@ export function CreatePostModal({ isOpen, onClose, onPost, showPinOption = false
               </button>
             )}
 
+            <div className="mt-auto pt-4 flex gap-3 md:hidden">
+              <Button variant="secondary" className="flex-1" onClick={handleClose} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button className="flex-1" onClick={() => void handlePost()} disabled={!canPost}>
+                {isSubmitting ? 'Posting…' : 'Post'}
+              </Button>
+            </div>
+
             <div className="mt-auto pt-4 hidden md:flex gap-3">
               <Button variant="secondary" className="flex-1" onClick={handleClose}>
                 Cancel
               </Button>
-              <Button className="flex-1" onClick={handlePost} disabled={!canPost}>
-                Post
+              <Button className="flex-1" onClick={() => void handlePost()} disabled={!canPost}>
+                {isSubmitting ? 'Posting…' : 'Post'}
               </Button>
             </div>
           </div>

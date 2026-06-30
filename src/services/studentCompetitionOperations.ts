@@ -5,26 +5,6 @@ import { type StudentRegistrationDraft } from '../utils/studentRegistrationDraft
 import { formatUserFacingError } from '../utils/format'
 import type { CompetitionRegistration } from '../domain/competition/models'
 
-async function confirmRegistrationEnrollment(registrationId: string) {
-  const { error: regError } = await supabase
-    .from('competition_registrations')
-    .update({
-      status: 'confirmed',
-      confirmed_at: new Date().toISOString(),
-    })
-    .eq('id', registrationId)
-
-  if (regError) throw regError
-
-  const { error: participantError } = await supabase
-    .from('competition_participants')
-    .update({ status: 'registered' })
-    .eq('registration_id', registrationId)
-    .neq('status', 'withdrawn')
-
-  if (participantError) throw participantError
-}
-
 function buildParticipantMetadata(draft: StudentRegistrationDraft) {
   return {
     emergencyContact: draft.emergencyContact,
@@ -134,19 +114,27 @@ export async function completeStudentRegistration(params: {
 }
 
 export async function markRegistrationPaid(registrationId: string, amount: number) {
-  const { error } = await supabase
-    .from('competition_registrations')
-    .update({
-      payment_status: amount > 0 ? 'paid' : 'waived',
-      payment_amount: amount > 0 ? amount : null,
-    })
-    .eq('id', registrationId)
-
-  if (error) {
-    throw new Error(formatUserFacingError(error, 'Payment could not be recorded.'))
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  const token = session?.access_token
+  if (!token) {
+    throw new Error('Not signed in')
   }
 
-  await confirmRegistrationEnrollment(registrationId)
+  const response = await fetch('/api/competition-registration-complete', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ registrationId, amount }),
+  })
+
+  const payload = (await response.json().catch(() => ({}))) as { error?: string }
+  if (!response.ok) {
+    throw new Error(formatUserFacingError(payload.error, 'Payment could not be recorded.'))
+  }
 }
 
 export async function updateStudentRegistrationDocuments(params: {

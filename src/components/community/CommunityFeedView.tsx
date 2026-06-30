@@ -22,7 +22,7 @@ export function CommunityFeedView() {
   const isTeacher = isLoggedIn && user?.role === 'teacher'
 
   const handleCreatePost = async (data: { text: string; file?: File }) => {
-    if (!user) return
+    if (!user) throw new Error('You must be signed in to post.')
 
     await createPost({
       authorId: user.id,

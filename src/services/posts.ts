@@ -83,7 +83,13 @@ export async function createPost(params: {
         upsert: false,
       })
 
-    if (uploadError) throw uploadError
+    if (uploadError) {
+      const message = uploadError.message ?? 'Could not upload media.'
+      if (message.toLowerCase().includes('policy') || uploadError.message?.includes('403')) {
+        throw new Error('Could not upload media. Check your connection and try again.')
+      }
+      throw new Error(message)
+    }
 
     const { data: urlData } = supabase.storage.from('post-media').getPublicUrl(path)
     mediaUrl = urlData.publicUrl
@@ -102,7 +108,13 @@ export async function createPost(params: {
     .select(postSelect)
     .single()
 
-  if (error) throw error
+  if (error) {
+    const message = error.message ?? 'Could not save post.'
+    if (error.code === '42501' || message.toLowerCase().includes('policy')) {
+      throw new Error('You do not have permission to create this post.')
+    }
+    throw new Error(message)
+  }
   return mapPost(data)
 }
 

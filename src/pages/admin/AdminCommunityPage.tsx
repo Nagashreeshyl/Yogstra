@@ -29,20 +29,16 @@ export function AdminCommunityPage() {
   const [removeError, setRemoveError] = useState<string | null>(null)
 
   const handleCreatePost = async (data: { text: string; file?: File; pinned?: boolean }) => {
-    if (!user) return
+    if (!user) throw new Error('You must be signed in to post.')
     setCreateError(null)
-    try {
-      await createPost({
-        authorId: user.id,
-        content: data.text,
-        mediaFile: data.file,
-        pinned: data.pinned,
-      })
-      setShowCreateModal(false)
-      await refetch()
-    } catch (err) {
-      setCreateError(err instanceof Error ? err.message : 'Could not create post.')
-    }
+    await createPost({
+      authorId: user.id,
+      content: data.text,
+      mediaFile: data.file,
+      pinned: data.pinned,
+    })
+    setShowCreateModal(false)
+    await refetch()
   }
 
   const handleTogglePin = async (postId: string, pinned: boolean) => {
