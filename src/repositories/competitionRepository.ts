@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { isMissingTableError } from '../utils/supabaseErrors'
 import type {
   CreateCompetitionCategoryInput,
   CreateCompetitionInput,
@@ -72,7 +73,10 @@ export const competitionRepository = {
       .eq('id', id)
       .maybeSingle()
 
-    if (error) throw error
+    if (error) {
+      if (isMissingTableError(error)) return null
+      throw error
+    }
     return data ? mapCompetition(data) : null
   },
 
@@ -83,7 +87,10 @@ export const competitionRepository = {
       .eq('slug', slug)
       .maybeSingle()
 
-    if (error) throw error
+    if (error) {
+      if (isMissingTableError(error)) return null
+      throw error
+    }
     return data ? mapCompetition(data) : null
   },
 
@@ -103,7 +110,10 @@ export const competitionRepository = {
       .order('start_date', { ascending: true, nullsFirst: false })
       .limit(limit)
 
-    if (error) throw error
+    if (error) {
+      if (isMissingTableError(error)) return []
+      throw error
+    }
     return (data ?? []).map(mapCompetition)
   },
 
@@ -114,7 +124,10 @@ export const competitionRepository = {
       .order('created_at', { ascending: false })
       .limit(limit)
 
-    if (error) throw error
+    if (error) {
+      if (isMissingTableError(error)) return []
+      throw error
+    }
     return (data ?? []).map(mapCompetition)
   },
 
@@ -125,7 +138,10 @@ export const competitionRepository = {
       .or(`organizer_id.eq.${userId},created_by.eq.${userId}`)
       .order('start_date', { ascending: false, nullsFirst: false })
 
-    if (error) throw error
+    if (error) {
+      if (isMissingTableError(error)) return []
+      throw error
+    }
     return (data ?? []).map(mapCompetition)
   },
 

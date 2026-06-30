@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { isMissingTableError } from '../utils/supabaseErrors'
 import type { CreateAcademyInput, AcademySettings } from '../domain/academy/models'
 import { mapAcademy, mapAcademySettings } from '../utils/academyMappers'
 
@@ -60,7 +61,10 @@ export const academyRepository = {
       .eq('user_id', userId)
       .eq('status', 'active')
 
-    if (memberError) throw memberError
+    if (memberError) {
+      if (isMissingTableError(memberError)) return []
+      throw memberError
+    }
 
     const { data: teacherRows, error: teacherError } = await supabase
       .from('teacher_academies')
@@ -68,7 +72,13 @@ export const academyRepository = {
       .eq('teacher_id', userId)
       .eq('status', 'active')
 
-    if (teacherError) throw teacherError
+    if (teacherError) {
+      if (isMissingTableError(teacherError)) {
+        // teacher_academies may be unavailable; continue with member + owned academies
+      } else {
+        throw teacherError
+      }
+    }
 
     const { data: ownedRows, error: ownedError } = await supabase
       .from('academies')
@@ -76,7 +86,10 @@ export const academyRepository = {
       .eq('created_by', userId)
       .neq('status', 'archived')
 
-    if (ownedError) throw ownedError
+    if (ownedError) {
+      if (isMissingTableError(ownedError)) return []
+      throw ownedError
+    }
 
     const academies = new Map<string, ReturnType<typeof mapAcademy>>()
 
@@ -110,7 +123,10 @@ export const academyRepository = {
       .order('created_at', { ascending: false })
       .limit(limit)
 
-    if (error) throw error
+    if (error) {
+      if (isMissingTableError(error)) return []
+      throw error
+    }
     return (data ?? []).map(mapAcademy)
   },
 
@@ -123,7 +139,10 @@ export const academyRepository = {
       .order('name', { ascending: true })
       .limit(limit)
 
-    if (error) throw error
+    if (error) {
+      if (isMissingTableError(error)) return []
+      throw error
+    }
     return (data ?? []).map(mapAcademy)
   },
 

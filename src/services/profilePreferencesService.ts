@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { isMissingTableError } from '../utils/supabaseErrors'
 import type { DashboardView } from '../utils/dashboardRoutes'
 
 export type ProfilePreferences = {
@@ -16,7 +17,7 @@ export async function fetchProfilePreferences(userId: string): Promise<ProfilePr
     .maybeSingle()
 
   if (error) {
-    if (error.code === '42P01') return null
+    if (isMissingTableError(error)) return null
     throw error
   }
   if (!data) return null
@@ -52,7 +53,7 @@ export async function saveProfilePreferences(
   })
 
   if (error) {
-    if (error.code === '42P01') return
+    if (isMissingTableError(error)) return
     throw error
   }
 }

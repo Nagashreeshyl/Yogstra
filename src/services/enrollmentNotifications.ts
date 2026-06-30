@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { isMissingTableError } from '../utils/supabaseErrors'
 
 export type EnrollmentNotification = {
   id: string
@@ -21,7 +22,7 @@ export async function fetchEnrollmentNotifications(
     .limit(limit)
 
   if (error) {
-    if (error.code === 'PGRST205' || error.code === '42P01') return []
+    if (isMissingTableError(error)) return []
     throw error
   }
 
@@ -41,5 +42,8 @@ export async function markEnrollmentNotificationRead(notificationId: string) {
     .update({ read_at: new Date().toISOString() })
     .eq('id', notificationId)
 
-  if (error) throw error
+  if (error) {
+    if (isMissingTableError(error)) return
+    throw error
+  }
 }

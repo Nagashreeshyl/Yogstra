@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { isMissingTableError } from '../utils/supabaseErrors'
 import type { IssueCertificateInput } from '../domain/competition/models'
 import { mapCompetitionCertificate } from '../utils/competitionMappers'
 
@@ -56,7 +57,10 @@ export const competitionCertificateRepository = {
       .eq('status', 'issued')
       .order('issued_at', { ascending: false })
 
-    if (error) throw error
+    if (error) {
+      if (isMissingTableError(error)) return []
+      throw error
+    }
     return (data ?? []).map(mapCompetitionCertificate)
   },
 

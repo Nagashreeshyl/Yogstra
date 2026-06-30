@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { isMissingTableError } from '../utils/supabaseErrors'
 import type { CreateBatchInput, EnrollBatchStudentInput } from '../domain/academy/models'
 import { mapBatch, mapBatchStudent } from '../utils/academyMappers'
 
@@ -133,7 +134,10 @@ export const batchRepository = {
       .eq('student_id', studentId)
       .eq('status', 'active')
 
-    if (error) throw error
+    if (error) {
+      if (isMissingTableError(error)) return []
+      throw error
+    }
     return (data ?? []).map(mapBatchStudent)
   },
 
@@ -143,7 +147,10 @@ export const batchRepository = {
       .select('id, name')
       .eq('academy_id', academyId)
 
-    if (batchError) throw batchError
+    if (batchError) {
+      if (isMissingTableError(batchError)) return []
+      throw batchError
+    }
 
     const batchIds = (batches ?? []).map((b) => b.id as string)
     if (!batchIds.length) return []
