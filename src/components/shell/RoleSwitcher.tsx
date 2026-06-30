@@ -14,7 +14,7 @@ import { isPlatformAdmin } from '../../utils/platformAdmin'
 import { useWorkspaceAccess } from '../../hooks/useWorkspaceAccess'
 import { persistWorkspaceChoice } from '../../utils/workspacePreference'
 
-export function RoleSwitcher() {
+export function RoleSwitcher({ compactOnMobile = false }: { compactOnMobile?: boolean }) {
   const { user, isLoggedIn } = useApp()
   const navigate = useNavigate()
   const location = useLocation()
@@ -53,21 +53,25 @@ export function RoleSwitcher() {
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex items-center gap-1.5 h-9 px-2.5 sm:px-3 rounded-[12px] border border-border bg-elevated text-sm text-foreground hover:bg-muted transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-        aria-label="Switch workspace"
+        className={`inline-flex items-center gap-1.5 h-9 rounded-[12px] border border-border bg-elevated text-sm text-foreground hover:bg-muted transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
+          compactOnMobile ? 'w-9 justify-center px-0 sm:w-auto sm:px-3' : 'px-2.5 sm:px-3'
+        }`}
+        aria-label={compactOnMobile ? `Switch workspace: ${label}` : 'Switch workspace'}
         aria-expanded={open}
         aria-haspopup="listbox"
       >
         <LayoutGrid size={14} className="text-accent shrink-0" />
-        <span className="max-w-[5.5rem] sm:max-w-none truncate">{label}</span>
-        <ChevronDown size={14} className="text-muted-foreground shrink-0" />
+        <span className={`truncate ${compactOnMobile ? 'hidden sm:inline sm:max-w-none' : 'max-w-[5.5rem] sm:max-w-none'}`}>
+          {label}
+        </span>
+        <ChevronDown size={14} className={`text-muted-foreground shrink-0 ${compactOnMobile ? 'hidden sm:block' : ''}`} />
       </button>
 
       {open && (
         <div
           role="listbox"
           aria-label="Workspaces"
-          className="absolute right-0 top-full mt-2 w-56 rounded-[16px] border border-border bg-elevated shadow-md py-2 z-[80]"
+          className="absolute right-0 top-full mt-2 w-56 max-w-[min(14rem,calc(100vw-2rem))] sm:max-w-none rounded-[16px] border border-border bg-elevated shadow-md py-2 z-[85] max-lg:fixed max-lg:right-4 max-lg:left-auto max-lg:top-[calc(3.5rem+env(safe-area-inset-top))] max-lg:mt-0 max-lg:w-[min(14rem,calc(100vw-2rem))]"
         >
           <p className="px-3 py-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             {isAdmin ? 'Admin — switch workspace' : 'Workspaces'}

@@ -102,7 +102,7 @@ export function NotificationDropdown({ count: countProp }: NotificationDropdownP
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-full mt-2 w-80 max-h-[min(24rem,70vh)] overflow-y-auto rounded-[16px] border border-border bg-elevated shadow-md z-50"
+          className="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-2rem)] max-h-[min(24rem,70vh)] overflow-y-auto rounded-[16px] border border-border bg-elevated shadow-md z-[85] max-lg:fixed max-lg:inset-x-4 max-lg:top-[calc(3.5rem+env(safe-area-inset-top))] max-lg:bottom-auto max-lg:mt-0 max-lg:w-auto max-lg:max-w-none"
         >
           <div className="sticky top-0 flex items-center justify-between border-b border-border bg-elevated px-4 py-3">
             <p className="text-sm font-medium text-foreground">Notifications</p>

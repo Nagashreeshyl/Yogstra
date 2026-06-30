@@ -55,7 +55,7 @@ export async function logActivity(input: LogActivityInput) {
       user_agent: typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 300) : null,
     })
 
-    if (error?.code === 'PGRST205' || error?.code === '42P01') return
+    if (error) return
   } catch {
     // Silent — logging must not break user flows
   }

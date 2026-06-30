@@ -28,7 +28,7 @@ export function InstallAppPrompt({ variant = 'banner' }: InstallAppPromptProps) 
         <button
           type="button"
           onClick={() => void handleClick()}
-          className="ml-auto p-2 text-primary-foreground/70 hover:text-primary-foreground rounded-[12px] cursor-pointer shrink-0"
+          className="inline-flex h-9 w-9 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-[12px] cursor-pointer shrink-0 transition-colors"
           aria-label="Install Yogstra app"
           title="Install app"
         >

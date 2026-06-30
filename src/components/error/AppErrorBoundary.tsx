@@ -1,5 +1,4 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
-import { Link } from 'react-router-dom'
 import { logActivity } from '../../services/activityLog'
 
 type Props = {
@@ -51,12 +50,12 @@ export class AppErrorBoundary extends Component<Props, State> {
             >
               Try again
             </button>
-            <Link
-              to="/"
+            <a
+              href="/"
               className="inline-flex h-11 items-center justify-center rounded-[12px] border border-border bg-elevated px-5 text-sm font-medium text-foreground hover:bg-muted"
             >
               Back to home
-            </Link>
+            </a>
           </div>
         </div>
       )

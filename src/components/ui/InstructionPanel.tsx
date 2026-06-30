@@ -53,7 +53,7 @@ export function InstructionPanel({ title, steps, storageKey, className = '' }: I
           <X size={16} />
         </button>
       </div>
-      <ol className="flex flex-wrap gap-x-4 gap-y-2">
+      <ol className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-x-4 sm:gap-y-2">
         {steps.map((step, index) => (
           <li key={step.label} className="flex items-center gap-2 text-xs text-muted-foreground">
             <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/15 text-[10px] font-semibold text-accent">

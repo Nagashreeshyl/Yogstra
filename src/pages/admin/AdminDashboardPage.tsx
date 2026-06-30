@@ -119,11 +119,13 @@ export function AdminDashboardPage() {
           value={pending?.length ?? 0}
           help={{ description: 'Coach applications awaiting verification.', example: '3 pending' }}
         />
-        <StatWithHelp
-          label="Monthly revenue"
-          value={`₹${(revenue ?? 0).toLocaleString('en-IN')}`}
-          help={{ description: 'Platform commission from paid enrollments this month.' }}
-        />
+        <div className="col-span-2 lg:col-span-1">
+          <StatWithHelp
+            label="Monthly revenue"
+            value={`₹${(revenue ?? 0).toLocaleString('en-IN')}`}
+            help={{ description: 'Platform commission from paid enrollments this month.' }}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">

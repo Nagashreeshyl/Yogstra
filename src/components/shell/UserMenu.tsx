@@ -71,7 +71,7 @@ export function UserMenu({ showAuthActions = false }: UserMenuProps) {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-full mt-2 w-56 rounded-[16px] border border-border bg-elevated shadow-md py-2 z-50"
+          className="absolute right-0 top-full mt-2 w-56 rounded-[16px] border border-border bg-elevated shadow-md py-2 z-[85] max-lg:fixed max-lg:right-4 max-lg:left-auto max-lg:top-[calc(3.5rem+env(safe-area-inset-top))] max-lg:bottom-auto max-lg:mt-0"
         >
           <div className="px-3 py-2 border-b border-border">
             <p className="text-sm font-medium truncate text-foreground">{user.name}</p>

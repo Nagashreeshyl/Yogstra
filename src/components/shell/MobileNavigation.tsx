@@ -24,6 +24,7 @@ export function MobileNavigation({ navItems, badges }: MobileNavigationProps) {
 
   const tabItems = navItems.filter((item) => item.placement.includes('tab')).slice(0, 4)
   const moreItems = navItems.filter((item) => item.placement.includes('more'))
+  const columnCount = tabItems.length + 1
 
   useEffect(() => {
     setMoreOpen(false)
@@ -48,7 +49,10 @@ export function MobileNavigation({ navItems, badges }: MobileNavigationProps) {
         aria-label="Mobile navigation"
       >
         <div className="pointer-events-auto mx-auto max-w-lg rounded-[28px] border border-border/80 bg-elevated/95 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.28)]">
-          <ul className="grid grid-cols-5 h-[3.75rem] px-1">
+          <ul
+            className="grid h-[3.75rem] px-1"
+            style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}
+          >
             {tabItems.map((item) => (
               <li key={item.to}>
                 <NavLink

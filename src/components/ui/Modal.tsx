@@ -1,5 +1,6 @@
 import { X } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { isAppShellRoute } from '../../utils/appShellRoutes'
 
 interface ModalProps {
   isOpen: boolean
@@ -18,13 +19,25 @@ export function Modal({
   showClose = true,
   title,
 }: ModalProps) {
+  const aboveMobileTabBar =
+    isOpen && typeof window !== 'undefined' && isAppShellRoute(window.location.pathname)
+
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby={title ? 'modal-title' : undefined}>
+    <div
+      className={`fixed inset-0 z-[90] flex p-4 max-lg:items-end lg:items-center lg:justify-center ${
+        aboveMobileTabBar
+          ? 'max-lg:pb-[calc(1rem+3.75rem+1.25rem+max(0.75rem,env(safe-area-inset-bottom)))]'
+          : 'max-lg:pb-[max(1rem,env(safe-area-inset-bottom))]'
+      }`}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={title ? 'modal-title' : undefined}
+    >
       <div className="absolute inset-0 bg-foreground/20 backdrop-blur-[2px]" onClick={onClose} aria-hidden="true" />
       <div
-        className={`relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[16px] border border-border bg-elevated p-4 shadow-md sm:p-6 lg:p-8 ${className}`}
+        className={`relative max-h-[min(90vh,100%)] w-full max-w-lg overflow-y-auto rounded-[16px] border border-border bg-elevated p-4 shadow-md sm:p-6 lg:p-8 max-lg:rounded-b-[24px] ${className}`}
       >
         {showClose && (
           <button

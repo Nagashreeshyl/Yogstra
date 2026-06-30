@@ -31,13 +31,20 @@ export function TopBar({
 }: TopBarProps) {
   const autoBreadcrumbs = useBreadcrumbs()
   const breadcrumbs = breadcrumbsOverride ?? autoBreadcrumbs
+  const mobileTitle =
+    variant === 'admin' ? 'Admin' : variant === 'teacher' ? 'Teacher' : variant === 'student' ? 'Student' : title
+  const showMobileBreadcrumbs = variant === 'public'
 
   return (
-    <header className="sticky top-0 z-40 shrink-0 border-b border-border bg-background/90 backdrop-blur-md pt-[env(safe-area-inset-top)]">
-      <div className="flex items-center gap-3 px-4 h-14 sm:px-6 lg:px-8">
-        <div className="lg:hidden min-w-0 flex-1 flex items-center">
-          <Link to={homeLink} className="font-heading text-lg font-semibold text-foreground truncate block min-w-0">
-            {title}
+    <header className="sticky top-0 z-40 shrink-0 border-b border-border bg-background/90 backdrop-blur-md pt-[env(safe-area-inset-top)] overflow-visible">
+      <div className="flex items-center gap-2 px-4 h-14 sm:gap-3 sm:px-6 lg:px-8">
+        <div className="lg:hidden min-w-0 flex-1">
+          <Link
+            to={homeLink}
+            className="font-heading text-base sm:text-lg font-semibold text-foreground truncate block min-w-0"
+          >
+            <span className="sm:hidden">{mobileTitle}</span>
+            <span className="hidden sm:inline">{title}</span>
           </Link>
         </div>
 
@@ -51,19 +58,21 @@ export function TopBar({
           </div>
         )}
 
-        <div className="flex items-center gap-1 sm:gap-2 ml-auto shrink-0">
+        <div className="flex items-center gap-0.5 sm:gap-2 ml-auto shrink-0">
           <InstallAppPrompt variant="header" />
           {showNotifications && variant !== 'public' && (
             <NotificationDropdown count={notificationCount} />
           )}
-          {showRoleSwitcher && variant !== 'public' && <RoleSwitcher />}
+          {showRoleSwitcher && variant !== 'public' && <RoleSwitcher compactOnMobile />}
           <UserMenu showAuthActions={variant === 'public'} />
         </div>
       </div>
 
-      <div className="lg:hidden px-4 pb-3 sm:px-6">
-        <Breadcrumb items={breadcrumbs} />
-      </div>
+      {showMobileBreadcrumbs && (
+        <div className="lg:hidden px-4 pb-3 sm:px-6">
+          <Breadcrumb items={breadcrumbs} />
+        </div>
+      )}
     </header>
   )
 }
