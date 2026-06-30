@@ -1,8 +1,9 @@
-import { useState } from 'react'
-import { AlertTriangle, GripVertical } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { AlertTriangle, GripVertical, Search } from 'lucide-react'
+import { useAsyncData } from '../../../hooks/useAsyncData'
+import { fetchTeachers } from '../../../services/teachers'
 import { DashboardCard } from '../../student/dashboard/DashboardCard'
 import { Button } from '../../ui/Button'
-import { Input } from '../../ui/Input'
 import { Select } from '../../ui/Select'
 import { EmptyState } from '../../shell/EmptyState'
 import type { OrganizerJudgeSummary } from '../../../services/organizerDashboard'
@@ -25,9 +26,36 @@ export function JudgeAssignmentBoard({
   organizerId,
   onUpdated,
 }: JudgeAssignmentBoardProps) {
-  const [userId, setUserId] = useState('')
+  const [search, setSearch] = useState('')
+  const [selectedTeacherId, setSelectedTeacherId] = useState('')
+  const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [draggingJudgeId, setDraggingJudgeId] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+
+  const { data: teachersData, loading: teachersLoading } = useAsyncData(
+    () => fetchTeachers(true),
+    [],
+  )
+  const teachers = teachersData ?? []
+
+  const assignedJudgeUserIds = useMemo(
+    () => new Set(summary.judges.map((j) => j.userId)),
+    [summary.judges],
+  )
+
+  const filteredTeachers = useMemo(() => {
+    const query = search.trim().toLowerCase()
+    return teachers
+      .filter((teacher) => !assignedJudgeUserIds.has(teacher.id))
+      .filter((teacher) => {
+        if (!query) return true
+        return (
+          teacher.name.toLowerCase().includes(query) ||
+          teacher.email.toLowerCase().includes(query) ||
+          teacher.city.toLowerCase().includes(query)
+        )
+      })
+  }, [teachers, search, assignedJudgeUserIds])
 
   async function handleAssign(categoryId: string | null) {
     if (!draggingJudgeId) return
@@ -42,11 +70,18 @@ export function JudgeAssignmentBoard({
   }
 
   async function handleInviteJudge() {
-    if (!userId.trim()) return
+    if (!selectedTeacherId.trim()) return
     setBusy(true)
     try {
-      await assignJudgeToCompetition(competitionId, userId.trim(), organizerId)
-      setUserId('')
+      await assignJudgeToCompetition(
+        competitionId,
+        selectedTeacherId.trim(),
+        organizerId,
+        selectedCategoryId || null,
+      )
+      setSelectedTeacherId('')
+      setSelectedCategoryId('')
+      setSearch('')
       onUpdated()
     } finally {
       setBusy(false)
@@ -67,30 +102,75 @@ export function JudgeAssignmentBoard({
     <DashboardCard
       title="Judge assignments"
       description={`${summary.assigned} assigned · ${summary.unassignedCategories} categories open · ${summary.conflicts} conflicts`}
-      action={
-        <Button size="sm" variant="secondary" disabled={busy}>
-          Assign judges
-        </Button>
-      }
     >
       {summary.conflicts > 0 && (
         <div className="mb-4 flex items-start gap-2 rounded-[12px] border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
           <AlertTriangle size={16} className="mt-0.5 shrink-0" aria-hidden />
-          <p>{summary.conflicts} scheduling conflict{summary.conflicts === 1 ? '' : 's'} detected. Review overlapping assignments.</p>
+          <p>
+            {summary.conflicts} scheduling conflict{summary.conflicts === 1 ? '' : 's'} detected.
+            Review overlapping assignments.
+          </p>
         </div>
       )}
 
-      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
-        <Input
-          label="Invite judge (user ID)"
-          value={userId}
-          onChange={(e) => setUserId(e.target.value)}
-          placeholder="Profile UUID"
-          className="flex-1"
-        />
-        <Button onClick={() => void handleInviteJudge()} disabled={busy || !userId.trim()}>
-          Invite
+      <div className="mb-4 space-y-3 rounded-[12px] border border-border bg-muted/20 p-4">
+        <p className="text-sm font-medium text-foreground">Assign a teacher as judge</p>
+        <div className="relative">
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden
+          />
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search teacher by name, email, or city…"
+            className="min-h-[44px] w-full rounded-lg border border-border bg-elevated py-2 pl-10 pr-3 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          />
+        </div>
+        <Select
+          label="Select teacher"
+          value={selectedTeacherId}
+          onChange={(e) => setSelectedTeacherId(e.target.value)}
+          disabled={teachersLoading || busy}
+        >
+          <option value="">
+            {teachersLoading ? 'Loading teachers…' : 'Choose a teacher…'}
+          </option>
+          {filteredTeachers.map((teacher) => (
+            <option key={teacher.id} value={teacher.id}>
+              {teacher.name}
+              {teacher.city ? ` · ${teacher.city}` : ''}
+            </option>
+          ))}
+        </Select>
+        {summary.categories.length > 0 && (
+          <Select
+            label="Assign to category (optional)"
+            value={selectedCategoryId}
+            onChange={(e) => setSelectedCategoryId(e.target.value)}
+            disabled={busy}
+          >
+            <option value="">Unassigned — assign later</option>
+            {summary.categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </Select>
+        )}
+        <Button
+          onClick={() => void handleInviteJudge()}
+          disabled={busy || !selectedTeacherId.trim()}
+          className="w-full sm:w-auto"
+        >
+          Assign judge
         </Button>
+        {!teachersLoading && filteredTeachers.length === 0 && (
+          <p className="text-xs text-muted-foreground">
+            No matching teachers found. All verified teachers may already be assigned.
+          </p>
+        )}
       </div>
 
       {summary.categories.length === 0 ? (
@@ -110,7 +190,7 @@ export function JudgeAssignmentBoard({
                 onDrop={() => void handleAssign(category.id)}
                 className="rounded-[12px] border border-dashed border-border bg-muted/30 p-3 min-h-[100px]"
               >
-                <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                   <p className="text-sm font-medium text-foreground">{category.name}</p>
                   <Button
                     size="sm"
@@ -121,8 +201,11 @@ export function JudgeAssignmentBoard({
                     Lock category
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground mb-2">Drop a judge here</p>
+                <p className="text-xs text-muted-foreground mb-2">Assigned judges</p>
                 <ul className="space-y-1">
+                  {categoryJudges.length === 0 && (
+                    <li className="text-xs text-muted-foreground">No judges assigned yet</li>
+                  )}
                   {categoryJudges.map((judge) => (
                     <li
                       key={judge.id}
@@ -164,10 +247,10 @@ export function JudgeAssignmentBoard({
         </div>
       )}
 
-      {summary.categories.length > 0 && (
-        <div className="mt-4 sm:hidden">
+      {summary.categories.length > 0 && draggingJudgeId && (
+        <div className="mt-4 lg:hidden">
           <Select
-            label="Assign dragged judge to category"
+            label="Move dragged judge to category"
             value=""
             onChange={(e) => {
               if (draggingJudgeId && e.target.value) {

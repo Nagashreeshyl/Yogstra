@@ -16,6 +16,10 @@ export interface StudentRegistrationDraft {
     photo: boolean
     ageProof: boolean
   }
+  documentFiles?: Partial<
+    Record<'identity' | 'medical' | 'photo' | 'ageProof', string>
+  >
+  registrationId?: string
   notes?: string
   updatedAt: string
 }

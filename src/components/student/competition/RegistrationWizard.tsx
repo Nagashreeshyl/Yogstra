@@ -1,9 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { CheckCircle2, Save } from 'lucide-react'
-import type { CompetitionCategory } from '../../../domain/competition/models'
-import { completeStudentRegistration, markRegistrationPaid } from '../../../services/studentCompetitionOperations'
+import type { CompetitionCategory, CompetitionRegistration } from '../../../domain/competition/models'
 import {
+  completeStudentRegistration,
+  markRegistrationPaid,
+  updateStudentRegistrationDocuments,
+} from '../../../services/studentCompetitionOperations'
+import {
+  clearRegistrationDraft,
   loadRegistrationDraft,
   saveRegistrationDraft,
   type StudentRegistrationDraft,
@@ -12,7 +17,10 @@ import { formatCategoryLabel } from '../../../services/studentCompetitionExperie
 import { formatUserFacingError } from '../../../utils/format'
 import { RegistrationProgress } from './RegistrationProgress'
 import { DashboardCard } from '../../student/dashboard/DashboardCard'
+import { CompetitionDocumentUploads } from './CompetitionDocumentUploads'
 import { Toast } from '../../ui/Toast'
+
+const DOC_KEYS = ['identity', 'medical', 'photo', 'ageProof'] as const
 
 const EMPTY_DRAFT = (): StudentRegistrationDraft => ({
   step: 0,
@@ -20,6 +28,7 @@ const EMPTY_DRAFT = (): StudentRegistrationDraft => ({
   eligibilityConfirmed: false,
   emergencyContact: { name: '', phone: '', relation: '' },
   documents: { identity: false, medical: false, photo: false, ageProof: false },
+  documentFiles: {},
   updatedAt: new Date().toISOString(),
 })
 
@@ -30,7 +39,16 @@ interface RegistrationWizardProps {
   categories: CompetitionCategory[]
   entryFee: number
   competitionName: string
+  existingRegistration?: CompetitionRegistration | null
+  initialParticipantMetadata?: Record<string, unknown> | null
   onComplete: () => void
+}
+
+function documentsComplete(draft: StudentRegistrationDraft): boolean {
+  return (
+    DOC_KEYS.every((key) => draft.documents[key]) &&
+    DOC_KEYS.every((key) => Boolean(draft.documentFiles?.[key]))
+  )
 }
 
 function canAdvance(step: number, draft: StudentRegistrationDraft): boolean {
@@ -40,7 +58,7 @@ function canAdvance(step: number, draft: StudentRegistrationDraft): boolean {
     case 1:
       return Boolean(draft.categoryId)
     case 2:
-      return Object.values(draft.documents).every(Boolean)
+      return documentsComplete(draft)
     case 3:
       return Boolean(
         draft.emergencyContact.name &&
@@ -54,6 +72,10 @@ function canAdvance(step: number, draft: StudentRegistrationDraft): boolean {
   }
 }
 
+function paymentComplete(registration?: CompetitionRegistration | null) {
+  return registration?.paymentStatus === 'paid' || registration?.paymentStatus === 'waived'
+}
+
 export function RegistrationWizard({
   competitionId,
   userId,
@@ -61,6 +83,8 @@ export function RegistrationWizard({
   categories,
   entryFee,
   competitionName,
+  existingRegistration,
+  initialParticipantMetadata,
   onComplete,
 }: RegistrationWizardProps) {
   const navigate = useNavigate()
@@ -70,14 +94,47 @@ export function RegistrationWizard({
   const [completed, setCompleted] = useState(false)
   const [saveToast, setSaveToast] = useState<string | null>(null)
   const [resumedDraft, setResumedDraft] = useState(false)
+  const [activeRegistration, setActiveRegistration] = useState(existingRegistration ?? null)
 
   useEffect(() => {
     const saved = loadRegistrationDraft(competitionId, userId)
+    const meta = initialParticipantMetadata ?? {}
+    const metaDocs = (meta.documents ?? {}) as StudentRegistrationDraft['documents']
+    const metaFiles = (meta.documentFiles ?? {}) as StudentRegistrationDraft['documentFiles']
+    const metaEmergency = (meta.emergencyContact ?? {
+      name: '',
+      phone: '',
+      relation: '',
+    }) as StudentRegistrationDraft['emergencyContact']
+
     if (saved) {
-      setDraft(saved)
+      setDraft({
+        ...saved,
+        registrationId: saved.registrationId ?? existingRegistration?.id,
+        documentFiles: { ...metaFiles, ...saved.documentFiles },
+      })
       if (saved.step > 0) setResumedDraft(true)
+    } else if (existingRegistration) {
+      const unpaid = !paymentComplete(existingRegistration)
+      setDraft({
+        ...EMPTY_DRAFT(),
+        step: unpaid ? 5 : 2,
+        registrationId: existingRegistration.id,
+        categoryId: existingRegistration.categoryId ?? '',
+        documents: {
+          identity: Boolean(metaDocs.identity),
+          medical: Boolean(metaDocs.medical),
+          photo: Boolean(metaDocs.photo),
+          ageProof: Boolean(metaDocs.ageProof),
+        },
+        documentFiles: metaFiles ?? {},
+        emergencyContact: metaEmergency,
+        eligibilityConfirmed: Boolean(meta.eligibilityConfirmed),
+      })
+      setResumedDraft(true)
     }
-  }, [competitionId, userId])
+    setActiveRegistration(existingRegistration ?? null)
+  }, [competitionId, userId, existingRegistration, initialParticipantMetadata])
 
   const persist = useCallback(
     (next: StudentRegistrationDraft) => {
@@ -91,14 +148,17 @@ export function RegistrationWizard({
   const fee = selectedCategory?.entryFeeOverride ?? entryFee
 
   const handleSaveAndContinueLater = () => {
-    saveRegistrationDraft(competitionId, userId, draft)
+    saveRegistrationDraft(competitionId, userId, {
+      ...draft,
+      registrationId: activeRegistration?.id ?? draft.registrationId,
+    })
     setSaveToast('Progress saved. You can resume registration anytime from Competitions.')
     window.setTimeout(() => {
       navigate('/dashboard/student/competitions')
     }, 900)
   }
 
-  const handleSubmit = async () => {
+  const handleSubmitApplication = async () => {
     if (!draft.categoryId) return
     setSubmitting(true)
     setSubmitError(null)
@@ -110,13 +170,73 @@ export function RegistrationWizard({
         categoryId: draft.categoryId,
         divisionId: draft.divisionId,
         draft,
+        existingRegistration: activeRegistration,
       })
-      await markRegistrationPaid(registration.id, fee)
+      setActiveRegistration(registration)
+      persist({ ...draft, registrationId: registration.id, step: 5 })
+    } catch (err) {
+      setSubmitError(formatUserFacingError(err, 'Could not save your application.'))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handlePay = async () => {
+    setSubmitting(true)
+    setSubmitError(null)
+    try {
+      let registration = activeRegistration
+      if (!registration?.id && !draft.registrationId) {
+        registration = await completeStudentRegistration({
+          competitionId,
+          userId,
+          userName,
+          categoryId: draft.categoryId,
+          divisionId: draft.divisionId,
+          draft,
+          existingRegistration: activeRegistration,
+        })
+        setActiveRegistration(registration)
+        persist({ ...draft, registrationId: registration.id })
+      }
+
+      const registrationId = registration?.id ?? draft.registrationId
+      if (!registrationId) {
+        throw new Error('Registration not found. Please review your application first.')
+      }
+
+      await updateStudentRegistrationDocuments({
+        registrationId,
+        studentId: userId,
+        draft,
+      })
+      await markRegistrationPaid(registrationId, fee)
+      clearRegistrationDraft(competitionId, userId)
       setCompleted(true)
-      persist({ ...draft, step: 6 })
+      persist({ ...draft, registrationId, step: 6 })
       onComplete()
     } catch (err) {
-      setSubmitError(formatUserFacingError(err, 'Registration failed. Please try again.'))
+      setSubmitError(formatUserFacingError(err, 'Payment failed. Please try again.'))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleDocumentsOnly = async () => {
+    const registrationId = activeRegistration?.id ?? draft.registrationId
+    if (!registrationId) return
+    setSubmitting(true)
+    setSubmitError(null)
+    try {
+      await updateStudentRegistrationDocuments({
+        registrationId,
+        studentId: userId,
+        draft,
+      })
+      setSaveToast('Documents updated successfully.')
+      onComplete()
+    } catch (err) {
+      setSubmitError(formatUserFacingError(err, 'Could not update documents.'))
     } finally {
       setSubmitting(false)
     }
@@ -140,6 +260,11 @@ export function RegistrationWizard({
     )
   }
 
+  const documentsOnlyMode =
+    Boolean(activeRegistration) &&
+    paymentComplete(activeRegistration) &&
+    !documentsComplete(draft)
+
   return (
     <div>
       {saveToast && (
@@ -149,6 +274,13 @@ export function RegistrationWizard({
       {resumedDraft && (
         <p className="mb-4 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-foreground">
           Welcome back — your saved progress was restored. Continue where you left off.
+        </p>
+      )}
+
+      {activeRegistration && !paymentComplete(activeRegistration) && (
+        <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
+          You have a pending application. Complete payment to confirm your spot — no duplicate
+          registration will be created.
         </p>
       )}
 
@@ -213,35 +345,29 @@ export function RegistrationWizard({
 
         {draft.step === 2 && (
           <div>
-            <h2 className="mb-4 font-heading text-lg font-semibold">Documents</h2>
-            <div className="space-y-2">
-              {(
-                [
-                  ['identity', 'Government ID'],
-                  ['medical', 'Medical fitness certificate'],
-                  ['photo', 'Passport-size photo'],
-                  ['ageProof', 'Age proof'],
-                ] as const
-              ).map(([key, label]) => (
-                <label
-                  key={key}
-                  className="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-lg border border-border px-4 py-3 text-sm"
-                >
-                  <input
-                    type="checkbox"
-                    checked={draft.documents[key]}
-                    onChange={(e) =>
-                      persist({
-                        ...draft,
-                        documents: { ...draft.documents, [key]: e.target.checked },
-                      })
-                    }
-                    className="h-4 w-4 accent-primary"
-                  />
-                  {label}
-                </label>
-              ))}
-            </div>
+            <h2 className="mb-2 font-heading text-lg font-semibold">Required documents</h2>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Upload each document, then confirm with the checkbox.
+            </p>
+            <CompetitionDocumentUploads
+              competitionId={competitionId}
+              userId={userId}
+              documents={draft.documents}
+              documentFiles={draft.documentFiles ?? {}}
+              onChange={(documents, documentFiles) =>
+                persist({ ...draft, documents, documentFiles })
+              }
+            />
+            {documentsOnlyMode && (
+              <button
+                type="button"
+                disabled={submitting || !documentsComplete(draft)}
+                onClick={() => void handleDocumentsOnly()}
+                className="mt-4 inline-flex min-h-[44px] items-center rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+              >
+                {submitting ? 'Saving…' : 'Save documents'}
+              </button>
+            )}
           </div>
         )}
 
@@ -291,6 +417,11 @@ export function RegistrationWizard({
                 <dd className="font-medium">{fee > 0 ? `₹${fee.toLocaleString('en-IN')}` : 'Free'}</dd>
               </div>
             </dl>
+            {submitError && (
+              <p className="mt-4 text-sm text-destructive" role="alert">
+                {submitError}
+              </p>
+            )}
           </div>
         )}
 
@@ -300,7 +431,7 @@ export function RegistrationWizard({
             <p className="mb-4 text-sm text-muted-foreground">
               {fee > 0
                 ? `Pay ₹${fee.toLocaleString('en-IN')} to complete registration.`
-                : 'No payment required.'}
+                : 'No payment required — confirm to enroll.'}
             </p>
             {submitError && (
               <p className="mb-4 text-sm text-destructive" role="alert">
@@ -310,7 +441,7 @@ export function RegistrationWizard({
             <button
               type="button"
               disabled={submitting}
-              onClick={() => void handleSubmit()}
+              onClick={() => void handlePay()}
               className="inline-flex min-h-[44px] w-full items-center justify-center rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60 sm:w-auto"
             >
               {submitting ? 'Processing…' : fee > 0 ? 'Pay & confirm' : 'Confirm registration'}
@@ -329,7 +460,7 @@ export function RegistrationWizard({
                 Back
               </button>
             )}
-            {draft.step < 5 && (
+            {draft.step < 4 && (
               <button
                 type="button"
                 disabled={!canAdvance(draft.step, draft)}
@@ -342,10 +473,11 @@ export function RegistrationWizard({
             {draft.step === 4 && (
               <button
                 type="button"
-                onClick={() => persist({ ...draft, step: 5 })}
-                className="inline-flex min-h-[44px] items-center rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
+                disabled={submitting}
+                onClick={() => void handleSubmitApplication()}
+                className="inline-flex min-h-[44px] items-center rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
               >
-                Proceed to payment
+                {submitting ? 'Saving…' : 'Proceed to payment'}
               </button>
             )}
           </div>

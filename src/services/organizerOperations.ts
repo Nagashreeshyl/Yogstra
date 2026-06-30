@@ -241,10 +241,20 @@ export async function confirmRegistrationPayment(registrationId: string, amountI
     .update({
       payment_status: 'paid',
       payment_amount: amountInr ?? null,
+      status: 'confirmed',
+      confirmed_at: new Date().toISOString(),
     })
     .eq('id', registrationId)
 
   if (error) throw error
+
+  const { error: participantError } = await supabase
+    .from('competition_participants')
+    .update({ status: 'registered' })
+    .eq('registration_id', registrationId)
+    .neq('status', 'withdrawn')
+
+  if (participantError) throw participantError
 }
 
 export async function lockCompetitionCategory(competitionId: string, categoryId: string) {

@@ -204,7 +204,12 @@ export async function fetchStudentCompetitionDetail(competitionId: string, userI
     fetchCompetitionParticipants(competitionId),
   ])
 
-  const registration = registrations.find((r) => r.competitionId === competitionId) ?? null
+  const registration = registrations.find(
+    (r) =>
+      r.competitionId === competitionId &&
+      r.status !== 'rejected' &&
+      r.status !== 'cancelled',
+  ) ?? null
   const activeJudges = judges.filter((j) => j.status === 'active')
 
   const faqs = (summary.competition.settings?.faqs as { q: string; a: string }[] | undefined) ?? []

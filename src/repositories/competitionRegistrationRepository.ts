@@ -135,6 +135,99 @@ export const competitionRegistrationRepository = {
     return (data ?? []).map(mapCompetitionRegistration)
   },
 
+  async findByCompetitionAndRegistrant(competitionId: string, registrantId: string) {
+    const { data, error } = await supabase
+      .from('competition_registrations')
+      .select(registrationSelect)
+      .eq('competition_id', competitionId)
+      .eq('registrant_id', registrantId)
+      .in('status', ['pending', 'confirmed', 'waitlisted'])
+      .order('submitted_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (error) {
+      if (isMissingTableError(error)) return null
+      throw error
+    }
+    return data ? mapCompetitionRegistration(data) : null
+  },
+
+  async updateRegistration(
+    id: string,
+    patch: Partial<{
+      categoryId: string
+      divisionId: string | null
+      notes: string | null
+      status: string
+      paymentStatus: string
+      paymentAmount: number | null
+    }>,
+  ) {
+    const updates: Record<string, unknown> = {}
+    if (patch.categoryId !== undefined) updates.category_id = patch.categoryId
+    if (patch.divisionId !== undefined) updates.division_id = patch.divisionId
+    if (patch.notes !== undefined) updates.notes = patch.notes
+    if (patch.status !== undefined) updates.status = patch.status
+    if (patch.paymentStatus !== undefined) updates.payment_status = patch.paymentStatus
+    if (patch.paymentAmount !== undefined) updates.payment_amount = patch.paymentAmount
+
+    const { data, error } = await supabase
+      .from('competition_registrations')
+      .update(updates)
+      .eq('id', id)
+      .select(registrationRowSelect)
+      .single()
+
+    if (error) throw error
+    return mapCompetitionRegistration(data)
+  },
+
+  async updateParticipant(
+    participantId: string,
+    patch: Partial<{
+      categoryId: string
+      divisionId: string | null
+      displayName: string
+      metadata: Record<string, unknown>
+      status: string
+      documentsVerified: boolean
+    }>,
+  ) {
+    const updates: Record<string, unknown> = {}
+    if (patch.categoryId !== undefined) updates.category_id = patch.categoryId
+    if (patch.divisionId !== undefined) updates.division_id = patch.divisionId
+    if (patch.displayName !== undefined) updates.display_name = patch.displayName
+    if (patch.metadata !== undefined) updates.metadata = patch.metadata
+    if (patch.status !== undefined) updates.status = patch.status
+    if (patch.documentsVerified !== undefined) updates.documents_verified = patch.documentsVerified
+
+    const { data, error } = await supabase
+      .from('competition_participants')
+      .update(updates)
+      .eq('id', participantId)
+      .select(participantRowSelect)
+      .single()
+
+    if (error) throw error
+    return mapCompetitionParticipant(data)
+  },
+
+  async findParticipantByRegistration(registrationId: string, studentId: string) {
+    const { data, error } = await supabase
+      .from('competition_participants')
+      .select(participantRowSelect)
+      .eq('registration_id', registrationId)
+      .eq('student_id', studentId)
+      .maybeSingle()
+
+    if (error) {
+      if (isMissingTableError(error)) return null
+      throw error
+    }
+    return data ? mapCompetitionParticipant(data) : null
+  },
+
   async create(input: CreateCompetitionRegistrationInput) {
     const { data, error } = await supabase
       .from('competition_registrations')

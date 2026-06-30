@@ -1,9 +1,11 @@
 import { useMemo, useState, useCallback, memo } from 'react'
 import { Link } from 'react-router-dom'
-import { Bell, Search, Sparkles } from 'lucide-react'
+import { Bell, CreditCard, Search, Sparkles } from 'lucide-react'
 import { useApp } from '../../../context/AppContext'
 import { useAsyncData } from '../../../hooks/useAsyncData'
 import { fetchUserCertificates } from '../../../services/certificateService'
+import { payStudentRegistration } from '../../../services/studentCompetitionOperations'
+import { formatUserFacingError } from '../../../utils/format'
 import {
   buildStudentCompetitionNotifications,
   DEFAULT_COMPETITION_FILTERS,
@@ -61,7 +63,10 @@ export const StudentCompetitionHomePage = memo(function StudentCompetitionHomePa
     [data, visibleCount],
   )
 
-  const savedDrafts = useMemo(() => listRegistrationDrafts(userId), [userId])
+  const savedDrafts = useMemo(() => {
+    const registeredIds = new Set(data?.registrations.map((r) => r.competitionId) ?? [])
+    return listRegistrationDrafts(userId).filter(({ competitionId }) => !registeredIds.has(competitionId))
+  }, [userId, data?.registrations])
 
   const loadMore = useCallback(() => setVisibleCount((n) => n + PAGE_SIZE), [])
 
@@ -157,9 +162,25 @@ export const StudentCompetitionHomePage = memo(function StudentCompetitionHomePa
             My competitions
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {data.registered.map((c) => (
-              <StudentCompetitionListCard key={c.id} competition={c} />
-            ))}
+            {data.registered.map((c) => {
+              const registration = data.registrations.find((r) => r.competitionId === c.id)
+              const needsPayment =
+                registration &&
+                registration.paymentStatus !== 'paid' &&
+                registration.paymentStatus !== 'waived'
+              return (
+                <div key={c.id} className="space-y-2">
+                  <StudentCompetitionListCard competition={c} />
+                  {needsPayment && registration && (
+                    <MyCompetitionPayButton
+                      competitionId={c.id}
+                      registrationId={registration.id}
+                      entryFee={c.entryFee}
+                    />
+                  )}
+                </div>
+              )
+            })}
           </div>
         </section>
       )}
@@ -269,25 +290,86 @@ export function StudentMyCompetitionsPage() {
     <>
       <PageHeader title="My competitions" description="Every event you're training for." />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {data.map(({ competition, registration }) => (
-          <div key={competition.id} className="space-y-2">
-            <StudentCompetitionListCard competition={competition} />
-            <div className="flex flex-wrap gap-2 px-1">
-              <Link to={`/dashboard/student/competitions/${competition.id}/preparation`} className="text-xs font-medium text-primary hover:underline">
-                Prepare
-              </Link>
-              <Link to={`/dashboard/student/competitions/${competition.id}/live`} className="text-xs font-medium text-primary hover:underline">
-                Live
-              </Link>
-              {registration.status === 'confirmed' && (
-                <Link to="/dashboard/student/results" className="text-xs font-medium text-primary hover:underline">
-                  Results
+        {data.map(({ competition, registration }) => {
+          const needsPayment =
+            registration.paymentStatus !== 'paid' && registration.paymentStatus !== 'waived'
+          return (
+            <div key={competition.id} className="space-y-2">
+              <StudentCompetitionListCard competition={competition} />
+              <div className="flex flex-wrap gap-2 px-1">
+                {needsPayment && (
+                  <MyCompetitionPayButton
+                    competitionId={competition.id}
+                    registrationId={registration.id}
+                    entryFee={competition.entryFee}
+                    onPaid={() => void refetch(true)}
+                  />
+                )}
+                <Link to={`/dashboard/student/competitions/${competition.id}/preparation`} className="text-xs font-medium text-primary hover:underline">
+                  Prepare
                 </Link>
-              )}
+                <Link to={`/dashboard/student/competitions/${competition.id}/live`} className="text-xs font-medium text-primary hover:underline">
+                  Live
+                </Link>
+                {registration.status === 'confirmed' && (
+                  <Link to="/dashboard/student/results" className="text-xs font-medium text-primary hover:underline">
+                    Results
+                  </Link>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </>
+  )
+}
+
+function MyCompetitionPayButton({
+  competitionId,
+  registrationId,
+  entryFee,
+  onPaid,
+}: {
+  competitionId: string
+  registrationId: string
+  entryFee: number
+  onPaid?: () => void
+}) {
+  const [paying, setPaying] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handlePay() {
+    setPaying(true)
+    setError(null)
+    try {
+      await payStudentRegistration(registrationId, entryFee)
+      onPaid?.()
+    } catch (err) {
+      setError(formatUserFacingError(err, 'Payment failed.'))
+    } finally {
+      setPaying(false)
+    }
+  }
+
+  return (
+    <div className="px-1">
+      <button
+        type="button"
+        disabled={paying}
+        onClick={() => void handlePay()}
+        className="inline-flex min-h-[40px] items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-60"
+      >
+        <CreditCard className="h-3.5 w-3.5" aria-hidden />
+        {paying ? 'Processing…' : `Pay ₹${entryFee.toLocaleString('en-IN')}`}
+      </button>
+      {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
+      <Link
+        to={`/dashboard/student/competitions/register/${competitionId}`}
+        className="mt-1 block text-xs text-muted-foreground hover:text-primary"
+      >
+        Upload documents
+      </Link>
+    </div>
   )
 }
