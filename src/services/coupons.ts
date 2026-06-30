@@ -306,6 +306,57 @@ export async function validateStudentCoupon(params: {
   const normalized = params.code.trim().toUpperCase()
   if (!normalized) throw new Error('Enter a coupon code.')
 
+  const { data, error } = await supabase.rpc('validate_and_claim_coupon', {
+    p_code: normalized,
+    p_teacher_id: params.teacherId,
+    p_class_type: params.classType,
+    p_duration: params.duration,
+  })
+
+  if (error) {
+    if (error.code === 'PGRST202' || error.message?.includes('validate_and_claim_coupon')) {
+      return validateStudentCouponDirect(params, normalized)
+    }
+    throw new Error(error.message || 'Invalid coupon.')
+  }
+
+  if (!data || typeof data !== 'object') {
+    throw new Error('Invalid or expired coupon code.')
+  }
+
+  const payload = data as Record<string, unknown>
+  const coupon = mapCoupon({
+    id: payload.coupon_id,
+    teacher_id: payload.teacher_id,
+    code: payload.code,
+    class_type: payload.class_type,
+    duration: payload.duration,
+    discount_percent: payload.discount_percent,
+    is_active: payload.is_active,
+    valid_until: payload.valid_until,
+    max_uses: payload.max_uses,
+    use_count: payload.use_count,
+    created_at: payload.created_at,
+  })
+
+  return {
+    coupon,
+    deliveryId: payload.delivery_id as string,
+    discountedAmount: (base: number) =>
+      Math.max(1, Math.round(base * (1 - coupon.discountPercent / 100))),
+  }
+}
+
+async function validateStudentCouponDirect(
+  params: {
+    code: string
+    studentId: string
+    teacherId: string
+    classType: ClassType
+    duration: ClassDuration
+  },
+  normalized: string,
+): Promise<{ coupon: TeacherCoupon; deliveryId: string; discountedAmount: (base: number) => number }> {
   const { data: couponRow, error } = await supabase
     .from('teacher_coupons')
     .select('*')
@@ -340,7 +391,7 @@ export async function validateStudentCoupon(params: {
     .maybeSingle()
 
   if (deliveryError) throw deliveryError
-  if (!delivery) throw new Error('This coupon was not sent to your account.')
+  if (!delivery) throw new Error('This coupon was not sent to your account. Ask your teacher to share the code again.')
   if (delivery.used_at) throw new Error('This coupon has already been used.')
 
   return {

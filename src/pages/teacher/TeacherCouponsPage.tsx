@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Copy, Send, Tag } from 'lucide-react'
+import { Send, Tag } from 'lucide-react'
+import { CopyCouponButton } from '../../components/coupons/CopyCouponButton'
 import { useApp } from '../../context/AppContext'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import type { ClassDuration, ClassType } from '../../services/classOrders'
@@ -122,13 +123,8 @@ export function TeacherCouponsPage() {
     }
   }
 
-  const copyCode = async (code: string) => {
-    try {
-      await navigator.clipboard.writeText(code)
-      setToast({ message: 'Coupon code copied.', type: 'success' })
-    } catch {
-      setToast({ message: 'Could not copy code.', type: 'error' })
-    }
+  const showCopiedToast = () => {
+    setToast({ message: 'Coupon code copied.', type: 'success' })
   }
 
   if (loading && !coupons?.length) {
@@ -216,14 +212,7 @@ export function TeacherCouponsPage() {
               <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Your new code</p>
               <div className="flex flex-wrap items-center gap-3">
                 <p className="font-mono text-lg font-bold text-primary tracking-wide">{generated.code}</p>
-                <button
-                  type="button"
-                  onClick={() => void copyCode(generated.code)}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-primary cursor-pointer"
-                >
-                  <Copy size={14} />
-                  Copy
-                </button>
+                <CopyCouponButton code={generated.code} onCopied={showCopiedToast} />
               </div>
               <p className="text-sm text-muted-foreground mt-2">{formatCouponSummary(generated)}</p>
               <p className="text-xs text-muted-foreground mt-1">{formatCouponLimits(generated)}</p>
@@ -281,9 +270,11 @@ export function TeacherCouponsPage() {
                       </p>
                     </div>
                     <div className="flex gap-2 shrink-0">
-                      <Button variant="secondary" size="sm" onClick={() => void copyCode(c.code)}>
-                        Copy
-                      </Button>
+                      <CopyCouponButton
+                        code={c.code}
+                        variant="button"
+                        onCopied={showCopiedToast}
+                      />
                       <Button
                         size="sm"
                         className="gap-1"
