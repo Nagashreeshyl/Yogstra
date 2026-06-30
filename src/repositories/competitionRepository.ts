@@ -50,6 +50,33 @@ const competitionSelect = `
   academy:academies!academy_id(name)
 `
 
+/** Flat select for writes — avoids embed RLS failures on insert/update returning. */
+const competitionRowSelect = `
+  id,
+  slug,
+  name,
+  description,
+  organizer_id,
+  academy_id,
+  venue,
+  city,
+  state,
+  country,
+  start_date,
+  end_date,
+  registration_deadline,
+  entry_fee,
+  format,
+  scope,
+  status,
+  max_participants,
+  rules,
+  settings,
+  created_by,
+  created_at,
+  updated_at
+`
+
 const categorySelect = `
   id,
   competition_id,
@@ -92,6 +119,20 @@ export const competitionRepository = {
       throw error
     }
     return data ? mapCompetition(data) : null
+  },
+
+  async slugTaken(slug: string) {
+    const { data, error } = await supabase
+      .from('competitions')
+      .select('id')
+      .eq('slug', slug)
+      .maybeSingle()
+
+    if (error) {
+      if (isMissingTableError(error)) return false
+      throw error
+    }
+    return data !== null
   },
 
   async listPublished(limit = 50) {
@@ -170,7 +211,7 @@ export const competitionRepository = {
         settings: defaultCompetitionSettings(),
         created_by: input.createdBy,
       })
-      .select(competitionSelect)
+      .select(competitionRowSelect)
       .single()
 
     if (error) throw error

@@ -1,35 +1,19 @@
-const CACHE = 'yogstra-shell-v4'
-
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(['/', '/index.html', '/manifest.webmanifest'])),
-  )
+/** Migration service worker — clears legacy caches, does not intercept requests. */
+self.addEventListener('install', () => {
   self.skipWaiting()
 })
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))),
-    ),
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+      .then(() => self.clients.matchAll({ type: 'window' }))
+      .then((clients) => {
+        for (const client of clients) {
+          void client.navigate(client.url)
+        }
+      }),
   )
   self.clients.claim()
-})
-
-self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return
-
-  const url = new URL(event.request.url)
-
-  // Always fetch fresh JS/CSS bundles — never serve stale call UI from cache.
-  if (url.pathname.startsWith('/assets/')) {
-    event.respondWith(fetch(event.request))
-    return
-  }
-
-  event.respondWith(
-    fetch(event.request).catch(() =>
-      caches.match(event.request).then((r) => r ?? caches.match('/index.html')),
-    ),
-  )
 })

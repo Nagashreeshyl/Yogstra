@@ -53,3 +53,43 @@ export function saveRegistrationDraft(
 export function clearRegistrationDraft(competitionId: string, userId: string) {
   localStorage.removeItem(draftKey(competitionId, userId))
 }
+
+function parseDraftKey(key: string): { competitionId: string; userId: string } | null {
+  if (!key.startsWith(`${DRAFT_PREFIX}:`)) return null
+  const rest = key.slice(DRAFT_PREFIX.length + 1)
+  const lastColon = rest.lastIndexOf(':')
+  if (lastColon <= 0) return null
+  return {
+    competitionId: rest.slice(0, lastColon),
+    userId: rest.slice(lastColon + 1),
+  }
+}
+
+export function listRegistrationDrafts(userId: string): Array<{
+  competitionId: string
+  draft: StudentRegistrationDraft
+}> {
+  const drafts: Array<{ competitionId: string; draft: StudentRegistrationDraft }> = []
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (!key) continue
+      const parsed = parseDraftKey(key)
+      if (!parsed || parsed.userId !== userId) continue
+      const draft = loadRegistrationDraft(parsed.competitionId, userId)
+      if (draft && draft.step < 6) {
+        drafts.push({ competitionId: parsed.competitionId, draft })
+      }
+    }
+  } catch {
+    return []
+  }
+  return drafts.sort(
+    (a, b) => new Date(b.draft.updatedAt).getTime() - new Date(a.draft.updatedAt).getTime(),
+  )
+}
+
+export function hasRegistrationDraft(competitionId: string, userId: string): boolean {
+  const draft = loadRegistrationDraft(competitionId, userId)
+  return Boolean(draft && draft.step < 6)
+}

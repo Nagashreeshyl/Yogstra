@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { CheckCircle2, Save } from 'lucide-react'
 import type { CompetitionCategory } from '../../../domain/competition/models'
 import { completeStudentRegistration, markRegistrationPaid } from '../../../services/studentCompetitionOperations'
@@ -9,8 +9,10 @@ import {
   type StudentRegistrationDraft,
 } from '../../../utils/studentRegistrationDraft'
 import { formatCategoryLabel } from '../../../services/studentCompetitionExperience'
+import { formatUserFacingError } from '../../../utils/format'
 import { RegistrationProgress } from './RegistrationProgress'
 import { DashboardCard } from '../../student/dashboard/DashboardCard'
+import { Toast } from '../../ui/Toast'
 
 const EMPTY_DRAFT = (): StudentRegistrationDraft => ({
   step: 0,
@@ -61,14 +63,20 @@ export function RegistrationWizard({
   competitionName,
   onComplete,
 }: RegistrationWizardProps) {
+  const navigate = useNavigate()
   const [draft, setDraft] = useState<StudentRegistrationDraft>(EMPTY_DRAFT)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [completed, setCompleted] = useState(false)
+  const [saveToast, setSaveToast] = useState<string | null>(null)
+  const [resumedDraft, setResumedDraft] = useState(false)
 
   useEffect(() => {
     const saved = loadRegistrationDraft(competitionId, userId)
-    if (saved) setDraft(saved)
+    if (saved) {
+      setDraft(saved)
+      if (saved.step > 0) setResumedDraft(true)
+    }
   }, [competitionId, userId])
 
   const persist = useCallback(
@@ -81,6 +89,14 @@ export function RegistrationWizard({
 
   const selectedCategory = categories.find((c) => c.id === draft.categoryId)
   const fee = selectedCategory?.entryFeeOverride ?? entryFee
+
+  const handleSaveAndContinueLater = () => {
+    saveRegistrationDraft(competitionId, userId, draft)
+    setSaveToast('Progress saved. You can resume registration anytime from Competitions.')
+    window.setTimeout(() => {
+      navigate('/dashboard/student/competitions')
+    }, 900)
+  }
 
   const handleSubmit = async () => {
     if (!draft.categoryId) return
@@ -95,12 +111,12 @@ export function RegistrationWizard({
         divisionId: draft.divisionId,
         draft,
       })
-      if (fee > 0) await markRegistrationPaid(registration.id)
+      await markRegistrationPaid(registration.id, fee)
       setCompleted(true)
       persist({ ...draft, step: 6 })
       onComplete()
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Registration failed')
+      setSubmitError(formatUserFacingError(err, 'Registration failed. Please try again.'))
     } finally {
       setSubmitting(false)
     }
@@ -126,10 +142,20 @@ export function RegistrationWizard({
 
   return (
     <div>
+      {saveToast && (
+        <Toast message={saveToast} type="success" onClose={() => setSaveToast(null)} />
+      )}
+
+      {resumedDraft && (
+        <p className="mb-4 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-foreground">
+          Welcome back — your saved progress was restored. Continue where you left off.
+        </p>
+      )}
+
       <div className="mb-4 flex justify-end">
         <button
           type="button"
-          onClick={() => saveRegistrationDraft(competitionId, userId, draft)}
+          onClick={handleSaveAndContinueLater}
           className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-muted"
         >
           <Save className="h-4 w-4" aria-hidden />

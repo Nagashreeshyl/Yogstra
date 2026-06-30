@@ -15,6 +15,7 @@ import { Textarea } from '../ui/Textarea'
 import { createAndPublishCompetition } from '../../services/organizerOperations'
 import { InstructionPanel } from '../ui/InstructionPanel'
 import { LabelWithHelp } from '../ui/HelpTooltip'
+import { appShellModalOverlayClasses } from '../../constants/mobileOverlay'
 
 const STEPS = [
   'Details',
@@ -142,12 +143,13 @@ export function CreateCompetitionWizard({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4"
+      className={appShellModalOverlayClasses(open)}
       role="dialog"
       aria-modal="true"
       aria-labelledby="wizard-title"
     >
-      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-t-[20px] sm:rounded-[20px] border border-border bg-elevated shadow-xl">
+      <div className="absolute inset-0 bg-black/50" onClick={handleClose} aria-hidden="true" />
+      <div className="relative w-full max-w-2xl max-h-[min(90vh,100%)] overflow-y-auto rounded-t-[20px] sm:rounded-[20px] border border-border bg-elevated shadow-xl">
         <div className="sticky top-0 flex items-center justify-between border-b border-border bg-elevated px-5 py-4">
           <div>
             <h2 id="wizard-title" className="font-heading text-lg font-semibold">

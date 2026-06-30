@@ -1,6 +1,7 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AppProvider } from './context/AppContext'
+import { clearStaleChunkReloadFlag, purgeServiceWorkersOnLoad } from './utils/chunkReload'
 import { AppLayout } from './components/layout/AppLayout'
 import { LoggedInRedirect } from './components/auth/LoggedInRedirect'
 import { StudentDashboardLayout } from './components/layout/StudentDashboardLayout'
@@ -155,6 +156,11 @@ const StudentRankingsPage = lazy(() =>
 )
 
 export default function App() {
+  useEffect(() => {
+    clearStaleChunkReloadFlag()
+    void purgeServiceWorkersOnLoad()
+  }, [])
+
   return (
     <AppProvider>
       <DirectVideoCallProvider>

@@ -30,6 +30,26 @@ const registrationSelect = `
   registrant:profiles!registrant_id(full_name)
 `
 
+const registrationRowSelect = `
+  id,
+  competition_id,
+  category_id,
+  division_id,
+  registrant_id,
+  registrant_type,
+  academy_id,
+  batch_id,
+  status,
+  payment_status,
+  payment_amount,
+  payment_reference,
+  notes,
+  submitted_at,
+  confirmed_at,
+  created_at,
+  updated_at
+`
+
 const participantSelect = `
   id,
   registration_id,
@@ -50,6 +70,26 @@ const participantSelect = `
   updated_at,
   student:profiles!student_id(full_name),
   category:competition_categories!category_id(name)
+`
+
+const participantRowSelect = `
+  id,
+  registration_id,
+  competition_id,
+  student_id,
+  category_id,
+  division_id,
+  display_name,
+  date_of_birth,
+  gender,
+  academy_id,
+  teacher_id,
+  status,
+  check_in_at,
+  documents_verified,
+  metadata,
+  created_at,
+  updated_at
 `
 
 export const competitionRegistrationRepository = {
@@ -108,7 +148,7 @@ export const competitionRegistrationRepository = {
         batch_id: input.batchId ?? null,
         notes: input.notes ?? null,
       })
-      .select(registrationSelect)
+      .select(registrationRowSelect)
       .single()
 
     if (error) throw error
@@ -158,7 +198,7 @@ export const competitionRegistrationRepository = {
         teacher_id: input.teacherId ?? null,
         metadata: input.metadata ?? {},
       })
-      .select(participantSelect)
+      .select(participantRowSelect)
       .single()
 
     if (error) throw error

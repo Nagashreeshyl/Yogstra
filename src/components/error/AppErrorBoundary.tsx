@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { logActivity } from '../../services/activityLog'
+import { isStaleChunkError, reloadOnceForStaleChunk } from '../../utils/chunkReload'
 
 type Props = {
   children: ReactNode
@@ -18,6 +19,10 @@ export class AppErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
+    if (isStaleChunkError(error)) {
+      reloadOnceForStaleChunk()
+      return
+    }
     void logActivity({
       action: 'error',
       status: 'error',
@@ -27,6 +32,10 @@ export class AppErrorBoundary extends Component<Props, State> {
   }
 
   handleRetry = () => {
+    if (this.state.error && isStaleChunkError(this.state.error)) {
+      reloadOnceForStaleChunk()
+      return
+    }
     this.setState((s) => ({ error: null, errorKey: s.errorKey + 1 }))
   }
 
@@ -39,8 +48,9 @@ export class AppErrorBoundary extends Component<Props, State> {
             We hit an unexpected error
           </h1>
           <p className="mt-3 max-w-md text-muted-foreground">
-            Your session is still active. Try again or return home. If this keeps happening, use the
-            feedback button to report it.
+            {this.state.error && isStaleChunkError(this.state.error)
+              ? 'A new version of Yogstra is available. Refresh to load the latest update.'
+              : 'Your session is still active. Try again or return home.'}
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <button
@@ -48,10 +58,15 @@ export class AppErrorBoundary extends Component<Props, State> {
               onClick={this.handleRetry}
               className="inline-flex h-11 items-center justify-center rounded-[12px] bg-primary px-5 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary-hover"
             >
-              Try again
+              {this.state.error && isStaleChunkError(this.state.error) ? 'Refresh app' : 'Try again'}
             </button>
             <a
               href="/"
+              onClick={(e) => {
+                e.preventDefault()
+                sessionStorage.removeItem('yogstra:chunk-reload-at')
+                window.location.href = '/'
+              }}
               className="inline-flex h-11 items-center justify-center rounded-[12px] border border-border bg-elevated px-5 text-sm font-medium text-foreground hover:bg-muted"
             >
               Back to home

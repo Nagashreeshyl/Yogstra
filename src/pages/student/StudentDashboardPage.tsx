@@ -106,7 +106,7 @@ export function StudentDashboardPage() {
         <QuickStats stats={stats} />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
+      <div className="grid grid-cols-1 gap-4 pb-2 max-lg:pb-4 lg:grid-cols-2 lg:gap-6 lg:pb-0">
         <TodaysPracticeCard practice={data.todaysPractice} />
         <NextClassCard nextClass={data.nextClass} />
         <DashboardCompetitionWidget competition={data.competition} />

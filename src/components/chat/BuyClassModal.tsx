@@ -12,6 +12,7 @@ import {
 } from '../../services/classOrders'
 import { formatCouponSummary, validateStudentCoupon } from '../../services/coupons'
 import { openRazorpayCheckout } from '../../services/payments'
+import { appShellModalOverlayClasses } from '../../constants/mobileOverlay'
 
 interface BuyClassModalProps {
   isOpen: boolean
@@ -229,9 +230,13 @@ export function BuyClassModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-foreground/30" onClick={onClose} />
-      <div className="relative bg-elevated rounded-[16px] border border-border w-full max-w-md p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+    <div
+      className={`${appShellModalOverlayClasses(isOpen)} lg:items-center lg:justify-center`}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="absolute inset-0 bg-foreground/30" onClick={onClose} aria-hidden="true" />
+      <div className="relative bg-elevated rounded-[16px] border border-border w-full max-w-md p-6 shadow-xl max-h-[min(90vh,100%)] overflow-y-auto max-lg:rounded-b-[24px]">
         <div className="flex items-center gap-2 mb-1">
           <ShoppingBag size={20} className="text-primary" />
           <h3 className="font-heading text-lg font-medium">Enroll in Program</h3>

@@ -21,7 +21,7 @@ export function PageContainer({
 }: PageContainerProps) {
   return (
     <div
-      className={`mx-auto w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-8 ${widthClasses[width]} ${className}`}
+      className={`mx-auto w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-8 max-lg:pb-8 ${widthClasses[width]} ${className}`}
     >
       {children}
     </div>

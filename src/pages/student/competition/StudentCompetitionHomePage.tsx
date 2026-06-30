@@ -18,6 +18,7 @@ import { LoadingSkeleton } from '../../../components/shell/LoadingSkeleton'
 import { DashboardCard } from '../../../components/student/dashboard/DashboardCard'
 import { StudentCompetitionListCard } from '../../../components/student/competition/StudentCompetitionListCard'
 import { CompetitionFilters } from '../../../components/student/competition/CompetitionFilters'
+import { listRegistrationDrafts } from '../../../utils/studentRegistrationDraft'
 
 const PAGE_SIZE = 6
 
@@ -59,6 +60,8 @@ export const StudentCompetitionHomePage = memo(function StudentCompetitionHomePa
     () => data?.upcoming.slice(0, visibleCount) ?? [],
     [data, visibleCount],
   )
+
+  const savedDrafts = useMemo(() => listRegistrationDrafts(userId), [userId])
 
   const loadMore = useCallback(() => setVisibleCount((n) => n + PAGE_SIZE), [])
 
@@ -109,6 +112,29 @@ export const StudentCompetitionHomePage = memo(function StudentCompetitionHomePa
         countries={data.filterOptions.countries}
         organizers={data.filterOptions.organizers}
       />
+
+      {savedDrafts.length > 0 && (
+        <DashboardCard title="Continue registration" className="mb-6">
+          <ul className="divide-y divide-border">
+            {savedDrafts.map(({ competitionId, draft }) => {
+              const competition = data.all.find((c) => c.id === competitionId)
+              return (
+                <li key={competitionId}>
+                  <Link
+                    to={`/dashboard/student/competitions/register/${competitionId}`}
+                    className="flex min-h-[44px] flex-wrap items-center justify-between gap-2 py-3 text-sm hover:text-primary"
+                  >
+                    <span className="font-medium">{competition?.name ?? 'Saved registration'}</span>
+                    <span className="text-muted-foreground">
+                      Step {draft.step + 1} of 7 · Resume
+                    </span>
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </DashboardCard>
+      )}
 
       {notifications.length > 0 && (
         <DashboardCard title="Notifications" className="mb-6" action={<Bell className="h-4 w-4 text-muted-foreground" aria-hidden />}>

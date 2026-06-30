@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -36,6 +36,106 @@
     <meta name="apple-mobile-web-app-title" content="Yogstra" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/pwa-icon-192.svg" />
+    <meta name="yogstra-build" content="%YOGSTRA_BUILD_ID%" />
+    <script>
+      ;(function () {
+        var RELOAD_KEY = 'yogstra:chunk-reload-at'
+        var BUILD_KEY = 'yogstra:build-id'
+        var COOLDOWN = 8000
+        var STALE =
+          /failed to fetch dynamically imported module|loading chunk|module script failed|mime type of "text\/html"|mime type \('text\/plain'\)|refused to apply style|404.*\/assets\//i
+
+        function navigateFresh() {
+          var url = new URL(window.location.href)
+          url.searchParams.set('_refresh', String(Date.now()))
+          window.location.replace(url.toString())
+        }
+
+        function hardReload() {
+          var last = sessionStorage.getItem(RELOAD_KEY)
+          if (last && Date.now() - Number(last) < COOLDOWN) return
+          sessionStorage.setItem(RELOAD_KEY, String(Date.now()))
+          var tasks = []
+          if ('serviceWorker' in navigator) {
+            tasks.push(
+              navigator.serviceWorker.getRegistrations().then(function (regs) {
+                return Promise.all(regs.map(function (r) { return r.unregister() }))
+              }),
+            )
+          }
+          if ('caches' in window) {
+            tasks.push(
+              caches.keys().then(function (keys) {
+                return Promise.all(keys.map(function (k) { return caches.delete(k) }))
+              }),
+            )
+          }
+          if (tasks.length) Promise.all(tasks).finally(navigateFresh)
+          else navigateFresh()
+        }
+
+        function watchAsset(node) {
+          if (!node || !node.addEventListener) return
+          node.addEventListener('error', function () {
+            var href = node.href || node.src || ''
+            if (href.indexOf('/assets/') !== -1) hardReload()
+          })
+        }
+
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function (regs) {
+            regs.forEach(function (r) { r.unregister() })
+          })
+        }
+
+        new MutationObserver(function (mutations) {
+          mutations.forEach(function (m) {
+            m.addedNodes.forEach(function (node) {
+              if (node.nodeType !== 1) return
+              if (node.tagName === 'LINK' || node.tagName === 'SCRIPT') watchAsset(node)
+            })
+          })
+        }).observe(document.documentElement, { childList: true, subtree: true })
+
+        window.addEventListener(
+          'error',
+          function (e) {
+            var file = e.filename || (e.target && (e.target.src || e.target.href)) || ''
+            if (file.indexOf('/assets/') !== -1) {
+              e.preventDefault()
+              hardReload()
+            }
+          },
+          true,
+        )
+
+        window.addEventListener('unhandledrejection', function (e) {
+          var msg =
+            e.reason && e.reason.message ? e.reason.message : String(e.reason || '')
+          if (STALE.test(msg)) {
+            e.preventDefault()
+            hardReload()
+          }
+        })
+
+        var meta = document.querySelector('meta[name="yogstra-build"]')
+        var buildId = meta && meta.getAttribute('content')
+        var storedBuild = sessionStorage.getItem(BUILD_KEY)
+        if (buildId && storedBuild && buildId !== storedBuild) {
+          hardReload()
+          return
+        }
+        if (buildId) sessionStorage.setItem(BUILD_KEY, buildId)
+
+        fetch('/build-id.txt', { cache: 'no-store' })
+          .then(function (r) { return r.ok ? r.text() : '' })
+          .then(function (serverId) {
+            serverId = (serverId || '').trim()
+            if (serverId && buildId && serverId !== buildId) hardReload()
+          })
+          .catch(function () {})
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -1,4 +1,5 @@
 import type { CreateCompetitionInput } from '../domain/competition/models'
+import { supabase } from '../lib/supabase'
 import { competitionRepository } from '../repositories/competitionRepository'
 import { slugifyCompetitionName } from '../utils/competitionMappers'
 
@@ -8,8 +9,8 @@ async function ensureUniqueSlug(baseSlug: string): Promise<string> {
 
   while (true) {
     const candidate = suffix === 0 ? slug : `${slug}-${suffix}`
-    const existing = await competitionRepository.findBySlug(candidate)
-    if (!existing) return candidate
+    const taken = await competitionRepository.slugTaken(candidate)
+    if (!taken) return candidate
     suffix += 1
   }
 }
@@ -47,15 +48,22 @@ export async function fetchCompetitionAnnouncements(competitionId: string) {
 }
 
 /** Creates a competition in draft status with a unique slug. */
-export async function createCompetition(input: CreateCompetitionInput, createdBy: string) {
+export async function createCompetition(input: CreateCompetitionInput, _createdBy?: string) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not signed in')
+
+  const creatorId = user.id
+
   const baseSlug = slugifyCompetitionName(input.slug ?? input.name)
   const slug = await ensureUniqueSlug(baseSlug)
 
   return competitionRepository.create({
     ...input,
     slug,
-    createdBy,
-    organizerId: input.organizerId ?? createdBy,
+    createdBy: creatorId,
+    organizerId: input.organizerId ?? creatorId,
   })
 }
 

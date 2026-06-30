@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { Home, List } from 'lucide-react'
+import { PageContainer } from '../../../components/shell/PageContainer'
 
 const tabs = [
   { to: '/dashboard/student/competitions', label: 'Discover', icon: Home, end: true },
@@ -8,8 +9,9 @@ const tabs = [
 
 export function StudentCompetitionLayout() {
   return (
-    <div className="student-competition py-4 sm:py-6">
-      <nav
+    <PageContainer width="wide">
+      <div className="student-competition">
+        <nav
         className="mb-6 flex gap-1 overflow-x-auto rounded-[12px] border border-border bg-muted/40 p-1"
         aria-label="Competition sections"
       >
@@ -30,8 +32,9 @@ export function StudentCompetitionLayout() {
             {label}
           </NavLink>
         ))}
-      </nav>
-      <Outlet />
-    </div>
+        </nav>
+        <Outlet />
+      </div>
+    </PageContainer>
   )
 }

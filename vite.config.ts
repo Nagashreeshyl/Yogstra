@@ -1,3 +1,5 @@
+import { writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -92,6 +94,19 @@ function livekitTokenDevMiddleware() {
   }
 }
 
+function yogstraBuildVersion() {
+  const buildId = Date.now().toString(36)
+  return {
+    name: 'yogstra-build-version',
+    transformIndexHtml(html: string) {
+      return html.replaceAll('%YOGSTRA_BUILD_ID%', buildId)
+    },
+    closeBundle() {
+      writeFileSync(resolve(process.cwd(), 'dist/build-id.txt'), buildId, 'utf8')
+    },
+  }
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   for (const [key, value] of Object.entries(env)) {
@@ -101,10 +116,12 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
-    plugins: [react(), tailwindcss(), livekitTokenDevMiddleware()],
+    plugins: [react(), tailwindcss(), livekitTokenDevMiddleware(), yogstraBuildVersion()],
     build: {
       rollupOptions: {
         output: {
+          entryFileNames: 'assets/index-[hash].js',
+          chunkFileNames: 'assets/[name]-[hash].js',
           manualChunks(id) {
             if (id.includes('node_modules/@livekit') || id.includes('node_modules/livekit-client')) {
               return 'livekit'
