@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { isMissingTableError } from '../utils/supabaseErrors'
 import type {
   CreateCompetitionParticipantInput,
   CreateCompetitionRegistrationInput,
@@ -59,7 +60,10 @@ export const competitionRegistrationRepository = {
       .eq('id', id)
       .maybeSingle()
 
-    if (error) throw error
+    if (error) {
+      if (isMissingTableError(error)) return null
+      throw error
+    }
     return data ? mapCompetitionRegistration(data) : null
   },
 
@@ -70,7 +74,10 @@ export const competitionRegistrationRepository = {
       .eq('competition_id', competitionId)
       .order('submitted_at', { ascending: false })
 
-    if (error) throw error
+    if (error) {
+      if (isMissingTableError(error)) return []
+      throw error
+    }
     return (data ?? []).map(mapCompetitionRegistration)
   },
 
@@ -81,7 +88,10 @@ export const competitionRegistrationRepository = {
       .eq('registrant_id', registrantId)
       .order('submitted_at', { ascending: false })
 
-    if (error) throw error
+    if (error) {
+      if (isMissingTableError(error)) return []
+      throw error
+    }
     return (data ?? []).map(mapCompetitionRegistration)
   },
 
@@ -112,7 +122,10 @@ export const competitionRegistrationRepository = {
       .eq('competition_id', competitionId)
       .order('display_name', { ascending: true })
 
-    if (error) throw error
+    if (error) {
+      if (isMissingTableError(error)) return []
+      throw error
+    }
     return (data ?? []).map(mapCompetitionParticipant)
   },
 
@@ -122,7 +135,10 @@ export const competitionRegistrationRepository = {
       .select(participantSelect)
       .eq('registration_id', registrationId)
 
-    if (error) throw error
+    if (error) {
+      if (isMissingTableError(error)) return []
+      throw error
+    }
     return (data ?? []).map(mapCompetitionParticipant)
   },
 
@@ -157,7 +173,10 @@ export const competitionRegistrationRepository = {
       .eq('documents_verified', false)
       .neq('status', 'withdrawn')
 
-    if (error) throw error
+    if (error) {
+      if (isMissingTableError(error)) return 0
+      throw error
+    }
     return count ?? 0
   },
 }

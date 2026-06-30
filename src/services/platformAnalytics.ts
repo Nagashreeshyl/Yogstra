@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { isMissingTableError } from '../utils/supabaseErrors'
 
 export type AnalyticsEventName =
   | 'page_view'
@@ -31,13 +32,14 @@ export async function trackAnalyticsEvent(
       role = (profile?.role as string | undefined) ?? null
     }
 
-    await supabase.from('platform_analytics_events').insert({
+    const { error } = await supabase.from('platform_analytics_events').insert({
       event_name: eventName,
       user_id: userId,
       role,
       page_path: typeof window !== 'undefined' ? window.location.pathname : null,
       metadata: metadata ?? {},
     })
+    if (error && !isMissingTableError(error)) return
   } catch {
     // Silent
   }
@@ -68,9 +70,7 @@ export async function fetchAnalyticsSummary(days = 30): Promise<AnalyticsSummary
     .limit(5000)
 
   if (error) {
-    if (error.code === 'PGRST205' || error.code === '42P01') {
-      return emptySummary()
-    }
+    if (isMissingTableError(error)) return emptySummary()
     throw error
   }
 

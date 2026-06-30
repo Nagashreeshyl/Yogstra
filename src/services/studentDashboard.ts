@@ -105,10 +105,11 @@ function daysUntilDate(dateStr: string): number {
 }
 
 async function pickNextCompetition(studentId: string): Promise<StudentDashboardCompetition | null> {
-  const [published, registrations] = await Promise.all([
-    fetchPublishedCompetitions(20),
-    fetchUserRegistrations(studentId),
-  ])
+  try {
+    const [published, registrations] = await Promise.all([
+      fetchPublishedCompetitions(20),
+      fetchUserRegistrations(studentId),
+    ])
 
   const sorted = published
     .filter((c) => c.startDate)
@@ -137,6 +138,9 @@ async function pickNextCompetition(studentId: string): Promise<StudentDashboardC
         ? 'registered'
         : 'pending'
       : 'not_registered',
+  }
+  } catch {
+    return null
   }
 }
 

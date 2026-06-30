@@ -14,7 +14,6 @@ import { CompetitionRouteLayout } from './components/competition/CompetitionRout
 import { RouteAwareInstallBanner } from './components/pwa/RouteAwareInstallBanner'
 import { DirectVideoCallProvider } from './components/chat/DirectVideoCallProvider'
 import { PageLoadingFallback } from './components/ui/PageLoadingFallback'
-import { BetaFeedbackWidget } from './components/feedback/BetaFeedbackWidget'
 
 const LandingPage = lazy(() => import('./pages/public/LandingPage').then((m) => ({ default: m.LandingPage })))
 const GetStartedPage = lazy(() => import('./pages/public/GetStartedPage').then((m) => ({ default: m.GetStartedPage })))
@@ -339,7 +338,6 @@ export default function App() {
             </Routes>
           </Suspense>
         </BrowserRouter>
-        <BetaFeedbackWidget />
       </DirectVideoCallProvider>
     </AppProvider>
   )

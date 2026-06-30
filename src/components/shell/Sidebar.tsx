@@ -61,7 +61,7 @@ export function Sidebar({
       <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto" aria-label="Main navigation">
         {sidebarItems.map((item) => (
           <NavLink
-            key={item.to}
+            key={`${item.to}-${item.label}`}
             to={item.to}
             end={item.end}
             className={({ isActive }) =>

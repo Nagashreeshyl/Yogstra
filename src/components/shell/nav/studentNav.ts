@@ -5,7 +5,6 @@ import {
   MessageCircle,
   MessageSquare,
   CreditCard,
-  User,
   Settings,
   Video,
 } from 'lucide-react'
@@ -54,13 +53,7 @@ export function getStudentNavItems(hasClasses: boolean): ShellNavItem[] {
     },
     {
       to: '/dashboard/student/settings',
-      label: 'Profile',
-      icon: User,
-      placement: ['sidebar', 'more'],
-    },
-    {
-      to: '/dashboard/student/settings',
-      label: 'Settings',
+      label: 'Profile & settings',
       icon: Settings,
       placement: ['sidebar', 'more'],
     },

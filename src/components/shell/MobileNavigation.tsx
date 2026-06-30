@@ -54,7 +54,7 @@ export function MobileNavigation({ navItems, badges }: MobileNavigationProps) {
             style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}
           >
             {tabItems.map((item) => (
-              <li key={item.to}>
+              <li key={`${item.to}-${item.label}`}>
                 <NavLink
                   to={item.to}
                   end={item.end}
@@ -116,7 +116,7 @@ export function MobileNavigation({ navItems, badges }: MobileNavigationProps) {
             </div>
             <ul className="p-2 space-y-0.5 pb-2">
               {moreItems.map((item) => (
-                <li key={item.to}>
+                <li key={`${item.to}-${item.label}`}>
                   <NavLink
                     to={item.to}
                     end={item.end}
