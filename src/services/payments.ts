@@ -1,6 +1,7 @@
 import type { ClassOrderInput } from './classOrders'
 import { supabase } from '../lib/supabase'
 import { dispatchEnrollmentComplete } from './enrollmentEvents'
+import { logActivity } from './activityLog'
 
 declare global {
   interface Window {
@@ -220,9 +221,23 @@ export async function openRazorpayCheckout(params: {
               teacherId: params.teacherId,
               orderId: result.orderId,
             })
+            void logActivity({
+              action: 'payment',
+              entityType: 'class_order',
+              entityId: result.orderId,
+              status: 'success',
+              metadata: { teacherId: params.teacherId },
+            })
             await params.onSuccess()
             finish(() => resolve())
           } catch (err) {
+            void logActivity({
+              action: 'payment_failed',
+              entityType: 'class_order',
+              status: 'error',
+              errorMessage: err instanceof Error ? err.message : 'Payment fulfillment failed',
+              metadata: { teacherId: params.teacherId },
+            })
             params.onDismiss?.()
             finish(() =>
               reject(

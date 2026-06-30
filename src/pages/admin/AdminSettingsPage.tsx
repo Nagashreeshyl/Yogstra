@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { fetchCommissionPercent, updateCommissionPercent } from '../../services/platformSettings'
+import { recordAuditLog } from '../../services/auditLog'
+import { formatUserFacingError } from '../../utils/format'
 import { PageHeader } from '../../components/shell/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -19,12 +21,19 @@ export function AdminSettingsPage() {
     const percent = Number(displayValue)
     setSaving(true)
     try {
+      const previous = commission
       await updateCommissionPercent(percent)
+      await recordAuditLog({
+        action: 'settings_commission_update',
+        entityType: 'platform_settings',
+        oldValue: { commission_percent: previous },
+        newValue: { commission_percent: percent },
+      }).catch(() => undefined)
       await refetch()
       setToast({ message: 'Commission updated.', type: 'success' })
     } catch (err) {
       setToast({
-        message: err instanceof Error ? err.message : 'Could not save commission.',
+        message: formatUserFacingError(err, 'Could not save commission. Please try again.'),
         type: 'error',
       })
     } finally {

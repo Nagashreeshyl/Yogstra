@@ -26,26 +26,26 @@ export function NotificationDropdown({ count: countProp }: NotificationDropdownP
 
   const { data: notifications, loading, refetch } = useAsyncData(
     () =>
-      userId && role && role !== 'admin'
+      userId && role
         ? fetchNotificationsForUser(userId, role)
         : Promise.resolve([]),
     [userId, role],
-    { enabled: Boolean(userId && role && role !== 'admin') },
+    { enabled: Boolean(userId && role) },
   )
 
   const { data: liveCount } = useAsyncData(
     () =>
-      userId && role && role !== 'admin'
+      userId && role
         ? fetchUnreadNotificationCountForUser(userId, role)
         : Promise.resolve(0),
     [userId, role, notifications?.length],
-    { enabled: Boolean(userId && role && role !== 'admin') },
+    { enabled: Boolean(userId && role) },
   )
 
   const count = countProp ?? liveCount ?? 0
 
   useEffect(() => {
-    if (!userId || !role || role === 'admin') return
+    if (!userId || !role) return
     return subscribeToNotifications(userId, role, () => void refetch(true))
   }, [userId, role, refetch])
 
@@ -59,23 +59,27 @@ export function NotificationDropdown({ count: countProp }: NotificationDropdownP
   }, [open])
 
   const handleMarkAllRead = async () => {
-    if (!userId || !role || role === 'admin') return
+    if (!userId || !role) return
     await markAllNotificationsReadForUser(userId, role)
     void refetch(true)
   }
 
   const handleMarkRead = async (id: string) => {
-    if (!userId || !role || role === 'admin') return
+    if (!userId || !role) return
     await markNotificationReadForUser(userId, role, id)
     void refetch(true)
   }
 
-  if (!user || user.role === 'admin') {
+  if (!user) {
     return null
   }
 
   const settingsPath =
-    user.role === 'teacher' ? '/dashboard/teacher/settings' : '/dashboard/student/settings'
+    user.role === 'admin'
+      ? '/admin/settings'
+      : user.role === 'teacher'
+        ? '/dashboard/teacher/settings'
+        : '/dashboard/student/settings'
 
   return (
     <div ref={ref} className="relative">

@@ -5,6 +5,7 @@ import {
 } from '../server/supabaseAdmin.js'
 import {
   extractBearerToken,
+  enforceRateLimit,
   handleApiPreflight,
 } from '../server/apiSecurity.js'
 import {
@@ -40,6 +41,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
+
+  if (!enforceRateLimit(req, res, 'teacher-payout-setup', 10, 60_000)) return
 
   const token = extractBearerToken(req)
 

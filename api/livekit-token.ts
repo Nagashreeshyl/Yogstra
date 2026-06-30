@@ -1,7 +1,7 @@
 import { createLiveKitToken } from '../server/livekitToken.js'
 import { assertAuthenticatedUser } from '../server/supabaseAdmin.js'
 import { assertLiveKitRoomAccess } from '../server/orderValidation.js'
-import { extractBearerToken, handleApiPreflight } from '../server/apiSecurity.js'
+import { extractBearerToken, enforceRateLimit, handleApiPreflight } from '../server/apiSecurity.js'
 import { sanitizeText } from '../server/validateInput.js'
 
 type TokenRequest = {
@@ -29,6 +29,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
+
+  if (!enforceRateLimit(req, res, 'livekit-token', 60, 60_000)) return
 
   try {
     const token = extractBearerToken(req)

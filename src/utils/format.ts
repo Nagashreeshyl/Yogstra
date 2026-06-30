@@ -85,6 +85,31 @@ export function formatUserFacingError(
 
   if (!raw.trim()) return fallback
 
+  if (/payment.*cancel|cancelled/i.test(raw)) {
+    return 'Payment was cancelled. You can try again when ready.'
+  }
+  if (/payment|razorpay|booking could not be completed/i.test(raw)) {
+    return 'Payment could not be completed. If you were charged, contact support with your payment reference.'
+  }
+  if (/enroll|enrollment/i.test(raw)) {
+    return 'Enrollment could not be completed. Please try again or contact support.'
+  }
+  if (/upload|storage|file/i.test(raw)) {
+    return 'Upload failed. Check the file size and format, then try again.'
+  }
+  if (/network|failed to fetch|timeout|offline/i.test(raw)) {
+    return 'Network connection issue. Check your internet and try again.'
+  }
+  if (/permission|not authorized|forbidden|access denied/i.test(raw)) {
+    return 'You do not have permission to perform this action.'
+  }
+  if (/competition/i.test(raw) && /fail|error/i.test(raw)) {
+    return 'Competition action failed. Please review your entries and try again.'
+  }
+  if (/academy/i.test(raw) && /fail|error|409/i.test(raw)) {
+    return 'Academy action failed. Refresh the page and try again.'
+  }
+
   if (/duplicate key|already exists|409/i.test(raw)) {
     return 'An academy with this name already exists. Refresh the page to continue setup.'
   }
@@ -100,3 +125,16 @@ export function formatUserFacingError(
 
   return raw
 }
+
+/** Context-specific error messages for common user actions. */
+export const USER_ERROR = {
+  payment: 'Payment failed. Please try again or use a different payment method.',
+  enrollment: 'Enrollment failed. Your payment may have succeeded — check your dashboard or contact support.',
+  upload: 'Upload failed. Try a smaller image (JPEG or PNG).',
+  auth: 'Authentication failed. Please sign in again.',
+  network: 'Connection lost. Check your network and try again.',
+  permission: 'You do not have permission to do that.',
+  competition: 'Competition update failed. Please try again.',
+  academy: 'Academy update failed. Please try again.',
+  generic: 'Something went wrong. Please try again.',
+} as const

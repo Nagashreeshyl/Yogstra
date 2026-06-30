@@ -92,6 +92,8 @@ export const ADMIN_ROUTES: RouteSpec[] = [
   { path: '/admin/reports', name: 'Admin Reports', auth: 'admin' },
   { path: '/admin/users', name: 'Admin Users', auth: 'admin' },
   { path: '/admin/audit', name: 'Admin Audit', auth: 'admin' },
+  { path: '/admin/system', name: 'Admin System', auth: 'admin' },
+  { path: '/admin/feedback', name: 'Admin Feedback', auth: 'admin' },
   { path: '/admin/settings', name: 'Admin Settings', auth: 'admin' },
 ]
 

@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabase'
 import type { ChatConversation, Payout } from '../types'
 import { formatRelativeDate, formatTime } from '../utils/format'
 import { mapPayout } from '../utils/mappers'
+import { recordAuditLog } from './auditLog'
 
 const payoutSelect = `
   *,
@@ -59,8 +60,16 @@ export async function fetchPayouts(): Promise<Payout[]> {
 }
 
 export async function markPayoutPaid(id: string) {
+  const { data: existing } = await supabase.from('payouts').select('status').eq('id', id).maybeSingle()
   const { error } = await supabase.from('payouts').update({ status: 'paid' }).eq('id', id)
   if (error) throw error
+  await recordAuditLog({
+    action: 'payout_mark_paid',
+    entityType: 'payout',
+    entityId: id,
+    oldValue: existing ? { status: existing.status } : null,
+    newValue: { status: 'paid' },
+  }).catch(() => undefined)
 }
 
 export async function fetchTeacherPayouts(teacherId: string): Promise<Payout[]> {

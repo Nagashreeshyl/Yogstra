@@ -10,7 +10,11 @@ type VercelResponse = {
   setHeader: (name: string, value: string) => void
 }
 
-const PRODUCTION_ORIGINS = new Set(['https://yogstra.vercel.app'])
+const PRODUCTION_ORIGINS = new Set([
+  'https://yogstra.vercel.app',
+  ...(process.env.VITE_APP_URL ? [process.env.VITE_APP_URL] : []),
+  ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
+])
 
 const DEV_ORIGINS = new Set(['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'])
 

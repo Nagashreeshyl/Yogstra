@@ -18,6 +18,8 @@ import {
   type AuthUser,
   type SignUpResult,
 } from '../services/auth'
+import { logActivity } from '../services/activityLog'
+import { trackAnalyticsEvent } from '../services/platformAnalytics'
 import {
   fetchCategories,
   createCategory,
@@ -182,6 +184,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const profile = await signIn(email, password)
     setUser(profile)
     setRole(profile.role)
+    void logActivity({ action: 'login', status: 'success', userId: profile.id, role: profile.role })
+    void trackAnalyticsEvent('dashboard_view', { event: 'login' })
     return profile
   }, [])
 
@@ -197,16 +201,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     setUser(result.profile)
     setRole(result.profile.role)
+    void logActivity({ action: 'login', status: 'success', userId: result.profile.id, role: result.profile.role })
+    void trackAnalyticsEvent('registration')
     return result
   }, [])
 
   // VERIFIED: logout clears Supabase session, profile cache, and redirects home
   const logout = useCallback(async () => {
+    const userId = user?.id
+    const userRole = user?.role
     await signOut()
+    void logActivity({ action: 'logout', status: 'info', userId: userId ?? null, role: userRole ?? null })
     setUser(null)
     setRole(null)
     window.location.href = '/'
-  }, [])
+  }, [user?.id, user?.role])
 
   const refreshUser = useCallback(async () => {
     const profile = await getSession()

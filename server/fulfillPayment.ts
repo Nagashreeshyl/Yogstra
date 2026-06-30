@@ -483,6 +483,18 @@ async function completePaidOrderSideEffects(
     teacherAmount,
     academyLink,
   )
+
+  await supabase.from('platform_activity_log').insert({
+    user_id: order.student_id,
+    role: 'student',
+    action: 'enrollment',
+    entity_type: 'class_order',
+    entity_id: order.id as string,
+    status: 'success',
+    metadata: { teacher_id: order.teacher_id, gross },
+  }).then(({ error }) => {
+    if (error?.code !== 'PGRST205' && error?.code !== '42P01' && error) throw error
+  })
 }
 
 export async function createPendingClassOrder(

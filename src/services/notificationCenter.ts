@@ -5,12 +5,16 @@ import {
   markNotificationRead,
   subscribeToTeacherNotifications,
 } from './teacherNotifications'
-import { fetchUserCertificates } from './certificateService'
+import {
+  fetchEnrollmentNotifications,
+  markEnrollmentNotificationRead,
+} from './enrollmentNotifications'
 import {
   buildStudentCompetitionNotifications,
   fetchStudentCompetitionHome,
   DEFAULT_COMPETITION_FILTERS,
 } from './studentCompetitionExperience'
+import { fetchUserCertificates } from './certificateService'
 
 export type AppNotification = {
   id: string
@@ -108,7 +112,20 @@ export async function fetchNotificationsForUser(
   userId: string,
   role: 'student' | 'teacher' | 'admin',
 ): Promise<AppNotification[]> {
-  if (role === 'teacher' || role === 'admin') {
+  if (role === 'admin') {
+    const enrollmentNotes = await fetchEnrollmentNotifications(userId, 20)
+    return enrollmentNotes.map((n) => ({
+      id: n.id,
+      title: n.title,
+      body: n.body,
+      href: n.href ?? '/admin/bookings',
+      createdAt: n.createdAt,
+      read: n.read,
+      source: 'system' as const,
+    }))
+  }
+
+  if (role === 'teacher') {
     const [rows, judgeNotes] = await Promise.all([
       fetchTeacherNotifications(userId),
       fetchJudgeAssignmentNotifications(userId),
@@ -170,7 +187,12 @@ export async function markNotificationReadForUser(
   role: 'student' | 'teacher' | 'admin',
   notificationId: string,
 ) {
-  if (role === 'teacher' || role === 'admin') {
+  if (role === 'admin') {
+    await markEnrollmentNotificationRead(notificationId)
+    return
+  }
+
+  if (role === 'teacher') {
     if (notificationId.startsWith('judge-')) {
       const ids = loadJudgeNotificationReadIds(userId)
       ids.add(notificationId)
@@ -190,7 +212,13 @@ export async function markAllNotificationsReadForUser(
   userId: string,
   role: 'student' | 'teacher' | 'admin',
 ) {
-  if (role === 'teacher' || role === 'admin') {
+  if (role === 'admin') {
+    const notes = await fetchEnrollmentNotifications(userId, 50)
+    await Promise.all(notes.filter((n) => !n.read).map((n) => markEnrollmentNotificationRead(n.id)))
+    return
+  }
+
+  if (role === 'teacher') {
     await markAllNotificationsRead(userId)
     const notes = await fetchNotificationsForUser(userId, role)
     saveJudgeNotificationReadIds(userId, new Set(notes.filter((n) => n.id.startsWith('judge-')).map((n) => n.id)))
@@ -214,7 +242,21 @@ export function subscribeToNotifications(
   role: 'student' | 'teacher' | 'admin',
   onUpdate: () => void,
 ) {
-  if (role === 'teacher' || role === 'admin') {
+  if (role === 'admin') {
+    const channel = supabase
+      .channel(`admin-notifications-${userId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'enrollment_notifications', filter: `user_id=eq.${userId}` },
+        () => onUpdate(),
+      )
+      .subscribe()
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }
+
+  if (role === 'teacher') {
     return subscribeToTeacherNotifications(userId, onUpdate)
   }
 

@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase'
 import { invalidateProfileCache } from './auth'
+import { recordAuditLog } from './auditLog'
 import type { Teacher, TeacherPricing } from '../types'
 import { mapTeacher } from '../utils/mappers'
 import { isTeacherProfileComplete } from '../utils/teacherProfileCompletion'
@@ -48,16 +49,36 @@ export async function updateTeacherStatus(
   id: string,
   status: 'verified' | 'rejected' | 'pending' | 'removed',
 ) {
+  const { data: existing } = await supabase
+    .from('teacher_profiles')
+    .select('status')
+    .eq('id', id)
+    .maybeSingle()
+
   const { error } = await supabase
     .from('teacher_profiles')
     .update({ status })
     .eq('id', id)
 
   if (error) throw error
+
+  await recordAuditLog({
+    action: `teacher_${status}`,
+    entityType: 'teacher',
+    entityId: id,
+    oldValue: existing ? { status: existing.status } : null,
+    newValue: { status },
+  }).catch(() => undefined)
 }
 
 /** Admin removes a teacher — blocks dashboard access and cancels active bookings. */
 export async function removeTeacher(id: string) {
+  const { data: existing } = await supabase
+    .from('teacher_profiles')
+    .select('status')
+    .eq('id', id)
+    .maybeSingle()
+
   const { error: statusError } = await supabase
     .from('teacher_profiles')
     .update({ status: 'removed' })
@@ -72,6 +93,14 @@ export async function removeTeacher(id: string) {
     .in('status', ['active', 'pending'])
 
   if (bookingError) throw bookingError
+
+  await recordAuditLog({
+    action: 'teacher_removed',
+    entityType: 'teacher',
+    entityId: id,
+    oldValue: existing ? { status: existing.status } : null,
+    newValue: { status: 'removed' },
+  }).catch(() => undefined)
 }
 
 /** Removed teachers can request verification again. */

@@ -14,6 +14,8 @@ import {
   BarChart3,
   UserCog,
   ScrollText,
+  Activity,
+  MessageCirclePlus,
 } from 'lucide-react'
 import type { ShellNavItem } from '../types'
 
@@ -36,6 +38,8 @@ export const adminNavItems: ShellNavItem[] = [
   { to: '/admin/competitions', label: 'Competitions', icon: Trophy, placement: ['sidebar', 'more'] },
   { to: '/admin/academies', label: 'Academies', icon: Building2, placement: ['sidebar', 'more'] },
   { to: '/admin/reports', label: 'Reports', icon: BarChart3, placement: ['sidebar', 'more'] },
+  { to: '/admin/system', label: 'System', icon: Activity, placement: ['sidebar', 'more'] },
+  { to: '/admin/feedback', label: 'Feedback', icon: MessageCirclePlus, placement: ['sidebar', 'more'] },
   { to: '/admin/audit', label: 'Audit log', icon: ScrollText, placement: ['sidebar', 'more'] },
   { to: '/admin/categories', label: 'Categories', icon: Grid3X3, placement: ['sidebar', 'more'] },
   { to: '/admin/settings', label: 'Settings', icon: Settings, placement: ['sidebar', 'more'] },

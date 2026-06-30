@@ -14,6 +14,7 @@ import { CompetitionRouteLayout } from './components/competition/CompetitionRout
 import { RouteAwareInstallBanner } from './components/pwa/RouteAwareInstallBanner'
 import { DirectVideoCallProvider } from './components/chat/DirectVideoCallProvider'
 import { PageLoadingFallback } from './components/ui/PageLoadingFallback'
+import { BetaFeedbackWidget } from './components/feedback/BetaFeedbackWidget'
 
 const LandingPage = lazy(() => import('./pages/public/LandingPage').then((m) => ({ default: m.LandingPage })))
 const GetStartedPage = lazy(() => import('./pages/public/GetStartedPage').then((m) => ({ default: m.GetStartedPage })))
@@ -77,6 +78,8 @@ const AdminAcademiesPage = lazy(() => import('./pages/admin/AdminAcademiesPage')
 const AdminReportsPage = lazy(() => import('./pages/admin/AdminReportsPage').then((m) => ({ default: m.AdminReportsPage })))
 const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage })))
 const AdminAuditPage = lazy(() => import('./pages/admin/AdminAuditPage').then((m) => ({ default: m.AdminAuditPage })))
+const AdminSystemPage = lazy(() => import('./pages/admin/AdminSystemPage').then((m) => ({ default: m.AdminSystemPage })))
+const AdminFeedbackPage = lazy(() => import('./pages/admin/AdminFeedbackPage').then((m) => ({ default: m.AdminFeedbackPage })))
 const PrivacyPolicyPage = lazy(() => import('./pages/legal/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage })))
 const TermsOfServicePage = lazy(() => import('./pages/legal/TermsOfServicePage').then((m) => ({ default: m.TermsOfServicePage })))
 const RefundPolicyPage = lazy(() => import('./pages/legal/RefundPolicyPage').then((m) => ({ default: m.RefundPolicyPage })))
@@ -326,6 +329,8 @@ export default function App() {
                   <Route path="reports" element={<AdminReportsPage />} />
                   <Route path="users" element={<AdminUsersPage />} />
                   <Route path="audit" element={<AdminAuditPage />} />
+                  <Route path="system" element={<AdminSystemPage />} />
+                  <Route path="feedback" element={<AdminFeedbackPage />} />
                   <Route path="settings" element={<AdminSettingsPage />} />
                 </Route>
               </Route>
@@ -334,6 +339,7 @@ export default function App() {
             </Routes>
           </Suspense>
         </BrowserRouter>
+        <BetaFeedbackWidget />
       </DirectVideoCallProvider>
     </AppProvider>
   )
