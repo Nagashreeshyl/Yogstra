@@ -7,6 +7,7 @@ import { Button } from '../ui/Button'
 import { ChatWindowSkeleton } from '../ui/Skeleton'
 import { useDirectChatMessages } from '../../hooks/useDirectChatMessages'
 import { useActiveClassPurchase } from '../../hooks/useActiveClassPurchase'
+import { useTeacherPurchaseEligibility } from '../../hooks/useTeacherPurchaseEligibility'
 import {
   deleteDirectMessageForBoth,
   deleteDirectMessageForMe,
@@ -79,13 +80,14 @@ export function WhatsAppChatWindow({
   const { startCall, callBusy } = useDirectVideoCall()
 
   const canBuyClass = currentUserRole === 'student' && participantRole === 'teacher'
+  const { canAcceptPurchase } = useTeacherPurchaseEligibility(participantId, canBuyClass)
   const { hasActivePurchase, refetchActivePurchase } = useActiveClassPurchase(
     currentUserId,
     participantId,
-    canBuyClass,
+    canBuyClass && canAcceptPurchase,
   )
 
-  const showBuyButton = canBuyClass && !hasActivePurchase
+  const showBuyButton = canBuyClass && canAcceptPurchase && !hasActivePurchase
   const isBlocked = threadSettings.blocked
   const showVideoCall = canDirectVideoCall({
     currentUserRole,
@@ -505,7 +507,7 @@ export function WhatsAppChatWindow({
         onSubmit={handleReport}
       />
 
-      {canBuyClass && (
+      {canBuyClass && canAcceptPurchase && (
         <BuyClassModal
           isOpen={showBuyModal}
           onClose={() => {
