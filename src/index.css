@@ -166,43 +166,64 @@ h6 {
   background: #d4c9b5;
 }
 
-/* DM video call — WhatsApp-style layout with persistent portaled controls */
-.dm-call-root {
-  --dm-control-bar-height: 5.75rem;
+/* Yogstra video call — DM + live class (forest / gold theme) */
+.yogstra-call-root {
+  --yogstra-call-control-height: 6.25rem;
+  background: #0f1f17;
 }
 
-.dm-call-room {
+.yogstra-call-room {
   position: relative;
   overflow: hidden;
+  background: radial-gradient(circle at 50% 0%, rgba(45, 90, 61, 0.28), transparent 55%), #0f1f17;
 }
 
-.dm-call-header-portal {
+.yogstra-call-header {
   position: fixed;
   inset-inline: 0;
   top: 0;
   z-index: 10000;
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-  padding: max(0.75rem, env(safe-area-inset-top)) 1rem 1.25rem;
-  background: linear-gradient(to bottom, rgba(26, 26, 26, 0.92), transparent);
   pointer-events: none;
 }
 
-.dm-call-stage {
+.yogstra-call-header-inner {
+  padding: max(0.85rem, env(safe-area-inset-top)) 1.1rem 1.35rem;
+  background: linear-gradient(to bottom, rgba(15, 31, 23, 0.96), rgba(15, 31, 23, 0));
+}
+
+.yogstra-call-header-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #f6f1e6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.yogstra-call-header-subtitle {
+  margin: 0.15rem 0 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(212, 175, 55, 0.82);
+}
+
+.yogstra-call-stage {
   position: absolute;
   inset: 0;
-  padding-bottom: var(--dm-control-bar-height);
-  background: #0f1f17;
+  padding-bottom: var(--yogstra-call-control-height);
 }
 
-.dm-call-remote-tile {
+.yogstra-call-main {
   width: 100%;
   height: 100%;
+  min-height: 0;
 }
 
-.dm-call-remote-tile.lk-participant-tile,
-.dm-call-pip-tile.lk-participant-tile {
+.yogstra-call-video-tile,
+.yogstra-call-video-tile.lk-participant-tile {
   position: relative;
   width: 100%;
   height: 100%;
@@ -210,24 +231,45 @@ h6 {
   grid-template: minmax(0, 1fr) / minmax(0, 1fr);
   gap: 0 !important;
   min-height: 0;
+  background: #0a1510;
 }
 
-.dm-call-pip {
+.yogstra-call-video-tile .lk-participant-media-video,
+.yogstra-call-video-tile video {
+  object-fit: cover !important;
+  object-position: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  background: #0a1510 !important;
+}
+
+.yogstra-call-video-tile .lk-participant-metadata {
+  background: linear-gradient(to top, rgba(15, 31, 23, 0.92), transparent);
+  border: 0;
+  padding-bottom: 0.65rem;
+}
+
+.yogstra-call-self-main {
+  filter: brightness(0.92);
+}
+
+.yogstra-call-pip {
   position: absolute;
-  top: calc(max(0.75rem, env(safe-area-inset-top)) + 3.25rem);
+  top: calc(max(0.85rem, env(safe-area-inset-top)) + 3.5rem);
   right: 1rem;
-  width: 6.75rem;
-  height: 9.5rem;
-  border-radius: 0.75rem;
+  width: 7rem;
+  height: 10rem;
+  border-radius: 1rem;
   overflow: hidden;
-  z-index: 50;
-  border: 2px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-  background: #111;
+  z-index: 55;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  background: #16281d;
 }
 
-.dm-call-pip .dm-call-pip-tile,
-.dm-call-pip .lk-participant-tile {
+.yogstra-call-pip-tile,
+.yogstra-call-pip .yogstra-call-video-tile {
   position: absolute !important;
   inset: 0 !important;
   width: 100% !important;
@@ -235,33 +277,121 @@ h6 {
   border-radius: inherit;
 }
 
-.dm-call-remote-tile .lk-participant-media-video,
-.dm-call-pip .lk-participant-media-video,
-.dm-call-remote-tile video,
-.dm-call-pip video {
-  object-fit: cover !important;
-  object-position: center !important;
-  width: 100% !important;
-  height: 100% !important;
-  min-height: 100% !important;
-  background: #000 !important;
+.yogstra-call-pip .lk-participant-metadata,
+.yogstra-call-self-main .lk-participant-metadata {
+  display: none;
 }
 
-.dm-call-root .dm-call-pip .lk-participant-media-video[data-orientation='portrait'],
-.dm-call-root .dm-call-remote-tile .lk-participant-media-video[data-orientation='portrait'] {
-  object-fit: cover !important;
+.yogstra-call-camera-off {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  width: 100%;
+  height: 100%;
+  padding: 1.5rem;
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(45, 90, 61, 0.35), transparent 62%),
+    linear-gradient(160deg, #0f1f17 0%, #16281d 100%);
 }
 
-.dm-call-pip .lk-participant-metadata {
-  transform: scale(0.85);
-  transform-origin: bottom left;
+.yogstra-call-camera-off-pip {
+  gap: 0.35rem;
+  padding: 0.65rem;
 }
 
-.dm-call-local-preview {
-  filter: brightness(0.55);
+.yogstra-call-camera-off-glow {
+  position: absolute;
+  width: 9rem;
+  height: 9rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.14), transparent 70%);
+  pointer-events: none;
 }
 
-.dm-call-connecting {
+.yogstra-call-camera-off-pip .yogstra-call-camera-off-glow {
+  width: 4rem;
+  height: 4rem;
+}
+
+.yogstra-call-camera-off-avatar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 9999px;
+  border: 2px solid rgba(212, 175, 55, 0.45);
+  background: rgba(45, 90, 61, 0.35);
+  color: #f6f1e6;
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.yogstra-call-camera-off-pip .yogstra-call-camera-off-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 0.75rem;
+  border-width: 1px;
+}
+
+.yogstra-call-camera-off-copy {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-width: 18rem;
+}
+
+.yogstra-call-camera-off-pip .yogstra-call-camera-off-copy {
+  display: none;
+}
+
+.yogstra-call-camera-off-name {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  color: #f6f1e6;
+}
+
+.yogstra-call-camera-off-subtitle {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: rgba(246, 241, 230, 0.68);
+}
+
+.yogstra-call-camera-off-mic {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(45, 90, 61, 0.55);
+  background: rgba(15, 31, 23, 0.72);
+  color: rgba(246, 241, 230, 0.82);
+  font-size: 0.72rem;
+}
+
+.yogstra-call-camera-off-mic-muted {
+  border-color: rgba(220, 38, 38, 0.45);
+  color: #fecaca;
+}
+
+.yogstra-call-connecting {
   position: absolute;
   inset: 0;
   z-index: 60;
@@ -269,14 +399,15 @@ h6 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  gap: 0.85rem;
   padding: 1.5rem;
   text-align: center;
-  background: rgba(10, 10, 10, 0.45);
+  background: rgba(15, 31, 23, 0.55);
+  backdrop-filter: blur(2px);
   pointer-events: none;
 }
 
-.dm-call-connecting-rings {
+.yogstra-call-connecting-rings {
   position: relative;
   width: 7.5rem;
   height: 7.5rem;
@@ -285,19 +416,19 @@ h6 {
   justify-content: center;
 }
 
-.dm-call-connecting-ring {
+.yogstra-call-connecting-ring {
   position: absolute;
   inset: 0;
-  border: 2px solid rgba(45, 156, 156, 0.75);
+  border: 2px solid rgba(212, 175, 55, 0.65);
   border-radius: 9999px;
-  animation: dm-call-ring-pulse 1.8s ease-out infinite;
+  animation: yogstra-call-ring-pulse 1.8s ease-out infinite;
 }
 
-.dm-call-connecting-ring-delay {
+.yogstra-call-connecting-ring-delay {
   animation-delay: 0.75s;
 }
 
-.dm-call-connecting-dot {
+.yogstra-call-connecting-dot {
   position: relative;
   z-index: 1;
   display: flex;
@@ -306,26 +437,29 @@ h6 {
   width: 3.25rem;
   height: 3.25rem;
   border-radius: 9999px;
-  background: rgba(45, 156, 156, 0.25);
-  color: #7fd4d4;
+  background: rgba(45, 90, 61, 0.35);
+  color: #d4af37;
 }
 
-.dm-call-connecting-spinner {
+.yogstra-call-connecting-spinner {
   animation: spin 1s linear infinite;
 }
 
-.dm-call-connecting-title {
-  color: #f5f0e8;
-  font-size: 1.05rem;
+.yogstra-call-connecting-title {
+  margin: 0;
+  color: #f6f1e6;
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
   font-weight: 600;
 }
 
-.dm-call-connecting-subtitle {
-  color: rgba(245, 240, 232, 0.55);
+.yogstra-call-connecting-subtitle {
+  margin: 0;
+  color: rgba(246, 241, 230, 0.58);
   font-size: 0.85rem;
 }
 
-@keyframes dm-call-ring-pulse {
+@keyframes yogstra-call-ring-pulse {
   0% {
     transform: scale(0.55);
     opacity: 0.85;
@@ -336,145 +470,202 @@ h6 {
   }
 }
 
-.dm-call-action-notice {
-  position: fixed;
-  left: 50%;
-  bottom: calc(var(--dm-control-bar-height) + 0.75rem);
-  z-index: 10002;
-  transform: translateX(-50%);
-  max-width: min(92vw, 22rem);
-  padding: 0.55rem 0.85rem;
-  border-radius: 9999px;
-  background: rgba(26, 26, 26, 0.96);
-  border: 1px solid rgba(248, 113, 113, 0.45);
-  color: #fecaca;
-  font-size: 0.78rem;
-  text-align: center;
-  pointer-events: none;
-}
-
-.dm-call-controls-portal {
+.yogstra-call-controls {
   position: fixed !important;
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
   z-index: 10001 !important;
   display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
   align-items: flex-end;
   justify-content: center;
-  gap: 0.35rem;
-  min-height: var(--dm-control-bar-height);
-  padding: 0.5rem 0.75rem max(0.75rem, env(safe-area-inset-bottom));
-  background: linear-gradient(to top, rgba(18, 18, 18, 0.98) 70%, rgba(18, 18, 18, 0.85));
-  pointer-events: auto !important;
+  gap: 0.45rem;
+  min-height: var(--yogstra-call-control-height);
+  padding: 0.55rem 0.85rem max(0.85rem, env(safe-area-inset-bottom));
+  background: linear-gradient(to top, rgba(15, 31, 23, 0.98) 72%, rgba(15, 31, 23, 0.82));
+  border-top: 1px solid rgba(212, 175, 55, 0.12);
 }
 
-.dm-call-labeled-btn {
+.yogstra-call-control-btn {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  min-width: 4.25rem;
-  padding: 0.35rem 0.5rem;
+  min-width: 4.1rem;
+  padding: 0.25rem 0.45rem;
   border: 0;
-  border-radius: 0.5rem;
+  border-radius: 0.65rem;
   background: transparent;
-  color: #f5f0e8;
+  color: #f6f1e6;
   cursor: pointer;
 }
 
-.dm-call-labeled-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.08);
+.yogstra-call-control-btn:hover:not(:disabled) {
+  background: rgba(246, 241, 230, 0.06);
 }
 
-.dm-call-labeled-btn:disabled {
+.yogstra-call-control-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
-.dm-call-labeled-icon {
+.yogstra-call-control-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 2.85rem;
+  height: 2.85rem;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(246, 241, 230, 0.1);
+  border: 1px solid rgba(246, 241, 230, 0.08);
 }
 
-.dm-call-labeled-btn-active .dm-call-labeled-icon {
-  background: rgba(220, 38, 38, 0.85);
+.yogstra-call-control-btn-active .yogstra-call-control-icon {
+  background: rgba(220, 38, 38, 0.88);
+  border-color: rgba(248, 113, 113, 0.45);
 }
 
-.dm-call-labeled-btn-danger .dm-call-labeled-icon {
+.yogstra-call-control-btn-danger .yogstra-call-control-icon {
   background: rgba(220, 38, 38, 0.18);
-  border: 1px solid rgba(248, 113, 113, 0.55);
+  border-color: rgba(248, 113, 113, 0.55);
   color: #fecaca;
 }
 
-.dm-call-labeled-text {
-  font-size: 0.68rem;
+.yogstra-call-control-label {
+  font-size: 0.66rem;
   line-height: 1;
-  color: rgba(245, 240, 232, 0.82);
+  color: rgba(246, 241, 230, 0.78);
   white-space: nowrap;
 }
 
-@media (min-width: 768px) {
-  .dm-call-controls-portal {
-    gap: 0.75rem;
-  }
-
-  .dm-call-labeled-btn {
-    min-width: 5rem;
-  }
-
-  .dm-call-labeled-icon {
-    width: 3rem;
-    height: 3rem;
-  }
-
-  .dm-call-labeled-text {
-    font-size: 0.75rem;
-  }
-
-  .dm-call-pip {
-    width: 8.5rem;
-    height: 12rem;
-  }
-}
-
-.dm-call-camera-gate {
+.yogstra-call-action-notice {
   position: fixed;
-  inset-inline: 0;
-  top: calc(max(0.75rem, env(safe-area-inset-top)) + 3.5rem);
+  left: 50%;
+  bottom: calc(var(--yogstra-call-control-height) + 0.75rem);
   z-index: 10002;
-  display: flex;
-  justify-content: center;
-  padding: 0 1rem;
-  pointer-events: none;
+  transform: translateX(-50%);
+  max-width: min(92vw, 22rem);
+  padding: 0.55rem 0.85rem;
+  border-radius: 9999px;
+  background: rgba(15, 31, 23, 0.96);
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  color: #fecaca;
+  font-size: 0.78rem;
+  text-align: center;
 }
 
-.dm-call-camera-gate-btn {
-  pointer-events: auto;
+.yogstra-call-camera-prompt {
+  position: fixed;
+  left: 50%;
+  top: calc(max(0.85rem, env(safe-area-inset-top)) + 3.75rem);
+  z-index: 10002;
+  transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.65rem 1rem;
+  gap: 0.45rem;
+  padding: 0.55rem 0.95rem;
   border-radius: 9999px;
-  border: 1px solid rgba(45, 156, 156, 0.55);
-  background: rgba(26, 26, 26, 0.95);
-  color: #f5f0e8;
-  font-size: 0.85rem;
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  background: rgba(15, 31, 23, 0.94);
+  color: #f6f1e6;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
 }
 
-.dm-call-camera-gate-btn:hover {
-  background: rgba(45, 156, 156, 0.25);
+.yogstra-call-quality-shell {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  background: rgba(15, 31, 23, 0.88);
+  backdrop-filter: blur(10px);
+}
+
+.yogstra-call-quality-floating {
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  z-index: 120;
+}
+
+.yogstra-call-quality {
+  position: fixed !important;
+  top: calc(max(0.85rem, env(safe-area-inset-top)) + 3.5rem) !important;
+  left: 1rem !important;
+  right: auto !important;
+  z-index: 10001 !important;
+}
+
+.yogstra-call-quality-label {
+  padding-inline: 0.45rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(212, 175, 55, 0.82);
+}
+
+.yogstra-call-quality-btn {
+  min-height: 30px;
+  padding: 0 0.65rem;
+  border: 0;
+  border-radius: 9999px;
+  background: transparent;
+  color: rgba(246, 241, 230, 0.78);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.yogstra-call-quality-btn:hover:not(:disabled) {
+  background: rgba(246, 241, 230, 0.08);
+}
+
+.yogstra-call-quality-btn-active {
+  background: #d4af37;
+  color: #0f1f17;
+}
+
+.yogstra-call-quality-applied {
+  flex-basis: 100%;
+  padding: 0.15rem 0.45rem 0;
+  font-size: 0.62rem;
+  color: rgba(246, 241, 230, 0.62);
+}
+
+@media (min-width: 768px) {
+  .yogstra-call-controls {
+    gap: 0.85rem;
+  }
+
+  .yogstra-call-control-btn {
+    min-width: 4.85rem;
+  }
+
+  .yogstra-call-control-icon {
+    width: 3.1rem;
+    height: 3.1rem;
+  }
+
+  .yogstra-call-control-label {
+    font-size: 0.72rem;
+  }
+
+  .yogstra-call-pip {
+    width: 8.75rem;
+    height: 12.25rem;
+  }
+
+  .yogstra-call-quality {
+    top: calc(max(0.85rem, env(safe-area-inset-top)) + 3rem) !important;
+    left: 1.25rem !important;
+  }
 }
 
 /* Judge portal — tablet-first, high-contrast scoring */

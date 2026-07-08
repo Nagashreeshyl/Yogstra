@@ -1,18 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   LiveKitRoom,
-  VideoConference,
 } from '@livekit/components-react'
 import '@livekit/components-styles'
 import { Loader2, X } from 'lucide-react'
-import { ClassRoomAudioSetup } from './ClassRoomAudioSetup'
 import { ClassSessionRemoteWatcher } from './ClassSessionRemoteWatcher'
 import { ClassSessionStatusWatcher } from './ClassSessionStatusWatcher'
-import { StudentTeacherAwayNotice } from './StudentTeacherAwayNotice'
-import { TeacherStudentAwayActions } from './TeacherStudentAwayActions'
-import { ClassHourTimeUpNotice } from './ClassHourTimeUpNotice'
-import { LiveKitVideoQualityBootstrap } from './LiveKitVideoQualityBootstrap'
-import { VideoQualitySelector } from './VideoQualitySelector'
+import { LiveClassCallView } from '../call/LiveClassCallView'
 import { Button } from '../ui/Button'
 import { buildLiveKitRoomOptions, getLiveKitVideoQuality } from '../../utils/livekitVideoQuality'
 import {
@@ -150,7 +144,7 @@ export function LiveClassRoom({
   }
 
   return (
-    <div className="fixed inset-0 z-[100] bg-sidebar pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+    <div className="fixed inset-0 z-[100] yogstra-call-root pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
       {callPhase === 'confirm_end' && role === 'teacher' && (
         <ClassSessionStatusWatcher sessionId={session.id} onTerminalStatus={handleRemoteEnd} />
       )}
@@ -203,28 +197,19 @@ export function LiveClassRoom({
           options={buildLiveKitRoomOptions(getLiveKitVideoQuality())}
           onDisconnected={handleDisconnected}
           data-lk-theme="default"
-          style={{ height: '100vh' }}
+          className="h-full w-full yogstra-call-room"
         >
           <ClassSessionRemoteWatcher sessionId={session.id} onRemoteEnd={handleRemoteEnd} />
-          <ClassRoomAudioSetup />
-          <LiveKitVideoQualityBootstrap />
-          <VideoQualitySelector />
-          {role === 'student' && <StudentTeacherAwayNotice />}
-          {role === 'teacher' && (
-            <TeacherStudentAwayActions
-              sessionId={session.id}
-              studentName={session.studentName}
-            />
-          )}
-          <ClassHourTimeUpNotice
+          <LiveClassCallView
             role={role}
-            sessionScheduledAt={session.scheduledSessionAt ?? null}
-            sessionStartedAt={session.startedAt}
+            sessionId={session.id}
             otherParticipantName={
               role === 'teacher' ? session.studentName : session.teacherName
             }
+            sessionScheduledAt={session.scheduledSessionAt ?? null}
+            sessionStartedAt={session.startedAt}
+            onEnd={() => finishLeave(true)}
           />
-          <VideoConference />
         </LiveKitRoom>
       )}
     </div>

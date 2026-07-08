@@ -100,6 +100,11 @@ export function getLiveKitCameraCaptureOptions(quality = getLiveKitVideoQuality(
   }
 }
 
+export function getLiveKitQualityResolutionLabel(quality: LiveKitVideoQuality) {
+  const { width, height } = videoPresetForQuality(quality).resolution
+  return `${width}×${height}`
+}
+
 export async function applyLiveKitVideoQuality(room: Room, quality: LiveKitVideoQuality) {
   saveLiveKitVideoQuality(quality)
   const capture = getLiveKitCameraCaptureOptions(quality)

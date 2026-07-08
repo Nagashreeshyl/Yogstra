@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useRoomContext } from '@livekit/components-react'
 import {
   applyLiveKitVideoQuality,
+  getLiveKitQualityResolutionLabel,
   getLiveKitVideoQuality,
   LIVEKIT_VIDEO_QUALITY_OPTIONS,
   saveLiveKitVideoQuality,
@@ -11,12 +12,17 @@ import {
 type VideoQualitySelectorProps = {
   /** `floating` for live class overlay; `inline` for DM call toolbar */
   variant?: 'floating' | 'inline'
+  className?: string
 }
 
-export function VideoQualitySelector({ variant = 'floating' }: VideoQualitySelectorProps) {
+export function VideoQualitySelector({
+  variant = 'floating',
+  className,
+}: VideoQualitySelectorProps) {
   const room = useRoomContext()
   const [quality, setQuality] = useState<LiveKitVideoQuality>(() => getLiveKitVideoQuality())
   const [busy, setBusy] = useState(false)
+  const [appliedNote, setAppliedNote] = useState<string | null>(null)
 
   async function handleChange(next: LiveKitVideoQuality) {
     if (next === quality || busy) return
@@ -25,26 +31,28 @@ export function VideoQualitySelector({ variant = 'floating' }: VideoQualitySelec
     try {
       if (room.state === 'connected') {
         await applyLiveKitVideoQuality(room, next)
+        setAppliedNote(`Sending ${getLiveKitQualityResolutionLabel(next)}`)
       } else {
         saveLiveKitVideoQuality(next)
+        setAppliedNote(`Will use ${getLiveKitQualityResolutionLabel(next)} on join`)
       }
     } catch {
       setQuality(getLiveKitVideoQuality())
+      setAppliedNote(null)
     } finally {
       setBusy(false)
+      window.setTimeout(() => setAppliedNote(null), 2600)
     }
   }
 
   const shellClass =
     variant === 'inline'
-      ? 'inline-flex items-center gap-1 rounded-full border border-white/15 bg-black/45 px-1 py-1 backdrop-blur-md'
-      : 'absolute right-4 top-4 z-[120] inline-flex items-center gap-1 rounded-full border border-white/15 bg-black/45 px-1 py-1 backdrop-blur-md'
+      ? 'yogstra-call-quality-shell yogstra-call-quality-inline'
+      : 'yogstra-call-quality-shell yogstra-call-quality-floating'
 
   return (
-    <div className={shellClass} role="group" aria-label="Video quality">
-      <span className="hidden sm:inline px-2 text-[10px] font-medium uppercase tracking-wide text-white/70">
-        Quality
-      </span>
+    <div className={[shellClass, className].filter(Boolean).join(' ')} role="group" aria-label="Video quality">
+      <span className="yogstra-call-quality-label">Out</span>
       {LIVEKIT_VIDEO_QUALITY_OPTIONS.map((option) => {
         const active = quality === option
         return (
@@ -53,17 +61,15 @@ export function VideoQualitySelector({ variant = 'floating' }: VideoQualitySelec
             type="button"
             disabled={busy}
             onClick={() => void handleChange(option)}
-            className={`min-h-[32px] rounded-full px-2.5 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-60 ${
-              active
-                ? 'bg-accent text-accent-foreground'
-                : 'text-white/80 hover:bg-white/10 hover:text-white'
-            }`}
+            className={`yogstra-call-quality-btn${active ? ' yogstra-call-quality-btn-active' : ''}`}
             aria-pressed={active}
+            title={`Send video at ${getLiveKitQualityResolutionLabel(option)}`}
           >
             {option}
           </button>
         )
       })}
+      {appliedNote ? <span className="yogstra-call-quality-applied">{appliedNote}</span> : null}
     </div>
   )
 }
