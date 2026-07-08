@@ -1,8 +1,8 @@
 # QA Report — Yogstra
 
 **Date:** 2026-06-30  
-**Playwright status:** failed  
-**Tests:** 0 total · 0 passed · 0 failed · 0 skipped  
+**Playwright status:** passed  
+**Tests:** 1 total · 1 passed · 0 failed · 0 skipped  
 **Issues found:** 0 (0 critical, 0 high, 0 medium, 0 low)
 
 ## Artifacts
@@ -29,7 +29,7 @@
 
 ## Test results
 
-
+- [passed] loads Landing (/) (3543ms)
 
 ## All issues
 

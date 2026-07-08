@@ -32,6 +32,13 @@ import {
 } from 'livekit-client'
 import type { TrackReferenceOrPlaceholder } from '@livekit/components-core'
 import { ClassRoomAudioSetup } from '../classes/ClassRoomAudioSetup'
+import { LiveKitVideoQualityBootstrap } from '../classes/LiveKitVideoQualityBootstrap'
+import { VideoQualitySelector } from '../classes/VideoQualitySelector'
+import {
+  buildLiveKitRoomOptions,
+  getLiveKitCameraCaptureOptions,
+  getLiveKitVideoQuality,
+} from '../../utils/livekitVideoQuality'
 import {
   canOfferScreenShare,
   disableScreenShare,
@@ -67,7 +74,7 @@ function DirectCallMediaBootstrap() {
   useEffect(() => {
     const publishLocal = async () => {
       try {
-        await room.localParticipant.setCameraEnabled(true, { facingMode: 'user' })
+        await room.localParticipant.setCameraEnabled(true, getLiveKitCameraCaptureOptions())
         await room.localParticipant.setMicrophoneEnabled(true)
       } catch {
         /* permissions may be denied — DirectCallCameraGate offers a retry tap */
@@ -175,7 +182,7 @@ function DirectCallCameraGate() {
         type="button"
         className="dm-call-camera-gate-btn"
         onClick={() => {
-          void room.localParticipant.setCameraEnabled(true, { facingMode: 'user' })
+          void room.localParticipant.setCameraEnabled(true, getLiveKitCameraCaptureOptions())
         }}
       >
         <Video size={18} />
@@ -434,7 +441,7 @@ function DirectCallControlBar({
       const videoTrack = publication?.videoTrack as LocalVideoTrack | undefined
 
       if (!videoTrack) {
-        await room.localParticipant.setCameraEnabled(true, { facingMode: 'user' })
+        await room.localParticipant.setCameraEnabled(true, getLiveKitCameraCaptureOptions())
         return
       }
 
@@ -498,6 +505,7 @@ function DirectCallControlBar({
         <div className="dm-call-action-notice">{actionNotice}</div>
       )}
       <div className="dm-call-controls-portal" role="toolbar" aria-label="Call controls">
+      <VideoQualitySelector variant="inline" />
       <DirectCallLabeledButton
         label="Microphone"
         disabled={mic.pending}
@@ -595,34 +603,33 @@ export function DirectVideoCallRoom({
     null,
   )
   const [error, setError] = useState<string | null>(null)
+  const [joining, setJoining] = useState(true)
   const endHandledRef = useRef(false)
   const localEndRef = useRef(false)
+
+  const loadConnectInfo = useCallback(async () => {
+    setJoining(true)
+    setError(null)
+    setConnectInfo(null)
+    try {
+      const info = await fetchLiveKitToken({
+        roomName: call.roomName,
+        participantName,
+        participantId,
+      })
+      setConnectInfo(info)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not join the call.')
+    } finally {
+      setJoining(false)
+    }
+  }, [call.roomName, participantName, participantId])
 
   useEffect(() => {
     endHandledRef.current = false
     localEndRef.current = false
-    setConnectInfo(null)
-    setError(null)
-
-    let cancelled = false
-    void fetchLiveKitToken({
-      roomName: call.roomName,
-      participantName,
-      participantId,
-    })
-      .then((info) => {
-        if (!cancelled) setConnectInfo(info)
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Could not join the call.')
-        }
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [call.id, call.roomName, participantName, participantId])
+    void loadConnectInfo()
+  }, [call.id, loadConnectInfo])
 
   useEffect(() => {
     const markEndedOnLeave = () => {
@@ -676,17 +683,27 @@ export function DirectVideoCallRoom({
   }
 
   if (error) {
+    const canRetry = !/sign in again/i.test(error)
     return (
       <div className="fixed inset-0 z-[200] bg-sidebar flex items-center justify-center p-6">
         <div className="max-w-md text-center space-y-4">
           <p className="text-destructive">{error}</p>
-          <Button onClick={onLeave}>Go back</Button>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {canRetry && (
+              <Button disabled={joining} onClick={() => void loadConnectInfo()}>
+                {joining ? 'Retrying…' : 'Try again'}
+              </Button>
+            )}
+            <Button variant="secondary" onClick={onLeave}>
+              Go back
+            </Button>
+          </div>
         </div>
       </div>
     )
   }
 
-  if (!connectInfo) {
+  if (joining || !connectInfo) {
     return (
       <div className="fixed inset-0 z-[200] bg-sidebar flex flex-col items-center justify-center gap-3">
         <Loader2 className="animate-spin text-accent" size={40} />
@@ -705,20 +722,11 @@ export function DirectVideoCallRoom({
         video
         audio
         connectOptions={{ autoSubscribe: true }}
-        options={{
-          disconnectOnPageLeave: false,
-          audioCaptureDefaults: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true,
-          },
-          videoCaptureDefaults: {
-            facingMode: 'user',
-          },
-        }}
+        options={buildLiveKitRoomOptions(getLiveKitVideoQuality())}
         data-lk-theme="default"
         className="h-full w-full dm-call-room"
       >
+        <LiveKitVideoQualityBootstrap />
         <DirectCallExperience
           call={call}
           otherName={otherName}

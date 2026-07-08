@@ -3,6 +3,10 @@
 /* Yogstra V2 semantic tokens — light/dark via ThemeProvider */
 :root {
   color-scheme: light;
+  /* Height of the in-flow mobile tab bar slot (pt-2 + pill + safe-area padding) */
+  --mobile-tab-bar-clearance: calc(
+    0.5rem + 3.75rem + max(0.75rem, env(safe-area-inset-bottom))
+  );
   --y-bg: #f6f1e6;
   --y-fg: #0f1f17;
   --y-muted: #ebe8e2;

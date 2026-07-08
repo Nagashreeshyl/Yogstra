@@ -21,7 +21,7 @@ function statusVariant(status: string) {
 
 export function AdminAcademiesPage() {
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('active')
   const [page, setPage] = useState(1)
   const [busyId, setBusyId] = useState<string | null>(null)
   const { data: academies, loading, error, refetch } = useAsyncData(() => fetchAllAcademies())
@@ -78,7 +78,7 @@ export function AdminAcademiesPage() {
       ) : (
         <>
           <AdminTable
-            headers={['Name', 'City', 'State', 'Status', 'Created', 'Actions']}
+            headers={['Name', 'Slug', 'City', 'State', 'Status', 'Created', 'Actions']}
             searchPlaceholder="Search academies..."
             filterOptions={[
               { label: 'Active', value: 'active' },
@@ -97,6 +97,7 @@ export function AdminAcademiesPage() {
             {paginated.map((a) => (
               <tr key={a.id} className="border-b border-border last:border-0">
                 <td className="px-4 py-3 font-medium">{a.name}</td>
+                <td className="px-4 py-3 text-muted-foreground">{a.slug}</td>
                 <td className="px-4 py-3">{a.city ?? '—'}</td>
                 <td className="px-4 py-3">{a.state ?? '—'}</td>
                 <td className="px-4 py-3">

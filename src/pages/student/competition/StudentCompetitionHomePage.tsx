@@ -174,6 +174,7 @@ export const StudentCompetitionHomePage = memo(function StudentCompetitionHomePa
                   {needsPayment && registration && (
                     <MyCompetitionPayButton
                       competitionId={c.id}
+                      competitionName={c.name}
                       registrationId={registration.id}
                       entryFee={c.entryFee}
                     />
@@ -300,6 +301,7 @@ export function StudentMyCompetitionsPage() {
                 {needsPayment && (
                   <MyCompetitionPayButton
                     competitionId={competition.id}
+                    competitionName={competition.name}
                     registrationId={registration.id}
                     entryFee={competition.entryFee}
                     onPaid={() => void refetch(true)}
@@ -327,15 +329,18 @@ export function StudentMyCompetitionsPage() {
 
 function MyCompetitionPayButton({
   competitionId,
+  competitionName,
   registrationId,
   entryFee,
   onPaid,
 }: {
   competitionId: string
+  competitionName: string
   registrationId: string
   entryFee: number
   onPaid?: () => void
 }) {
+  const { user } = useApp()
   const [paying, setPaying] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -343,7 +348,11 @@ function MyCompetitionPayButton({
     setPaying(true)
     setError(null)
     try {
-      await payStudentRegistration(registrationId, entryFee)
+      await payStudentRegistration(registrationId, entryFee, {
+        studentName: user?.name ?? 'Student',
+        studentEmail: user?.email ?? undefined,
+        competitionName,
+      })
       onPaid?.()
     } catch (err) {
       setError(formatUserFacingError(err, 'Payment failed.'))

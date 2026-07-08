@@ -456,7 +456,7 @@ export function TeacherSettingsPage() {
 
         {/* Form fields */}
         <form
-          className="space-y-5"
+          className="space-y-5 pb-6"
           onSubmit={(e) => {
             e.preventDefault()
             void handleSave()

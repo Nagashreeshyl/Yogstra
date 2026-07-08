@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { openCompetitionRegistrationCheckout } from './payments'
 import { competitionRegistrationRepository } from '../repositories/competitionRegistrationRepository'
 import { submitRegistration, addParticipant } from './registrationService'
 import { type StudentRegistrationDraft } from '../utils/studentRegistrationDraft'
@@ -113,7 +114,22 @@ export async function completeStudentRegistration(params: {
   return registration
 }
 
-export async function markRegistrationPaid(registrationId: string, amount: number) {
+export async function markRegistrationPaid(
+  registrationId: string,
+  amount: number,
+  meta?: { studentName?: string; studentEmail?: string; competitionName?: string },
+) {
+  if (amount > 0) {
+    await openCompetitionRegistrationCheckout({
+      registrationId,
+      amountInr: amount,
+      studentName: meta?.studentName ?? 'Student',
+      studentEmail: meta?.studentEmail,
+      competitionName: meta?.competitionName ?? 'Competition',
+    })
+    return
+  }
+
   const {
     data: { session },
   } = await supabase.auth.getSession()
@@ -162,6 +178,10 @@ export async function updateStudentRegistrationDocuments(params: {
   })
 }
 
-export async function payStudentRegistration(registrationId: string, amount: number) {
-  return markRegistrationPaid(registrationId, amount)
+export async function payStudentRegistration(
+  registrationId: string,
+  amount: number,
+  meta?: { studentName?: string; studentEmail?: string; competitionName?: string },
+) {
+  return markRegistrationPaid(registrationId, amount, meta)
 }

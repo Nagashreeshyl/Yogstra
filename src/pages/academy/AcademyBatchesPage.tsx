@@ -3,6 +3,8 @@ import { Layers } from 'lucide-react'
 import { useAsyncData } from '../../hooks/useAsyncData'
 import { useAcademyContext } from '../../hooks/useAcademyContext'
 import { createBatch, enrollStudentInBatch, fetchAcademyBatches } from '../../services/batchService'
+import { fetchAcademyTeachers } from '../../services/academyMemberService'
+import { fetchStudentList } from '../../services/students'
 import type { BatchDifficulty } from '../../domain/academy/models'
 import { PageContainer } from '../../components/shell/PageContainer'
 import { PageHeader } from '../../components/shell/PageHeader'
@@ -13,6 +15,16 @@ import { AdminTable } from '../../components/admin/AdminTable'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
+import { CustomSelect } from '../../components/ui/CustomSelect'
+import { SearchablePersonSelect } from '../../components/ui/SearchablePersonSelect'
+import { SearchableSelect } from '../../components/ui/SearchablePersonSelect'
+
+const DIFFICULTY_OPTIONS = [
+  { id: '', label: 'Any' },
+  { id: 'beginner', label: 'Beginner' },
+  { id: 'intermediate', label: 'Intermediate' },
+  { id: 'advanced', label: 'Advanced' },
+]
 
 export function AcademyBatchesPage() {
   const { academyId, loading: contextLoading, error: contextError, refetch: refetchContext } =
@@ -34,6 +46,46 @@ export function AcademyBatchesPage() {
     () => (academyId ? fetchAcademyBatches(academyId) : Promise.resolve([])),
     [academyId],
     { enabled: Boolean(academyId) },
+  )
+
+  const { data: academyTeachers, loading: teachersLoading } = useAsyncData(
+    () => (academyId ? fetchAcademyTeachers(academyId) : Promise.resolve([])),
+    [academyId],
+    { enabled: Boolean(academyId) },
+  )
+
+  const { data: students, loading: studentsLoading } = useAsyncData(() => fetchStudentList(), [])
+
+  const teacherOptions = useMemo(
+    () =>
+      (academyTeachers ?? [])
+        .filter((t) => t.status === 'active' || t.status === 'invited')
+        .map((t) => ({
+          id: t.teacherId,
+          label: t.teacherName ?? 'Teacher',
+          hint: t.employmentType.replace('_', ' '),
+        })),
+    [academyTeachers],
+  )
+
+  const studentOptions = useMemo(
+    () =>
+      (students ?? []).map((s) => ({
+        id: s.id,
+        label: s.name,
+        hint: s.phone || undefined,
+      })),
+    [students],
+  )
+
+  const batchOptions = useMemo(
+    () =>
+      (batches ?? []).map((batch) => ({
+        id: batch.id,
+        label: batch.name,
+        hint: batch.difficulty ?? undefined,
+      })),
+    [batches],
   )
 
   const filtered = useMemo(() => {
@@ -121,20 +173,26 @@ export function AcademyBatchesPage() {
     <PageContainer width="wide">
       <PageHeader title="Batches" description="Create and manage training batches." />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <form
           onSubmit={(e) => void handleCreate(e)}
-          className="rounded-[16px] border border-border bg-elevated p-5 space-y-4"
+          className="overflow-visible rounded-[16px] border border-border bg-elevated p-5 space-y-4"
         >
           <h2 className="font-heading text-lg font-semibold">Create batch</h2>
           <Input label="Batch name" value={name} onChange={(e) => setName(e.target.value)} required />
-          <Input
-            label="Teacher ID (optional)"
+          <SearchablePersonSelect
+            id="create-batch-teacher"
+            label="Teacher (optional)"
             value={teacherId}
-            onChange={(e) => setTeacherId(e.target.value)}
-            placeholder="UUID"
+            onChange={setTeacherId}
+            options={teacherOptions}
+            loading={teachersLoading}
+            disabled={creating}
+            selectPlaceholder="Choose a teacher…"
+            searchPlaceholder="Search academy teachers…"
+            emptyMessage="No teachers match your search."
           />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Input
               label="Capacity"
               type="number"
@@ -142,22 +200,14 @@ export function AcademyBatchesPage() {
               value={capacity}
               onChange={(e) => setCapacity(e.target.value)}
             />
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="difficulty" className="text-sm font-medium text-foreground">
-                Difficulty
-              </label>
-              <select
-                id="difficulty"
-                value={difficulty}
-                onChange={(e) => setDifficulty(e.target.value as BatchDifficulty | '')}
-                className="w-full px-4 py-2.5 text-sm bg-elevated rounded-[16px] border border-border focus:outline-none focus:border-primary"
-              >
-                <option value="">Any</option>
-                <option value="beginner">Beginner</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="advanced">Advanced</option>
-              </select>
-            </div>
+            <CustomSelect
+              id="create-batch-difficulty"
+              label="Difficulty"
+              value={difficulty}
+              onChange={(next) => setDifficulty(next as BatchDifficulty | '')}
+              options={DIFFICULTY_OPTIONS}
+              placeholder="Any"
+            />
           </div>
           {createError && <p className="text-sm text-red-600">{createError}</p>}
           <Button type="submit" disabled={creating || !name.trim()}>
@@ -167,34 +217,35 @@ export function AcademyBatchesPage() {
 
         <form
           onSubmit={(e) => void handleEnroll(e)}
-          className="rounded-[16px] border border-border bg-elevated p-5 space-y-4"
+          className="overflow-visible rounded-[16px] border border-border bg-elevated p-5 space-y-4"
         >
           <h2 className="font-heading text-lg font-semibold">Enroll student</h2>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="enroll-batch" className="text-sm font-medium text-foreground">
-              Batch
-            </label>
-            <select
-              id="enroll-batch"
-              value={enrollBatchId}
-              onChange={(e) => setEnrollBatchId(e.target.value)}
-              className="w-full px-4 py-2.5 text-sm bg-elevated rounded-[16px] border border-border focus:outline-none focus:border-primary"
-              required
-            >
-              <option value="">Select batch</option>
-              {(batches ?? []).map((batch) => (
-                <option key={batch.id} value={batch.id}>
-                  {batch.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <Input
-            label="Student ID"
-            value={enrollStudentId}
-            onChange={(e) => setEnrollStudentId(e.target.value)}
-            placeholder="Student UUID"
+          <SearchableSelect
+            id="enroll-student-batch"
+            label="Batch"
+            value={enrollBatchId}
+            onChange={setEnrollBatchId}
+            options={batchOptions}
+            loading={loading}
+            disabled={enrolling}
             required
+            enableSearch={batchOptions.length > 6}
+            selectPlaceholder="Select batch…"
+            searchPlaceholder="Search batches…"
+            emptyMessage="No batches match your search."
+          />
+          <SearchablePersonSelect
+            id="enroll-student-person"
+            label="Student"
+            value={enrollStudentId}
+            onChange={setEnrollStudentId}
+            options={studentOptions}
+            loading={studentsLoading}
+            disabled={enrolling}
+            required
+            selectPlaceholder="Choose a student…"
+            searchPlaceholder="Search students by name or phone…"
+            emptyMessage="No students match your search."
           />
           {enrollError && <p className="text-sm text-red-600">{enrollError}</p>}
           {enrollSuccess && <p className="text-sm text-primary">{enrollSuccess}</p>}

@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from './supabaseAdmin.js'
+import { assertAuthenticatedUser, getSupabaseAdmin, getSupabaseUserClient } from './supabaseAdmin.js'
 import type { PendingClassOrderInput } from './fulfillPayment.js'
 
 type ClassType = '1:1' | 'group'
@@ -176,19 +176,64 @@ export async function validatePendingOrderRequest(params: {
   return expectedAmount
 }
 
-export async function assertLiveKitRoomAccess(roomName: string, accessToken: string) {
-  const { getSupabaseUserClient } = await import('./supabaseAdmin.js')
-  const supabase = getSupabaseUserClient(accessToken)
+export async function assertLiveKitRoomAccess(
+  roomName: string,
+  accessToken: string,
+  verifiedUser?: Awaited<ReturnType<typeof assertAuthenticatedUser>>,
+) {
+  const user = verifiedUser ?? (await assertAuthenticatedUser(accessToken))
   const trimmedRoom = roomName.trim()
 
-  const [{ data: session }, { data: call }] = await Promise.all([
-    supabase.from('class_sessions').select('id').eq('room_name', trimmedRoom).maybeSingle(),
-    supabase.from('direct_video_calls').select('id').eq('room_name', trimmedRoom).maybeSingle(),
-  ])
+  let session:
+    | { id: string; teacher_id: string; student_id: string }
+    | null
+    | undefined
+  let call:
+    | { id: string; caller_id: string; callee_id: string }
+    | null
+    | undefined
 
-  if (!session && !call) {
-    throw new Error('You do not have access to this video room.')
+  try {
+    const admin = getSupabaseAdmin()
+    const [{ data: classSession }, { data: directCall }] = await Promise.all([
+      admin.from('class_sessions').select('id, teacher_id, student_id').eq('room_name', trimmedRoom).maybeSingle(),
+      admin.from('direct_video_calls').select('id, caller_id, callee_id').eq('room_name', trimmedRoom).maybeSingle(),
+    ])
+    session = classSession
+    call = directCall
+  } catch {
+    const supabase = getSupabaseUserClient(accessToken)
+    const [{ data: classSession }, { data: directCall }] = await Promise.all([
+      supabase.from('class_sessions').select('id, teacher_id, student_id').eq('room_name', trimmedRoom).maybeSingle(),
+      supabase.from('direct_video_calls').select('id, caller_id, callee_id').eq('room_name', trimmedRoom).maybeSingle(),
+    ])
+    session = classSession
+    call = directCall
   }
+
+  if (session) {
+    const allowed =
+      user.role === 'admin' ||
+      session.teacher_id === user.userId ||
+      session.student_id === user.userId
+    if (!allowed) {
+      throw new Error('You do not have access to this video room.')
+    }
+    return
+  }
+
+  if (call) {
+    const allowed =
+      user.role === 'admin' ||
+      call.caller_id === user.userId ||
+      call.callee_id === user.userId
+    if (!allowed) {
+      throw new Error('You do not have access to this video room.')
+    }
+    return
+  }
+
+  throw new Error('You do not have access to this video room.')
 }
 
 export async function assertOrderFulfillAccess(

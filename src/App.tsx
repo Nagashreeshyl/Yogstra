@@ -51,6 +51,7 @@ const TeacherRegistrationPage = lazy(() => import('./pages/TeacherRegistrationPa
 const TeacherPendingPage = lazy(() => import('./pages/TeacherPendingPage').then((m) => ({ default: m.TeacherPendingPage })))
 const StudentMessagesPage = lazy(() => import('./pages/StudentMessagesPage').then((m) => ({ default: m.StudentMessagesPage })))
 const StudentSettingsPage = lazy(() => import('./pages/student/StudentSettingsPage').then((m) => ({ default: m.StudentSettingsPage })))
+const StudentAcademyPage = lazy(() => import('./pages/student/StudentAcademyPage').then((m) => ({ default: m.StudentAcademyPage })))
 const TeacherDashboardPage = lazy(() => import('./pages/TeacherDashboardPage').then((m) => ({ default: m.TeacherDashboardPage })))
 const TeacherStudentsPage = lazy(() => import('./pages/teacher/TeacherStudentsPage').then((m) => ({ default: m.TeacherStudentsPage })))
 const TeacherSchedulePage = lazy(() => import('./pages/teacher/TeacherSchedulePage').then((m) => ({ default: m.TeacherSchedulePage })))
@@ -256,6 +257,7 @@ export default function App() {
                   <Route path="students/:id" element={<StudentProfilePage />} />
                   <Route path="classes" element={<StudentClassesPage />} />
                   <Route path="classes/room/:sessionId" element={<StudentClassesPage />} />
+                  <Route path="academies" element={<StudentAcademyPage />} />
                   <Route path="settings" element={<StudentSettingsPage />} />
                 </Route>
                 <Route path="student/messages" element={<Navigate to="/dashboard/student/messages" replace />} />

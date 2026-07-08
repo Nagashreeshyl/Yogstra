@@ -144,6 +144,15 @@ export async function fetchIncomingRingingCall(userId: string): Promise<DirectVi
   return data ? mapCall(data as Record<string, unknown>) : null
 }
 
+const STALE_ACTIVE_CALL_MS = 30 * 60 * 1000
+
+function isResumableActiveCall(call: DirectVideoCall) {
+  if (call.status !== 'active') return false
+  const reference = call.startedAt ?? call.createdAt
+  const ageMs = Date.now() - new Date(reference).getTime()
+  return ageMs >= 0 && ageMs < STALE_ACTIVE_CALL_MS
+}
+
 export async function fetchUserActiveDirectCall(userId: string): Promise<DirectVideoCall | null> {
   const { data, error } = await supabase
     .from('direct_video_calls')
@@ -159,7 +168,17 @@ export async function fetchUserActiveDirectCall(userId: string): Promise<DirectV
     throw error
   }
 
-  return data ? mapCall(data as Record<string, unknown>) : null
+  if (!data) return null
+
+  const call = mapCall(data as Record<string, unknown>)
+  if (call.status === 'active' && !isResumableActiveCall(call)) {
+    await updateDirectVideoCallStatus(call.id, 'ended', {
+      endedAt: new Date().toISOString(),
+    })
+    return null
+  }
+
+  return call
 }
 
 type CallChangeHandlers = {

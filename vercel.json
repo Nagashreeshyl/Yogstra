@@ -111,6 +111,9 @@
     },
     "api/competition-registration-complete.ts": {
       "includeFiles": "server/**"
+    },
+    "api/competition-razorpay-order.ts": {
+      "includeFiles": "server/**"
     }
   },
   "rewrites": [

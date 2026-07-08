@@ -36,6 +36,7 @@ interface RegistrationWizardProps {
   competitionId: string
   userId: string
   userName: string
+  userEmail?: string
   categories: CompetitionCategory[]
   entryFee: number
   competitionName: string
@@ -80,6 +81,7 @@ export function RegistrationWizard({
   competitionId,
   userId,
   userName,
+  userEmail,
   categories,
   entryFee,
   competitionName,
@@ -210,7 +212,11 @@ export function RegistrationWizard({
         studentId: userId,
         draft,
       })
-      await markRegistrationPaid(registrationId, fee)
+      await markRegistrationPaid(registrationId, fee, {
+        studentName: userName,
+        studentEmail: userEmail,
+        competitionName,
+      })
       clearRegistrationDraft(competitionId, userId)
       setCompleted(true)
       persist({ ...draft, registrationId, step: 6 })

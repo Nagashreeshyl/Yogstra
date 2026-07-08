@@ -70,6 +70,7 @@ export function StudentRegistrationWizardPage() {
         competitionId={competitionId}
         userId={userId}
         userName={userName}
+        userEmail={user.email ?? undefined}
         categories={detail.categories}
         entryFee={detail.competition.entryFee}
         competitionName={detail.competition.name}

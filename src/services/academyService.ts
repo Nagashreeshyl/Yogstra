@@ -2,6 +2,7 @@ import type { CreateAcademyInput, StudentAssociation } from '../domain/academy/m
 import { academyRepository } from '../repositories/academyRepository'
 import { academyMemberRepository } from '../repositories/academyMemberRepository'
 import { batchRepository } from '../repositories/batchRepository'
+import { linkTeacherToAcademy } from './academyMemberService'
 import { slugifyAcademyName } from '../utils/academyMappers'
 
 function isUniqueViolation(err: unknown): boolean {
@@ -82,11 +83,31 @@ export async function ensureAcademyBootstrap(academyId: string, userId: string) 
       /* non-owners cannot reactivate; creator bootstrap should succeed */
     }
   }
+
+  try {
+    const linkedTeachers = await academyMemberRepository.listTeachersByAcademy(academyId)
+    const alreadyLinked = linkedTeachers.some(
+      (row) => row.teacherId === userId && row.status !== 'removed',
+    )
+    if (!alreadyLinked) {
+      await linkTeacherToAcademy({ academyId, teacherId: userId, isPrimary: true })
+    }
+  } catch {
+    /* owner may already be linked */
+  }
 }
 
 /** Creates an academy and bootstraps owner membership + default settings. */
 export async function createAcademy(input: CreateAcademyInput, createdBy: string) {
   const baseSlug = slugifyAcademyName(input.slug ?? input.name)
+
+  const existing = await academyRepository.findBySlug(baseSlug)
+  if (existing?.createdBy === createdBy) {
+    await ensureAcademyBootstrap(existing.id, createdBy)
+    const membership = await academyMemberRepository.findMembership(existing.id, createdBy)
+    if (membership?.status === 'active') return existing
+  }
+
   let slug = await ensureUniqueSlug(baseSlug)
 
   let academy
@@ -124,6 +145,18 @@ export async function createAcademy(input: CreateAcademyInput, createdBy: string
   } catch (settingsErr) {
     const existing = await academyRepository.getSettings(academy.id)
     if (!existing) throw settingsErr
+  }
+
+  try {
+    const linkedTeachers = await academyMemberRepository.listTeachersByAcademy(academy.id)
+    const alreadyLinked = linkedTeachers.some(
+      (row) => row.teacherId === createdBy && row.status !== 'removed',
+    )
+    if (!alreadyLinked) {
+      await linkTeacherToAcademy({ academyId: academy.id, teacherId: createdBy, isPrimary: true })
+    }
+  } catch {
+    /* owner may already be linked */
   }
 
   if (input.parentAcademyId) {

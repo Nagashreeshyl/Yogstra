@@ -7,6 +7,7 @@ import {
   CreditCard,
   Settings,
   Video,
+  Building2,
 } from 'lucide-react'
 import type { ShellNavItem } from '../types'
 
@@ -30,6 +31,12 @@ export function getStudentNavItems(hasClasses: boolean): ShellNavItem[] {
       label: 'Competitions',
       icon: Trophy,
       placement: ['sidebar', 'tab'],
+    },
+    {
+      to: '/dashboard/student/academies',
+      label: 'Academies',
+      icon: Building2,
+      placement: ['sidebar', 'more'],
     },
     {
       to: '/dashboard/student/messages',

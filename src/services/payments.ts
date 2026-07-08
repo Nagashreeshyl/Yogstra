@@ -282,3 +282,169 @@ export async function openRazorpayCheckout(params: {
     rzp.open()
   })
 }
+
+async function createCompetitionRazorpayOrder(params: {
+  registrationId: string
+  amountInr: number
+}) {
+  const { data: session } = await supabase.auth.getSession()
+  const token = session.session?.access_token
+  if (!token) throw new Error('Please sign in again to pay.')
+
+  const response = await fetch('/api/competition-razorpay-order', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      registrationId: params.registrationId,
+      amountInr: params.amountInr,
+    }),
+  })
+
+  const body = (await response.json().catch(() => ({}))) as {
+    orderId?: string
+    keyId?: string
+    alreadyComplete?: boolean
+    error?: string
+  }
+
+  if (body.alreadyComplete) {
+    return { alreadyComplete: true as const }
+  }
+
+  if (!response.ok || !body.orderId) {
+    throw new Error(body.error ?? 'Could not initialize competition payment.')
+  }
+
+  return {
+    alreadyComplete: false as const,
+    orderId: body.orderId,
+    keyId: body.keyId ? trimEnv(body.keyId) : undefined,
+  }
+}
+
+async function fulfillCompetitionRegistration(params: {
+  registrationId: string
+  amountInr: number
+  response: RazorpaySuccessResponse
+}) {
+  const { data: session } = await supabase.auth.getSession()
+  const token = session.session?.access_token
+  if (!token) throw new Error('Please sign in again to complete registration.')
+
+  const res = await fetch('/api/competition-registration-complete', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      registrationId: params.registrationId,
+      amount: params.amountInr,
+      razorpay_order_id: params.response.razorpay_order_id,
+      razorpay_payment_id: params.response.razorpay_payment_id,
+      razorpay_signature: params.response.razorpay_signature,
+    }),
+  })
+
+  const body = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string }
+  if (!res.ok || !body.ok) {
+    throw new Error(body.error ?? 'Payment succeeded but registration could not be confirmed.')
+  }
+}
+
+export async function openCompetitionRegistrationCheckout(params: {
+  registrationId: string
+  amountInr: number
+  studentName: string
+  studentEmail?: string
+  competitionName: string
+}) {
+  const key = trimEnv(import.meta.env.VITE_RAZORPAY_KEY_ID as string | undefined)
+  if (!key) {
+    throw new Error(
+      'Payment gateway is not configured. Contact support to complete your registration.',
+    )
+  }
+
+  const { inr, paise } = normalizeInrAmount(params.amountInr)
+  await loadRazorpayScript()
+
+  const serverOrder = await createCompetitionRazorpayOrder({
+    registrationId: params.registrationId,
+    amountInr: inr,
+  })
+
+  if (serverOrder.alreadyComplete) {
+    return
+  }
+
+  return new Promise<void>((resolve, reject) => {
+    let settled = false
+    const finish = (fn: () => void) => {
+      if (settled) return
+      settled = true
+      fn()
+    }
+
+    const prefill: Record<string, string> = { name: params.studentName }
+    if (params.studentEmail) prefill.email = params.studentEmail
+
+    const options: Record<string, unknown> = {
+      key: serverOrder.keyId ?? key,
+      order_id: serverOrder.orderId,
+      name: 'Yogstra',
+      description: `Competition entry · ${params.competitionName}`,
+      prefill,
+      theme: { color: '#5BB8C4' },
+      handler(response: RazorpaySuccessResponse) {
+        void (async () => {
+          try {
+            await fulfillCompetitionRegistration({
+              registrationId: params.registrationId,
+              amountInr: inr,
+              response,
+            })
+            finish(() => resolve())
+          } catch (err) {
+            finish(() =>
+              reject(
+                err instanceof Error
+                  ? err
+                  : new Error('Payment succeeded but registration could not be confirmed.'),
+              ),
+            )
+          }
+        })()
+      },
+      modal: {
+        ondismiss() {
+          finish(() => reject(new Error('Payment cancelled.')))
+        },
+      },
+    }
+
+    if (!serverOrder.orderId) {
+      options.amount = paise
+      options.currency = 'INR'
+    }
+
+    const rzp = new window.Razorpay!(options)
+
+    rzp.on('payment.failed', (response: RazorpayFailureResponse) => {
+      finish(() =>
+        reject(
+          new Error(
+            response.error?.description ??
+              response.error?.reason ??
+              'Payment failed. Please try again.',
+          ),
+        ),
+      )
+    })
+
+    rzp.open()
+  })
+}

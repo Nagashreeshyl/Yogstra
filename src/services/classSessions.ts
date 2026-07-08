@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { forceRefreshAccessToken, getFreshAccessToken } from '../utils/supabaseAuth'
 
 // VERIFIED: live class sessions — teacher start, student ring, LiveKit join, session status
 export type ClassSessionStatus = 'ringing' | 'active' | 'ended' | 'declined' | 'missed'
@@ -52,38 +53,48 @@ export async function fetchLiveKitToken(params: {
   participantName: string
   participantId: string
 }) {
-  const { data: session } = await supabase.auth.getSession()
-  const token = session.session?.access_token
-  if (!token) throw new Error('Please sign in again to join video.')
-
   if (!params.roomName?.trim() || !params.participantName?.trim() || !params.participantId?.trim()) {
     throw new Error('Missing video call details. Refresh and try again.')
   }
 
-  const response = await fetch('/api/livekit-token', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      roomName: params.roomName,
-      participantName: params.participantName,
-      participantId: params.participantId,
-    }),
-  })
+  async function requestToken(accessToken: string) {
+    const response = await fetch('/api/livekit-token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        roomName: params.roomName,
+        participantName: params.participantName,
+        participantId: params.participantId,
+      }),
+    })
 
-  const body = (await response.json().catch(() => ({}))) as {
-    token?: string
-    serverUrl?: string
-    error?: string
+    const body = (await response.json().catch(() => ({}))) as {
+      token?: string
+      serverUrl?: string
+      error?: string
+    }
+
+    return { response, body }
+  }
+
+  let accessToken = await getFreshAccessToken()
+  let { response, body } = await requestToken(accessToken)
+
+  if (response.status === 401) {
+    accessToken = await forceRefreshAccessToken()
+    ;({ response, body } = await requestToken(accessToken))
   }
 
   if (!response.ok || !body.token || !body.serverUrl) {
     const fallback =
       response.status === 404
         ? 'Video API is unavailable. Restart with npm run dev (local) or redeploy on Vercel.'
-        : 'Could not connect to video server.'
+        : response.status === 401
+          ? 'Your session expired. Please sign in again and retry the call.'
+          : 'Could not connect to video server.'
     throw new Error(body.error ?? fallback)
   }
 

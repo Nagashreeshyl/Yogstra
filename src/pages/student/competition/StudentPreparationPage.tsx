@@ -70,7 +70,11 @@ export function StudentPreparationPage() {
     setPaying(true)
     setPayError(null)
     try {
-      await payStudentRegistration(registration.id, fee)
+      await payStudentRegistration(registration.id, fee, {
+        studentName: user?.name ?? 'Student',
+        studentEmail: user?.email ?? undefined,
+        competitionName: data.detail.competition.name,
+      })
       await refetch(true)
     } catch (err) {
       setPayError(formatUserFacingError(err, 'Payment failed. Please try again.'))

@@ -43,9 +43,9 @@ export function MobileNavigation({ navItems, badges }: MobileNavigationProps) {
 
   return (
     <>
-      {/* Floating pill tab bar — mobile/tablet only; desktop uses sidebar */}
+      {/* In-flow pill tab bar — reserves layout space so page content cannot scroll underneath */}
       <nav
-        className="lg:hidden fixed inset-x-0 bottom-0 z-[70] pointer-events-none px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+        className="mobile-tab-bar lg:hidden shrink-0 relative z-[70] pointer-events-none px-4 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
         aria-label="Mobile navigation"
       >
         <div className="pointer-events-auto mx-auto max-w-lg rounded-[28px] border border-border/80 bg-elevated/95 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.28)]">

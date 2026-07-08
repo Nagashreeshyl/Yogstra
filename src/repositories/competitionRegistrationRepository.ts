@@ -153,6 +153,20 @@ export const competitionRegistrationRepository = {
     return data ? mapCompetitionRegistration(data) : null
   },
 
+  async findParticipantById(id: string) {
+    const { data, error } = await supabase
+      .from('competition_participants')
+      .select(participantRowSelect)
+      .eq('id', id)
+      .maybeSingle()
+
+    if (error) {
+      if (isMissingTableError(error)) return null
+      throw error
+    }
+    return data ? mapCompetitionParticipant(data) : null
+  },
+
   async updateRegistration(
     id: string,
     patch: Partial<{
@@ -172,15 +186,18 @@ export const competitionRegistrationRepository = {
     if (patch.paymentStatus !== undefined) updates.payment_status = patch.paymentStatus
     if (patch.paymentAmount !== undefined) updates.payment_amount = patch.paymentAmount
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('competition_registrations')
       .update(updates)
       .eq('id', id)
-      .select(registrationRowSelect)
-      .single()
 
     if (error) throw error
-    return mapCompetitionRegistration(data)
+
+    const refreshed = await this.findById(id)
+    if (!refreshed) {
+      throw new Error('Could not update registration.')
+    }
+    return refreshed
   },
 
   async updateParticipant(
@@ -202,15 +219,18 @@ export const competitionRegistrationRepository = {
     if (patch.status !== undefined) updates.status = patch.status
     if (patch.documentsVerified !== undefined) updates.documents_verified = patch.documentsVerified
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('competition_participants')
       .update(updates)
       .eq('id', participantId)
-      .select(participantRowSelect)
-      .single()
 
     if (error) throw error
-    return mapCompetitionParticipant(data)
+
+    const refreshed = await this.findParticipantById(participantId)
+    if (!refreshed) {
+      throw new Error('Could not update participant profile.')
+    }
+    return refreshed
   },
 
   async findParticipantByRegistration(registrationId: string, studentId: string) {

@@ -1,4 +1,5 @@
 import { getSupabaseAdmin, getSupabaseUserClient } from '../server/supabaseAdmin.js'
+import { verifyPaymentSignature } from '../server/razorpayClient.js'
 import {
   extractBearerToken,
   enforceRateLimit,
@@ -8,6 +9,9 @@ import {
 type CompleteRequest = {
   registrationId?: string
   amount?: number
+  razorpay_order_id?: string
+  razorpay_payment_id?: string
+  razorpay_signature?: string
 }
 
 type VercelRequest = {
@@ -33,7 +37,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!enforceRateLimit(req, res, 'competition-registration-complete', 20, 60_000)) return
 
   const registrationId = req.body?.registrationId?.trim()
-  void Number(req.body?.amount ?? 0)
+  const amountInr = Number(req.body?.amount ?? 0)
+  const razorpayOrderId = req.body?.razorpay_order_id?.trim()
+  const razorpayPaymentId = req.body?.razorpay_payment_id?.trim()
+  const razorpaySignature = req.body?.razorpay_signature?.trim()
 
   if (!registrationId) {
     return res.status(400).json({ error: 'Registration id is required.' })
@@ -56,7 +63,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const { data: registration, error: regError } = await userClient
       .from('competition_registrations')
-      .select('id, competition_id, registrant_id, payment_status, status')
+      .select('id, competition_id, registrant_id, payment_status, status, category_id, payment_reference')
       .eq('id', registrationId)
       .maybeSingle()
 
@@ -82,23 +89,63 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(404).json({ error: 'Competition not found.' })
     }
 
-    const entryFee = Number(competition.entry_fee ?? 0)
+    let entryFee = Number(competition.entry_fee ?? 0)
+    if (registration.category_id) {
+      const { data: category } = await userClient
+        .from('competition_categories')
+        .select('entry_fee_override')
+        .eq('id', registration.category_id)
+        .maybeSingle()
+      if (category?.entry_fee_override != null) {
+        entryFee = Number(category.entry_fee_override)
+      }
+    }
+
+    let paymentStatus: 'paid' | 'waived' = 'waived'
+    let paymentAmount: number | null = null
+    let paymentReference: string | null = null
+
     if (entryFee > 0) {
-      return res.status(501).json({
-        error:
-          'Paid competition entry requires Razorpay integration. Contact the organizer or try again after payment is enabled.',
+      if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+        return res.status(400).json({ error: 'Payment verification is required for this entry fee.' })
+      }
+
+      if (
+        registration.payment_reference &&
+        registration.payment_reference !== razorpayOrderId
+      ) {
+        return res.status(400).json({ error: 'Payment order does not match this registration.' })
+      }
+
+      const signatureValid = verifyPaymentSignature({
+        orderId: razorpayOrderId,
+        paymentId: razorpayPaymentId,
+        signature: razorpaySignature,
       })
+      if (!signatureValid) {
+        return res.status(400).json({ error: 'Payment verification failed.' })
+      }
+
+      const expectedAmount = Math.round(entryFee)
+      const submittedAmount = Math.round(amountInr)
+      if (submittedAmount > 0 && submittedAmount !== expectedAmount) {
+        return res.status(400).json({ error: 'Payment amount does not match the entry fee.' })
+      }
+
+      paymentStatus = 'paid'
+      paymentAmount = expectedAmount
+      paymentReference = razorpayPaymentId
     }
 
     const admin = getSupabaseAdmin()
-    const paymentStatus = 'waived'
     const now = new Date().toISOString()
 
     const { error: updateError } = await admin
       .from('competition_registrations')
       .update({
         payment_status: paymentStatus,
-        payment_amount: null,
+        payment_amount: paymentAmount,
+        payment_reference: paymentReference,
         status: 'confirmed',
         confirmed_at: now,
       })

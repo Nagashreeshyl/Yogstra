@@ -124,6 +124,44 @@ export async function fetchTeacherCount(): Promise<number> {
   return count ?? 0
 }
 
+/** Lightweight list for pickers and search dropdowns */
+export interface TeacherListItem {
+  id: string
+  name: string
+  city: string
+  state: string
+}
+
+export async function fetchTeacherList(): Promise<TeacherListItem[]> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select(`
+      id,
+      full_name,
+      city,
+      state,
+      teacher_profiles (status)
+    `)
+    .eq('role', 'teacher')
+    .order('full_name', { ascending: true })
+
+  if (error) throw error
+
+  return (data ?? [])
+    .filter((row) => {
+      const tp = Array.isArray(row.teacher_profiles)
+        ? row.teacher_profiles[0]
+        : row.teacher_profiles
+      return tp?.status !== 'removed'
+    })
+    .map((row) => ({
+      id: row.id as string,
+      name: (row.full_name as string | null) ?? 'Teacher',
+      city: (row.city as string | null) ?? '',
+      state: (row.state as string | null) ?? '',
+    }))
+}
+
 export async function fetchPendingTeachers(): Promise<Teacher[]> {
   const all = await fetchTeachers(false)
   return all.filter((t) => t.status === 'Pending')

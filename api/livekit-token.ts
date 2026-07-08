@@ -42,7 +42,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'roomName is required.' })
     }
 
-    await assertLiveKitRoomAccess(roomName, token!)
+    await assertLiveKitRoomAccess(roomName, token!, user)
 
     const result = await createLiveKitToken({
       roomName,

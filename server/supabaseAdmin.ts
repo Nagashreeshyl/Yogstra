@@ -76,16 +76,39 @@ export async function assertAuthenticatedUser(accessToken: string | undefined) {
     throw new Error('Authentication required.')
   }
 
-  const supabase = getSupabaseAnon()
-  const { data, error } = await supabase.auth.getUser(accessToken)
-  if (error || !data.user) {
-    throw new Error('Invalid session.')
+  let authUser: { id: string } | null = null
+
+  try {
+    const admin = getSupabaseAdmin()
+    const { data, error } = await admin.auth.getUser(accessToken)
+    if (!error && data.user) {
+      authUser = data.user
+    }
+  } catch {
+    /* service role unavailable — fall back to anon validation */
   }
 
-  const { data: profile, error: profileError } = await supabase
+  if (!authUser) {
+    const supabase = getSupabaseAnon()
+    const { data, error } = await supabase.auth.getUser(accessToken)
+    if (error || !data.user) {
+      throw new Error('Invalid session.')
+    }
+    authUser = data.user
+  }
+
+  const profileClient = (() => {
+    try {
+      return getSupabaseAdmin()
+    } catch {
+      return getSupabaseAnon()
+    }
+  })()
+
+  const { data: profile, error: profileError } = await profileClient
     .from('profiles')
     .select('role')
-    .eq('id', data.user.id)
+    .eq('id', authUser.id)
     .maybeSingle()
 
   if (profileError || !profile?.role) {
@@ -93,7 +116,7 @@ export async function assertAuthenticatedUser(accessToken: string | undefined) {
   }
 
   return {
-    userId: data.user.id,
+    userId: authUser.id,
     role: profile.role as 'student' | 'teacher' | 'admin',
   }
 }

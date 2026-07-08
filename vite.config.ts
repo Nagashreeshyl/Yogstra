@@ -61,7 +61,7 @@ function livekitTokenDevMiddleware() {
               return
             }
 
-            await assertLiveKitRoomAccess(roomName, bearer)
+            await assertLiveKitRoomAccess(roomName, bearer, user)
 
             const participantName = String(body.participantName ?? '').trim() || 'Participant'
             const result = await createLiveKitToken({
@@ -112,6 +112,18 @@ export default defineConfig(({ mode }) => {
   for (const [key, value] of Object.entries(env)) {
     if (process.env[key] === undefined) {
       process.env[key] = value
+    }
+  }
+
+  if (mode === 'production') {
+    const missing = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'].filter(
+      (key) => !env[key]?.trim(),
+    )
+    if (missing.length) {
+      throw new Error(
+        `Production build missing required env: ${missing.join(', ')}. ` +
+          'Set them in Vercel project settings or .env.local before building.',
+      )
     }
   }
 

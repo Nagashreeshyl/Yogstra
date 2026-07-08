@@ -10,6 +10,7 @@ import {
   linkTeacherToAcademy,
 } from '../../services/academyMemberService'
 import { inviteMemberByEmail, updateMemberStatus } from '../../services/academyOperations'
+import { fetchTeacherList } from '../../services/teachers'
 import { PageContainer } from '../../components/shell/PageContainer'
 import { PageHeader } from '../../components/shell/PageHeader'
 import { ErrorState } from '../../components/shell/ErrorState'
@@ -18,14 +19,14 @@ import { LoadingSkeleton } from '../../components/shell/LoadingSkeleton'
 import { AdminTable } from '../../components/admin/AdminTable'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
-import { Input } from '../../components/ui/Input'
+import { SearchablePersonSelect } from '../../components/ui/SearchablePersonSelect'
 
 export function AcademyTeachersPage() {
   const { user } = useApp()
   const { academyId, loading: contextLoading, error: contextError, refetch: refetchContext } =
     useAcademyContext()
   const [search, setSearch] = useState('')
-  const [inviteValue, setInviteValue] = useState('')
+  const [selectedTeacherId, setSelectedTeacherId] = useState('')
   const [inviting, setInviting] = useState(false)
   const [inviteError, setInviteError] = useState<string | null>(null)
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null)
@@ -34,6 +35,28 @@ export function AcademyTeachersPage() {
     () => (academyId ? fetchAcademyTeachers(academyId) : Promise.resolve([])),
     [academyId],
     { enabled: Boolean(academyId) },
+  )
+
+  const { data: allTeachers, loading: allTeachersLoading } = useAsyncData(
+    () => fetchTeacherList(),
+    [],
+  )
+
+  const linkedTeacherIds = useMemo(
+    () => new Set((teachers ?? []).map((t) => t.teacherId)),
+    [teachers],
+  )
+
+  const teacherOptions = useMemo(
+    () =>
+      (allTeachers ?? [])
+        .filter((t) => !linkedTeacherIds.has(t.id))
+        .map((t) => ({
+          id: t.id,
+          label: t.name,
+          hint: [t.city, t.state].filter(Boolean).join(' · ') || undefined,
+        })),
+    [allTeachers, linkedTeacherIds],
   )
 
   const filtered = useMemo(() => {
@@ -45,7 +68,7 @@ export function AcademyTeachersPage() {
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!academyId || !user?.id || !inviteValue.trim()) return
+    if (!academyId || !user?.id || !selectedTeacherId) return
 
     setInviting(true)
     setInviteError(null)
@@ -54,13 +77,13 @@ export function AcademyTeachersPage() {
     try {
       const member = await inviteMemberByEmail({
         academyId,
-        emailOrUserId: inviteValue.trim(),
+        emailOrUserId: selectedTeacherId,
         role: 'teacher',
         invitedBy: user.id,
       })
       await linkTeacherToAcademy({ academyId, teacherId: member.userId })
       setInviteSuccess('Teacher invited successfully.')
-      setInviteValue('')
+      setSelectedTeacherId('')
       await refetch()
     } catch (err) {
       setInviteError(err instanceof Error ? err.message : 'Could not invite teacher.')
@@ -113,19 +136,22 @@ export function AcademyTeachersPage() {
         className="mb-8 rounded-[16px] border border-border bg-elevated p-5 space-y-4"
       >
         <h2 className="font-heading text-lg font-semibold">Invite teacher</h2>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Input
-            label="User ID or email"
-            value={inviteValue}
-            onChange={(e) => setInviteValue(e.target.value)}
-            placeholder="teacher@example.com or UUID"
-            className="flex-1"
-          />
-          <div className="flex items-end">
-            <Button type="submit" disabled={inviting || !inviteValue.trim()}>
-              {inviting ? 'Inviting…' : 'Send invite'}
-            </Button>
-          </div>
+        <SearchablePersonSelect
+          label="Teacher"
+          value={selectedTeacherId}
+          onChange={setSelectedTeacherId}
+          options={teacherOptions}
+          loading={allTeachersLoading}
+          disabled={inviting}
+          required
+          selectPlaceholder="Choose a teacher…"
+          searchPlaceholder="Search teachers by name or location…"
+          emptyMessage="No available teachers match your search."
+        />
+        <div className="flex justify-end">
+          <Button type="submit" disabled={inviting || !selectedTeacherId}>
+            {inviting ? 'Inviting…' : 'Send invite'}
+          </Button>
         </div>
         {inviteError && <p className="text-sm text-red-600">{inviteError}</p>}
         {inviteSuccess && <p className="text-sm text-primary">{inviteSuccess}</p>}
@@ -135,7 +161,7 @@ export function AcademyTeachersPage() {
         <EmptyState
           icon={<Users size={24} />}
           title="No teachers yet"
-          description="Invite teachers by email or user ID to link them to your academy."
+          description="Invite teachers from Yogstra to link them to your academy."
         />
       ) : (
         <AdminTable

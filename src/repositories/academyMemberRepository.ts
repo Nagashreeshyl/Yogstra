@@ -87,6 +87,49 @@ export const academyMemberRepository = {
     employmentType?: 'employed' | 'affiliated' | 'visiting'
     isPrimary?: boolean
   }) {
+    const teacherSelect = `
+      id,
+      academy_id,
+      teacher_id,
+      employment_type,
+      is_primary,
+      status,
+      started_at,
+      created_at,
+      updated_at,
+      teacher:profiles!teacher_id(full_name, avatar_url)
+    `
+
+    const { data: existing, error: findError } = await supabase
+      .from('teacher_academies')
+      .select(teacherSelect)
+      .eq('academy_id', input.academyId)
+      .eq('teacher_id', input.teacherId)
+      .maybeSingle()
+
+    if (findError) throw findError
+
+    if (existing) {
+      if (existing.status === 'removed') {
+        const { data, error } = await supabase
+          .from('teacher_academies')
+          .update({
+            status: 'active',
+            employment_type: input.employmentType ?? existing.employment_type,
+            is_primary: input.isPrimary ?? existing.is_primary,
+            started_at: existing.started_at ?? new Date().toISOString(),
+          })
+          .eq('id', existing.id)
+          .select(teacherSelect)
+          .single()
+
+        if (error) throw error
+        return mapTeacherAcademy(data)
+      }
+
+      return mapTeacherAcademy(existing)
+    }
+
     const { data, error } = await supabase
       .from('teacher_academies')
       .insert({
@@ -97,18 +140,7 @@ export const academyMemberRepository = {
         status: 'active',
         started_at: new Date().toISOString(),
       })
-      .select(`
-        id,
-        academy_id,
-        teacher_id,
-        employment_type,
-        is_primary,
-        status,
-        started_at,
-        created_at,
-        updated_at,
-        teacher:profiles!teacher_id(full_name, avatar_url)
-      `)
+      .select(teacherSelect)
       .single()
 
     if (error) throw error

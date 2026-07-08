@@ -11,7 +11,10 @@ import { ClassSessionStatusWatcher } from './ClassSessionStatusWatcher'
 import { StudentTeacherAwayNotice } from './StudentTeacherAwayNotice'
 import { TeacherStudentAwayActions } from './TeacherStudentAwayActions'
 import { ClassHourTimeUpNotice } from './ClassHourTimeUpNotice'
+import { LiveKitVideoQualityBootstrap } from './LiveKitVideoQualityBootstrap'
+import { VideoQualitySelector } from './VideoQualitySelector'
 import { Button } from '../ui/Button'
+import { buildLiveKitRoomOptions, getLiveKitVideoQuality } from '../../utils/livekitVideoQuality'
 import {
   fetchLiveKitToken,
   updateClassSessionStatus,
@@ -197,19 +200,15 @@ export function LiveClassRoom({
           video
           audio
           connectOptions={{ autoSubscribe: true }}
-          options={{
-            audioCaptureDefaults: {
-              echoCancellation: true,
-              noiseSuppression: true,
-              autoGainControl: true,
-            },
-          }}
+          options={buildLiveKitRoomOptions(getLiveKitVideoQuality())}
           onDisconnected={handleDisconnected}
           data-lk-theme="default"
           style={{ height: '100vh' }}
         >
           <ClassSessionRemoteWatcher sessionId={session.id} onRemoteEnd={handleRemoteEnd} />
           <ClassRoomAudioSetup />
+          <LiveKitVideoQualityBootstrap />
+          <VideoQualitySelector />
           {role === 'student' && <StudentTeacherAwayNotice />}
           {role === 'teacher' && (
             <TeacherStudentAwayActions

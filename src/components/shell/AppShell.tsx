@@ -4,7 +4,6 @@ import { MobileNavigation } from './MobileNavigation'
 import { useNavBadges } from './useNavBadges'
 import { useApp } from '../../context/AppContext'
 import { getDashboardPath } from '../../utils/authRouting'
-import { MOBILE_TAB_BAR_CLEARANCE } from '../../constants/mobileNav'
 import type { AppShellProps } from './types'
 
 function resolveHomeLink(variant: AppShellProps['variant'], isLoggedIn: boolean, user: ReturnType<typeof useApp>['user']) {
@@ -59,18 +58,15 @@ export function AppShell({
 
         <main
           id="main-content"
-          className={`flex flex-1 flex-col min-h-0 min-w-0 overflow-y-auto overscroll-y-contain lg:pb-0 ${mainClassName}`}
+          className={`app-shell-main flex flex-1 flex-col min-h-0 min-w-0 overflow-y-auto overscroll-y-contain lg:pb-0 ${
+            fullBleed ? 'app-shell-main--full-bleed' : ''
+          } ${mainClassName}`}
         >
           {fullBleed ? (
             <div className="flex min-h-0 flex-1 flex-col">{children}</div>
           ) : (
             children
           )}
-          <div
-            className="lg:hidden shrink-0 pointer-events-none"
-            aria-hidden="true"
-            style={{ height: MOBILE_TAB_BAR_CLEARANCE }}
-          />
         </main>
 
         <MobileNavigation navItems={navItems} badges={badges} />
